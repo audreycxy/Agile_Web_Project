@@ -3,37 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login</title>
+  <title>Sign Up</title>
 
   <!-- Link the shared stylesheet from the static/css folder -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
   <div class="login-container">
-    <h2>Login</h2>
+    <h2>Sign Up</h2>
 
-    <!-- Show an error message from Flask if login fails -->
+    <!-- Show an error message from Flask if signup validation fails -->
     {% if error %}
       <div class="message error">{{ error }}</div>
     {% endif %}
 
-    <!-- Login form sends data to the /login POST route -->
-    <form method="POST" action="{{ url_for('handle_login') }}">
+    <!-- Signup form sends data to the /signup POST route -->
+    <form method="POST" action="{{ url_for('handle_signup') }}">
+      <input type="text" name="username" placeholder="Enter your username" required />
       <input type="email" name="email" placeholder="Enter your email" required />
       <input type="password" name="password" placeholder="Enter your password" required />
-      <button type="submit">Login</button>
+      <input type="password" name="confirm_password" placeholder="Confirm your password" required />
+      <button type="submit">Sign Up</button>
     </form>
 
-    <!-- Link to signup page for users without an account -->
+    <!-- Link back to login page for existing users -->
     <p class="signup-text">
-      Don't have an account?
-      <a href="{{ url_for('signup') }}">Sign up here</a>
+      Already have an account?
+      <a href="{{ url_for('login') }}">Login here</a>
     </p>
-
-    <!-- Optional guest access button -->
-    <div class="extra-options">
-      <a href="{{ url_for('guest') }}" class="option-btn">Continue as Guest Player</a>
-    </div>
   </div>
 </body>
 </html>

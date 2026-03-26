@@ -1,3 +1,4 @@
+/* Remove default spacing and apply a basic font and background */
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -92,4 +93,3 @@ body {
 .option-btn:hover {
   background: #545b62;
 }
-
