@@ -1,4 +1,6 @@
+// Listen for the signup form submission.
 document.getElementById("signupForm").addEventListener("submit", function(event) {
+    // Stop the form from submitting immediately.
     event.preventDefault();
 
     // Read values entered by the user.
@@ -22,7 +24,7 @@ document.getElementById("signupForm").addEventListener("submit", function(event)
         return;
     }
 
-    // Temporary success message for frontend testing only. Can remove once connected to backend.
+    // Temporary success message for frontend testing only.
     message.textContent = "Sign up successful!";
     message.style.color = "green";
 });

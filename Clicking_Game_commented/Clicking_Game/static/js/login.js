@@ -1,6 +1,8 @@
+// Get the login form and message box from the page.
 const loginForm = document.getElementById("loginForm");
 const message = document.getElementById("message");
 
+// Run this code when the user submits the form.
 loginForm.addEventListener("submit", function(event) {
   // Prevent the browser from submitting the form immediately.
   event.preventDefault();
@@ -14,7 +16,7 @@ loginForm.addEventListener("submit", function(event) {
     message.textContent = "Please fill in all fields.";
     message.className = "message";
   } else {
-    // Temporary success message for frontend testing only. Can remove once connected to backend.
+    // Temporary success message for frontend testing only.
     message.textContent = "Login successful!";
     message.className = "message success";
   }
