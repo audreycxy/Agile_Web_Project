@@ -41,8 +41,12 @@ body {
 }
 
 .message {
-  margin-top: 15px;
+  margin-bottom: 15px;
   font-size: 14px;
+}
+
+.error {
+  color: red;
 }
 
 .signup-text {
@@ -51,8 +55,8 @@ body {
 }
 
 .signup-text a {
-  text-decoration: none;
   color: #007bff;
+  text-decoration: none;
 }
 
 .signup-text a:hover {
@@ -61,9 +65,6 @@ body {
 
 .extra-options {
   margin-top: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
 }
 
 .option-btn {
@@ -78,3 +79,4 @@ body {
 .option-btn:hover {
   background: #545b62;
 }
+

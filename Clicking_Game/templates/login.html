@@ -1,38 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Login Page</title>
-  <link rel="stylesheet" href="/static/css/style.css" />
+  <title>Login</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
   <div class="login-container">
     <h2>Login</h2>
 
-    <form id="loginForm">
-      <input type="email" id="email" placeholder="Enter your email" required />
-      <input type="password" id="password" placeholder="Enter your password" required />
+    {% if error %}
+      <div class="message error">{{ error }}</div>
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('handle_login') }}">
+      <input type="email" name="email" placeholder="Enter your email" required />
+      <input type="password" name="password" placeholder="Enter your password" required />
       <button type="submit">Login</button>
     </form>
 
-    <div id="message" class="message"></div>
-
     <p class="signup-text">
       Don't have an account?
-      <a href="/signup">Sign up here</a>
+      <a href="{{ url_for('signup') }}">Sign up here</a>
     </p>
 
     <div class="extra-options">
-      <a href="/administrator" class="option-btn">Login as Administrator</a>
-      <a href="/guest" class="option-btn">Continue as Guest Player</a>
+      <a href="{{ url_for('guest') }}" class="option-btn">Continue as Guest Player</a>
     </div>
   </div>
-  </div>
-
-  <script src="/static/js/signup.js"></script>
 </body>
-
 </html>
