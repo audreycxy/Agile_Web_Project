@@ -12,6 +12,8 @@
   <div class="dashboard-container">
     <h1>Player Dashboard</h1>
 
+    <p class="welcome-user">Welcome, {{ name }}</p>
+
     <p class="dashboard-description">
       This is the main page after a player logs in. Players can start a new game,
       view their past results, manage their profile, and log out of the system.
@@ -26,11 +28,6 @@
     <h2>Player Information</h2>
 
     <div class="dashboard-info">
-      <div class="info-box">
-        <h3>Welcome</h3>
-        <p id="welcomeText">Welcome, {{ name }}</p>
-      </div>
-
       <div class="info-box">
         <h3>Profile</h3>
         <p id="profileText">Username: {{ name }}</p>

@@ -1,10 +1,10 @@
 const playerData = {
   username: "player01",
   highestScore: 120,
-  latestResult: "95 points"
+  latestResult: "90 points"
 };
 
-document.getElementById("welcomeText").textContent = `Welcome, ${playerData.username}`;
+
 document.getElementById("profileText").textContent = `Username: ${playerData.username}`;
 document.getElementById("highestScore").textContent = playerData.highestScore;
 document.getElementById("latestResult").textContent = playerData.latestResult;
@@ -20,5 +20,5 @@ document.getElementById("viewHistoryBtn").addEventListener("click", function () 
 });
 
 document.getElementById("logoutBtn").addEventListener("click", function () {
-  actionMessage.textContent = "Logging out...";
+  window.location.href = "/logout";
 });

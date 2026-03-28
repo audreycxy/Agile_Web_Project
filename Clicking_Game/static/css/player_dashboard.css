@@ -102,3 +102,11 @@ body {
   color: #007bff;
   font-weight: bold;
 }
+
+.welcome-user {
+  margin-top: -5px;
+  margin-bottom: 25px;
+  font-size: 28px;
+  font-weight: bold;
+  color: #333;
+}
