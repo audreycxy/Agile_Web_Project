@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Clicker Game</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- add js reference below later -->
+
+</head>
+<body>
+    <div class="guest-container">
+        <h1>Clicker Game</h1>
+        <button class="btn-play">Play</button>
+        <p>You need to be <a href="{{ url_for('login') }}">signed in</a> to an account to save your data!</p>
+    </div>
+</body>
+</html>
