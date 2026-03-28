@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Player Dashboard</title>
+
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/player_dashboard.css') }}">
+</head>
+<body>
+  <div class="dashboard-container">
+    <h1>Player Dashboard</h1>
+
+    <p class="welcome-user">Welcome, {{ name }}</p>
+
+    <p class="dashboard-description">
+      This is the main page after a player logs in. Players can start a new game,
+      view their past results, manage their profile, and log out of the system.
+    </p>
+
+    <div class="dashboard-buttons">
+      <button id="startGameBtn">Start Game</button>
+      <button id="viewHistoryBtn">View Results / History</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+
+    <h2>Player Information</h2>
+
+    <div class="dashboard-info">
+      <div class="info-box">
+        <h3>Profile</h3>
+        <p id="profileText">Username: {{ name }}</p>
+      </div>
+
+      <div class="info-box">
+        <h3>Highest Score</h3>
+        <p id="highestScore">120</p>
+      </div>
+
+      <div class="info-box">
+        <h3>Latest Result</h3>
+        <p id="latestResult">95 points</p>
+      </div>
+    </div>
+
+    <p id="actionMessage" class="action-message"></p>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/player_dashboard.js') }}"></script>
+</body>
+</html>
