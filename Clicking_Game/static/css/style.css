@@ -93,3 +93,36 @@ body {
   background: #545b62;
 }
 
+/* GUEST PAGE STYLES */
+.guest-container {
+  display: flex;
+  flex-direction: column;
+  gap: 150px;
+  background: #f4f4f4;
+  justify-content: flex-start;
+  align-items: center;
+  min-height: 80vh;
+  text-align: center;
+}
+
+.guest-container h1 {
+  font-size: 3.5rem;
+  margin-bottom: 20px
+}
+
+.btn-play {
+  background: linear-gradient(to bottom, #2ecc71, #27ae60);
+  font-size: 2rem;
+  padding: 20px;
+  cursor: pointer;
+
+  width: 25%;
+  margin-top: 10px;
+  border: none;
+  color: white;
+  border-radius: 5px;
+}
+
+.btn-play:hover {
+  background: #27ae60;
+}
