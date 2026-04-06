@@ -18,6 +18,10 @@ users = {
 }
 
 @app.route("/")
+def home():
+    return render_template("home.html")
+
+@app.route("/login", methods=["GET"])
 def login():
     return render_template("login.html")
 
@@ -38,7 +42,7 @@ def handle_login():
 
     return render_template("login.html", error="Invalid email or password.")
 
-@app.route("/signup")
+@app.route("/signup", methods=["GET"])
 def signup():
     return render_template("signup.html")
 
@@ -82,16 +86,16 @@ def player_dashboard():
         return redirect(url_for("login"))
     return render_template("player_dashboard.html", name=session.get("name"))
 
-@app.route("/guest_dashboard")
-def guest_dashboard():
-    if session.get("role") != "guest":
-        return redirect(url_for("login"))
-    return render_template("guest_dashboard.html", name=session.get("name"))
+# @app.route("/guest_dashboard")
+# def guest_dashboard():
+#     if session.get("role") != "guest":
+#         return redirect(url_for("login"))
+#     return render_template("guest_dashboard.html", name=session.get("name"))
 
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("home"))
 
 if __name__ == "__main__":
     app.run(debug=True)
