@@ -1,0 +1,73 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f4f4;
+}
+
+/* Main box used for home page */
+.home-container {
+  width: 85%;
+  max-width: 1100px;
+  margin: 80px auto;
+  padding: 30px;
+  background: white;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Main page title */
+.home-container h1 {
+  margin-bottom: 20px;
+  font-size: 48px;
+}
+
+/* Short description under the title */
+.home-description {
+  margin-bottom: 30px;
+  font-size: 20px;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Button section */
+.home-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 30px;
+}
+
+/* Main buttons */
+.home-buttons button {
+  width: 100%;
+  max-width: 420px;
+  padding: 14px;
+  border: none;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 18px;
+}
+
+/* Darker button colour when hovered */
+.home-buttons button:hover {
+  background: #0056b3;
+}
+
+/* About section title */
+.home-container h2 {
+  margin-top: 30px;
+  margin-bottom: 15px;
+}
+
+/* About section text */
+.about-text {
+  font-size: 18px;
+  line-height: 1.8;
+  color: #333;
+  max-width: 1000px;
+  margin: 0 auto;
+}
