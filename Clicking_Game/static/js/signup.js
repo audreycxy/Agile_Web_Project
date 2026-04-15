@@ -1,28 +1,22 @@
-document.getElementById("signupForm").addEventListener("submit", function(event) {
-    event.preventDefault();
+const signupForm = document.getElementById("signupForm");
 
-    // Read values entered by the user.
+if (signupForm) {
+  signupForm.addEventListener("submit", function(event) {
     const username = document.getElementById("username").value.trim();
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value;
     const confirmPassword = document.getElementById("confirmPassword").value;
     const message = document.getElementById("message");
 
-    // Check whether all fields were filled in.
     if (username === "" || email === "" || password === "" || confirmPassword === "") {
-        message.textContent = "Please fill in all fields.";
-        message.style.color = "red";
-        return;
+      event.preventDefault();
+      message.textContent = "Please fill in all fields.";
+      return;
     }
 
-    // Check whether both password fields match.
     if (password !== confirmPassword) {
-        message.textContent = "Passwords do not match.";
-        message.style.color = "red";
-        return;
+      event.preventDefault();
+      message.textContent = "Passwords do not match.";
     }
-
-    // Temporary success message for frontend testing only. Can remove once connected to backend.
-    message.textContent = "Sign up successful!";
-    message.style.color = "green";
-});
+  });
+}

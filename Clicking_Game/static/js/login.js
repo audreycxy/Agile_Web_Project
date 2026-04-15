@@ -1,21 +1,14 @@
 const loginForm = document.getElementById("loginForm");
-const message = document.getElementById("message");
 
-loginForm.addEventListener("submit", function(event) {
-  // Prevent the browser from submitting the form immediately.
-  event.preventDefault();
+if (loginForm) {
+  loginForm.addEventListener("submit", function(event) {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const message = document.getElementById("message");
 
-  // Read the email and password input values.
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value.trim();
-
-  // Show an error if any field is empty.
-  if (email === "" || password === "") {
-    message.textContent = "Please fill in all fields.";
-    message.className = "message";
-  } else {
-    // Temporary success message for frontend testing only. Can remove once connected to backend.
-    message.textContent = "Login successful!";
-    message.className = "message success";
-  }
-});
+    if (email === "" || password === "") {
+      event.preventDefault();
+      message.textContent = "Please fill in all fields.";
+    }
+  });
+}
