@@ -1,0 +1,17 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY:-dev-secret-change-me}
+      DATABASE: /app/instance/app.db
+      AUTO_MIGRATE: ${AUTO_MIGRATE:-1}
+    volumes:
+      - clicking_game_data:/app/instance
+    restart: unless-stopped
+
+volumes:
+  clicking_game_data:
