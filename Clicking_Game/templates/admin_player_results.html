@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Player Results</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+
+  <body>
+    <div class="container py-5">
+      <div class="card shadow-sm border-0 mx-auto" style="max-width: 1100px">
+        <div class="card-body p-4">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+              <h2 class="mb-1">Admin Player Results</h2>
+              <p class="text-muted mb-0">
+                View player scores and game result records.
+              </p>
+            </div>
+            <a href="#" class="btn btn-secondary">Back to Dashboard</a>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label for="searchInput" class="form-label">Search player</label>
+              <input
+                type="text"
+                id="searchInput"
+                class="form-control"
+                placeholder="Enter player username"
+                onkeyup="searchTable()"
+              />
+            </div>
+
+            <div class="col-md-6">
+              <label for="sortSelect" class="form-label">Sort results by</label>
+              <select
+                id="sortSelect"
+                class="form-select"
+                onchange="sortTable()"
+              >
+                <option value="score">Score</option>
+                <option value="highest">Highest Score</option>
+                <option value="date">Date Played</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table
+              class="table table-bordered table-hover align-middle"
+              id="resultsTable"
+            >
+              <thead class="table-light">
+                <tr>
+                  <th>Player Username</th>
+                  <th>Score</th>
+                  <th>Highest Score</th>
+                  <th>Date Played</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>player_one</td>
+                  <td>120</td>
+                  <td>150</td>
+                  <td data-date="2026-04-01 14:10:00">2026-04-01 14:10:00</td>
+                </tr>
+                <tr>
+                  <td>player_two</td>
+                  <td>95</td>
+                  <td>130</td>
+                  <td data-date="2026-04-03 09:25:00">2026-04-03 09:25:00</td>
+                </tr>
+                <tr>
+                  <td>player_three</td>
+                  <td>140</td>
+                  <td>170</td>
+                  <td data-date="2026-04-02 18:45:00">2026-04-02 18:45:00</td>
+                </tr>
+                <tr>
+                  <td>player_four</td>
+                  <td>80</td>
+                  <td>110</td>
+                  <td data-date="2026-04-04 11:30:00">2026-04-04 11:30:00</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="mt-3">
+            <a href="#" class="btn btn-danger">Logout</a>
+          </div>
+          <p class="text-muted mt-2 mb-0 small">
+            Navigation links will be connected after dashboard routing is
+            confirmed.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      function searchTable() {
+        const input = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const rows = document.querySelectorAll("#resultsTable tbody tr");
+
+        rows.forEach((row) => {
+          const username = row.cells[0].innerText.toLowerCase();
+          row.style.display = username.includes(input) ? "" : "none";
+        });
+      }
+
+      function sortTable() {
+        const sortValue = document.getElementById("sortSelect").value;
+        const table = document.getElementById("resultsTable");
+        const tbody = table.querySelector("tbody");
+        const rows = Array.from(tbody.querySelectorAll("tr"));
+
+        rows.sort((a, b) => {
+          if (sortValue === "score") {
+            return (
+              parseInt(b.cells[1].innerText) - parseInt(a.cells[1].innerText)
+            );
+          } else if (sortValue === "highest") {
+            return (
+              parseInt(b.cells[2].innerText) - parseInt(a.cells[2].innerText)
+            );
+          } else {
+            const dateA = new Date(a.cells[3].getAttribute("data-date"));
+            const dateB = new Date(b.cells[3].getAttribute("data-date"));
+            return dateB - dateA;
+          }
+        });
+
+        rows.forEach((row) => tbody.appendChild(row));
+      }
+
+      window.onload = sortTable;
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
