@@ -81,6 +81,18 @@ def admin_dashboard():
     return render_template("admin_dashboard.html", name=g.user.name)
 
 
+@bp.route("/admin_account_management")
+@login_required(role="admin")
+def admin_account_management():
+    return render_template("admin_account_management.html")
+
+
+@bp.route("/admin_player_results")
+@login_required(role="admin")
+def admin_player_results():
+    return render_template("admin_player_results.html")
+
+
 @bp.route("/player_dashboard")
 @login_required(role="player")
 def player_dashboard():
