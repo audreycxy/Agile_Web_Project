@@ -91,3 +91,25 @@ def player_dashboard():
 def logout():
     session.clear()
     return redirect(url_for("main.home"))
+
+
+
+@bp.route("/history")
+def history():
+    sample_history = [
+        {"score": 80, "date": "2026-04-20", "time": "14:32"},
+        {"score": 95, "date": "2026-04-21", "time": "10:15"},
+        {"score": 90, "date": "2026-04-22", "time": "18:40"},
+        {"score": 120, "date": "2026-04-23", "time": "20:08"},
+    ]
+
+    scores = [game["score"] for game in sample_history]
+
+    return render_template(
+        "history.html",
+        username="chd777",
+        game_history=sample_history,
+        highest_score=max(scores),
+        latest_score=sample_history[-1]["score"],
+        average_score=round(sum(scores) / len(scores), 1)
+    )

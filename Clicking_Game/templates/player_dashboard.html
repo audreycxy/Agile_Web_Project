@@ -27,7 +27,7 @@
 
         <div class="d-grid gap-3 col-md-6 mx-auto">
           <button id="startGameBtn" class="btn btn-primary btn-lg">Start Game</button>
-          <button id="viewHistoryBtn" class="btn btn-outline-primary btn-lg">View Results / History</button>
+          <a href="{{ url_for('auth.history') }}" class="btn btn-secondary">View Results / History</a>
           <a href="{{ url_for('auth.logout') }}" class="btn btn-danger btn-lg">Logout</a>
         </div>
       </div>
