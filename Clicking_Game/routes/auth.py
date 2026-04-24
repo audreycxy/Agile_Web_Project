@@ -1,4 +1,5 @@
 from flask import Blueprint, g, redirect, render_template, request, session, url_for
+from sqlalchemy import select
 
 from Clicking_Game.models import users
 from Clicking_Game.utils.auth import login_required
@@ -84,13 +85,30 @@ def admin_dashboard():
 @bp.route("/admin_account_management")
 @login_required(role="admin")
 def admin_account_management():
-    return render_template("admin_account_management.html")
+    user_list = users.get_session().scalars(
+        select(users.User).order_by(users.User.id.asc())
+    ).all()
+    return render_template("admin_account_management.html", users=user_list)
 
 
 @bp.route("/admin_player_results")
 @login_required(role="admin")
 def admin_player_results():
-    return render_template("admin_player_results.html")
+    result_list = users.get_session().scalars(
+        select(users.GameResult).order_by(users.GameResult.created_at.desc())
+    ).all()
+
+    highest_scores = {}
+    for result in result_list:
+        if result.user_id is not None:
+            current_highest = highest_scores.get(result.user_id, 0)
+            highest_scores[result.user_id] = max(current_highest, result.score)
+
+    return render_template(
+        "admin_player_results.html",
+        results=result_list,
+        highest_scores=highest_scores,
+    )
 
 
 @bp.route("/player_dashboard")
