@@ -79,38 +79,36 @@
                 </tr>
               </thead>
               <tbody>
+                {% for result in results %}
                 <tr>
-                  <td>player_one</td>
-                  <td>120</td>
-                  <td>150</td>
-                  <td data-date="2026-04-01 14:10:00">2026-04-01 14:10:00</td>
+                  <td>
+                    {{ result.user.name if result.user else 'Guest/Deleted User'
+                    }}
+                  </td>
+                  <td>{{ result.score }}</td>
+                  <td>
+                    {{ highest_scores.get(result.user_id, result.score) }}
+                  </td>
+                  <td data-date="{{ result.created_at }}">
+                    {{ result.created_at.strftime('%Y-%m-%d %H:%M:%S') if
+                    result.created_at else 'N/A' }}
+                  </td>
                 </tr>
+                {% else %}
                 <tr>
-                  <td>player_two</td>
-                  <td>95</td>
-                  <td>130</td>
-                  <td data-date="2026-04-03 09:25:00">2026-04-03 09:25:00</td>
+                  <td colspan="4" class="text-center text-muted">
+                    No player results found.
+                  </td>
                 </tr>
-                <tr>
-                  <td>player_three</td>
-                  <td>140</td>
-                  <td>170</td>
-                  <td data-date="2026-04-02 18:45:00">2026-04-02 18:45:00</td>
-                </tr>
-                <tr>
-                  <td>player_four</td>
-                  <td>80</td>
-                  <td>110</td>
-                  <td data-date="2026-04-04 11:30:00">2026-04-04 11:30:00</td>
-                </tr>
+                {% endfor %}
               </tbody>
             </table>
           </div>
 
           <div class="mt-3">
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger"
-              >Logout</a
-            >
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">
+              Logout
+            </a>
           </div>
         </div>
       </div>
@@ -124,6 +122,10 @@
         const rows = document.querySelectorAll("#resultsTable tbody tr");
 
         rows.forEach((row) => {
+          if (row.cells.length < 4) {
+            return;
+          }
+
           const username = row.cells[0].innerText.toLowerCase();
           row.style.display = username.includes(input) ? "" : "none";
         });
@@ -133,7 +135,9 @@
         const sortValue = document.getElementById("sortSelect").value;
         const table = document.getElementById("resultsTable");
         const tbody = table.querySelector("tbody");
-        const rows = Array.from(tbody.querySelectorAll("tr"));
+        const rows = Array.from(tbody.querySelectorAll("tr")).filter(
+          (row) => row.cells.length === 4,
+        );
 
         rows.sort((a, b) => {
           if (sortValue === "score") {
