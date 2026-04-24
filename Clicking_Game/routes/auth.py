@@ -113,3 +113,32 @@ def history():
         latest_score=sample_history[-1]["score"],
         average_score=round(sum(scores) / len(scores), 1)
     )
+
+@bp.route("/profile", methods=["GET", "POST"])
+def profile():
+    username = session.get("username", "chd777")
+    email = session.get("email", "1417595655@qq.com")
+
+    if request.method == "POST":
+        new_username = request.form.get("username")
+        new_email = request.form.get("email")
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        # Temporary logic for frontend testing.
+        # Later, connect this part to your database update function.
+        if new_password or confirm_password:
+            if new_password != confirm_password:
+                return redirect(url_for("auth.profile"))
+
+        session["username"] = new_username
+        session["email"] = new_email
+
+        return redirect(url_for("auth.profile"))
+
+    return render_template(
+        "profile.html",
+        username=username,
+        email=email
+    )
