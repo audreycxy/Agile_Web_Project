@@ -31,7 +31,12 @@
                 View player scores and game result records.
               </p>
             </div>
-            <a href="#" class="btn btn-secondary">Back to Dashboard</a>
+            <a
+              href="{{ url_for('auth.admin_dashboard') }}"
+              class="btn btn-secondary"
+            >
+              Back to Dashboard
+            </a>
           </div>
 
           <div class="row g-3 mb-4">
@@ -103,12 +108,10 @@
           </div>
 
           <div class="mt-3">
-            <a href="#" class="btn btn-danger">Logout</a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger"
+              >Logout</a
+            >
           </div>
-          <p class="text-muted mt-2 mb-0 small">
-            Navigation links will be connected after dashboard routing is
-            confirmed.
-          </p>
         </div>
       </div>
     </div>
