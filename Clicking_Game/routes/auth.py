@@ -34,6 +34,7 @@ def login():
             error = "Please fill in all fields."
         else:
             user = users.authenticate(email, password)
+
             if user is None:
                 error = "Invalid email or password."
             else:
@@ -42,6 +43,7 @@ def login():
                 session["email"] = user.email
                 session["name"] = user.name
                 session["role"] = user.role
+
                 return redirect(dashboard_url_for(user))
 
     return render_template("login.html", error=error)
@@ -68,6 +70,7 @@ def signup():
             error = "Account already exists."
         else:
             user = users.create_user(username, email, password)
+
             if user is None:
                 error = "Account already exists."
             else:
@@ -88,7 +91,11 @@ def admin_account_management():
     user_list = users.get_session().scalars(
         select(users.User).order_by(users.User.id.asc())
     ).all()
-    return render_template("admin_account_management.html", users=user_list)
+
+    return render_template(
+        "admin_account_management.html",
+        users=user_list
+    )
 
 
 @bp.route("/admin_player_results")
@@ -99,6 +106,7 @@ def admin_player_results():
     ).all()
 
     highest_scores = {}
+
     for result in result_list:
         if result.user_id is not None:
             current_highest = highest_scores.get(result.user_id, 0)
@@ -107,7 +115,7 @@ def admin_player_results():
     return render_template(
         "admin_player_results.html",
         results=result_list,
-        highest_scores=highest_scores,
+        highest_scores=highest_scores
     )
 
 
