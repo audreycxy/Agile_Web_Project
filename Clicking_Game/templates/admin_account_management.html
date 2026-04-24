@@ -60,35 +60,32 @@
                 </tr>
               </thead>
               <tbody>
+                {% for user in users %}
                 <tr>
-                  <td>1001</td>
-                  <td>Admin User</td>
-                  <td>admin@example.com</td>
-                  <td>Admin</td>
-                  <td data-date="2026-04-01 09:30:00">2026-04-01 09:30:00</td>
+                  <td>{{ user.id }}</td>
+                  <td>{{ user.name }}</td>
+                  <td>{{ user.email }}</td>
+                  <td>{{ user.role }}</td>
+                  <td data-date="{{ user.created_at }}">
+                    {{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') if
+                    user.created_at else 'N/A' }}
+                  </td>
                 </tr>
+                {% else %}
                 <tr>
-                  <td>1002</td>
-                  <td>Player One</td>
-                  <td>player1@example.com</td>
-                  <td>Player</td>
-                  <td data-date="2026-04-03 14:20:00">2026-04-03 14:20:00</td>
+                  <td colspan="5" class="text-center text-muted">
+                    No accounts found.
+                  </td>
                 </tr>
-                <tr>
-                  <td>1003</td>
-                  <td>Player Two</td>
-                  <td>player2@example.com</td>
-                  <td>Player</td>
-                  <td data-date="2026-04-02 11:15:00">2026-04-02 11:15:00</td>
-                </tr>
+                {% endfor %}
               </tbody>
             </table>
           </div>
 
           <div class="mt-3">
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger"
-              >Logout</a
-            >
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">
+              Logout
+            </a>
           </div>
         </div>
       </div>
@@ -99,7 +96,9 @@
         const sortValue = document.getElementById("sortSelect").value;
         const table = document.getElementById("accountsTable");
         const tbody = table.querySelector("tbody");
-        const rows = Array.from(tbody.querySelectorAll("tr"));
+        const rows = Array.from(tbody.querySelectorAll("tr")).filter(
+          (row) => row.cells.length === 5,
+        );
 
         rows.sort((a, b) => {
           if (sortValue === "id") {
