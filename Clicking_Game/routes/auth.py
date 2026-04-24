@@ -94,7 +94,7 @@ def admin_account_management():
 
     return render_template(
         "admin_account_management.html",
-        users=user_list
+        users=user_list,
     )
 
 
@@ -115,7 +115,7 @@ def admin_player_results():
     return render_template(
         "admin_player_results.html",
         results=result_list,
-        highest_scores=highest_scores
+        highest_scores=highest_scores,
     )
 
 
@@ -123,6 +123,55 @@ def admin_player_results():
 @login_required(role="player")
 def player_dashboard():
     return render_template("player_dashboard.html", name=g.user.name)
+
+
+@bp.route("/history")
+def history():
+    sample_history = [
+        {"score": 80, "date": "2026-04-20", "time": "14:32"},
+        {"score": 95, "date": "2026-04-21", "time": "10:15"},
+        {"score": 90, "date": "2026-04-22", "time": "18:40"},
+        {"score": 120, "date": "2026-04-23", "time": "20:08"},
+    ]
+
+    scores = [game["score"] for game in sample_history]
+
+    return render_template(
+        "history.html",
+        username="chd777",
+        game_history=sample_history,
+        highest_score=max(scores),
+        latest_score=sample_history[-1]["score"],
+        average_score=round(sum(scores) / len(scores), 1),
+    )
+
+
+@bp.route("/profile", methods=["GET", "POST"])
+def profile():
+    username = session.get("username", "chd777")
+    email = session.get("email", "1417595655@qq.com")
+
+    if request.method == "POST":
+        new_username = request.form.get("username")
+        new_email = request.form.get("email")
+        new_password = request.form.get("new_password")
+        confirm_password = request.form.get("confirm_password")
+
+        
+        if new_password or confirm_password:
+            if new_password != confirm_password:
+                return redirect(url_for("auth.profile"))
+
+        session["username"] = new_username
+        session["email"] = new_email
+
+        return redirect(url_for("auth.profile"))
+
+    return render_template(
+        "profile.html",
+        username=username,
+        email=email,
+    )
 
 
 @bp.route("/logout")
