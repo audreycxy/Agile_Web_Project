@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game History</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+
+        .history-page {
+            width: 85%;
+            max-width: 1200px;
+            margin: 55px auto;
+            text-align: center;
+        }
+
+        .history-main-card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 55px 70px;
+            margin-bottom: 30px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .history-main-card h1 {
+            font-size: 46px;
+            font-weight: 700;
+            margin: 0 0 18px;
+        }
+
+        .history-main-card h2 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #6c757d;
+            margin-bottom: 24px;
+        }
+
+        .history-main-card p {
+            max-width: 850px;
+            margin: 0 auto 30px;
+            font-size: 20px;
+            line-height: 1.5;
+            color: #6c757d;
+        }
+
+        .history-buttons {
+            width: 520px;
+            max-width: 100%;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .history-btn {
+            display: block;
+            width: 100%;
+            padding: 13px 18px;
+            border-radius: 7px;
+            font-size: 20px;
+            text-decoration: none;
+            box-sizing: border-box;
+            transition: 0.2s;
+        }
+
+        .history-btn-primary {
+            background-color: #0d6efd;
+            color: #ffffff;
+        }
+
+        .history-btn-primary:hover {
+            background-color: #0b5ed7;
+            text-decoration: none;
+        }
+
+        .history-btn-danger {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+
+        .history-btn-danger:hover {
+            background-color: #bb2d3b;
+            text-decoration: none;
+        }
+
+        .history-section-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 25px 0;
+        }
+
+        .history-stats {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 35px;
+            flex-wrap: wrap;
+        }
+
+        .history-stat-card {
+            background-color: #ffffff;
+            width: 260px;
+            padding: 20px 25px;
+            border-radius: 1rem;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .history-stat-card h3 {
+            font-size: 22px;
+            font-weight: 700;
+            margin: 0 0 10px;
+        }
+
+        .history-stat-card p {
+            font-size: 18px;
+            margin: 0;
+        }
+
+        .history-list-card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 35px 45px;
+            margin-top: 25px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .history-list-card h2 {
+            font-size: 30px;
+            font-weight: 700;
+            margin: 0 0 25px;
+        }
+
+        .history-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 18px;
+        }
+
+        .history-table th {
+            background-color: #f3f4f6;
+            font-weight: 700;
+            padding: 14px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .history-table td {
+            padding: 14px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .history-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        @media (max-width: 768px) {
+            .history-page {
+                width: 92%;
+                margin: 30px auto;
+            }
+
+            .history-main-card {
+                padding: 35px 25px;
+            }
+
+            .history-main-card h1 {
+                font-size: 36px;
+            }
+
+            .history-main-card p {
+                font-size: 17px;
+            }
+
+            .history-table {
+                font-size: 15px;
+            }
+
+            .history-list-card {
+                padding: 25px 15px;
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="history-page">
+
+        <section class="history-main-card">
+            <h1>Game History</h1>
+
+            <h2>Welcome, {{ username }}</h2>
+
+            <p>
+                Here you can view your past game results, including your highest score,
+                latest score, and average score. You can also return to your dashboard
+                or log out of the system.
+            </p>
+
+            <div class="history-buttons">
+                <a href="{{ url_for('auth.player_dashboard') }}" class="history-btn history-btn-primary">
+                    Back to Dashboard
+                </a>
+
+                <a href="{{ url_for('auth.logout') }}" class="history-btn history-btn-danger">
+                    Logout
+                </a>
+            </div>
+        </section>
+
+        <h2 class="history-section-title">Game Statistics</h2>
+
+        <section class="history-stats">
+            <div class="history-stat-card">
+                <h3>Highest Score</h3>
+                <p>{{ highest_score }}</p>
+            </div>
+
+            <div class="history-stat-card">
+                <h3>Latest Score</h3>
+                <p>{{ latest_score }}</p>
+            </div>
+
+            <div class="history-stat-card">
+                <h3>Average Score</h3>
+                <p>{{ average_score }}</p>
+            </div>
+        </section>
+
+        <section class="history-list-card">
+            <h2>List of Past Scores</h2>
+
+            <table class="history-table">
+                <thead>
+                    <tr>
+                        <th>Game No.</th>
+                        <th>Score</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for game in game_history %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>{{ game.score }}</td>
+                        <td>{{ game.date }}</td>
+                        <td>{{ game.time }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </section>
+
+    </div>
+</body>
+</html>

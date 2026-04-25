@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Profile</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+
+        .profile-page {
+            width: 85%;
+            max-width: 1100px;
+            margin: 55px auto;
+            text-align: center;
+        }
+
+        .profile-main-card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 55px 70px;
+            margin-bottom: 30px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .profile-main-card h1 {
+            font-size: 46px;
+            font-weight: 700;
+            margin: 0 0 18px;
+        }
+
+        .profile-main-card h2 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #6c757d;
+            margin-bottom: 24px;
+        }
+
+        .profile-main-card p {
+            max-width: 850px;
+            margin: 0 auto 30px;
+            font-size: 20px;
+            line-height: 1.5;
+            color: #6c757d;
+        }
+
+        .profile-content-card {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            padding: 40px 50px;
+            margin-bottom: 30px;
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
+            text-align: left;
+        }
+
+        .profile-content-card h2 {
+            text-align: center;
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 30px;
+        }
+
+        .profile-form {
+            max-width: 650px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: 22px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #212529;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 13px 15px;
+            border: 1px solid #ced4da;
+            border-radius: 7px;
+            font-size: 17px;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #0d6efd;
+            box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+        }
+
+        .password-section {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid #dee2e6;
+        }
+
+        .password-section h3 {
+            font-size: 24px;
+            margin: 0 0 20px;
+            text-align: center;
+        }
+
+        .profile-buttons {
+            width: 520px;
+            max-width: 100%;
+            margin: 30px auto 0;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .profile-btn {
+            display: block;
+            width: 100%;
+            padding: 13px 18px;
+            border-radius: 7px;
+            font-size: 20px;
+            text-decoration: none;
+            text-align: center;
+            box-sizing: border-box;
+            border: none;
+            cursor: pointer;
+            font-family: 'Poppins', sans-serif;
+            transition: 0.2s;
+        }
+
+        .profile-btn-primary {
+            background-color: #0d6efd;
+            color: #ffffff;
+        }
+
+        .profile-btn-primary:hover {
+            background-color: #0b5ed7;
+            text-decoration: none;
+        }
+
+        .profile-btn-secondary {
+            background-color: #ffffff;
+            color: #0d6efd;
+            border: 1px solid #0d6efd;
+        }
+
+        .profile-btn-secondary:hover {
+            background-color: #eff6ff;
+            text-decoration: none;
+        }
+
+        .profile-btn-danger {
+            background-color: #dc3545;
+            color: #ffffff;
+        }
+
+        .profile-btn-danger:hover {
+            background-color: #bb2d3b;
+            text-decoration: none;
+        }
+
+        .profile-note {
+            text-align: center;
+            color: #6c757d;
+            font-size: 15px;
+            margin-top: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .profile-page {
+                width: 92%;
+                margin: 30px auto;
+            }
+
+            .profile-main-card {
+                padding: 35px 25px;
+            }
+
+            .profile-main-card h1 {
+                font-size: 36px;
+            }
+
+            .profile-main-card p {
+                font-size: 17px;
+            }
+
+            .profile-content-card {
+                padding: 30px 22px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="profile-page">
+
+        <section class="profile-main-card">
+            <h1>User Profile</h1>
+
+            <h2>Welcome, {{ username }}</h2>
+
+            <p>
+                This page allows players to view and edit their profile information,
+                update their password, return to the player dashboard, or log out of the system.
+            </p>
+        </section>
+
+        <section class="profile-content-card">
+            <h2>Profile Information</h2>
+
+            <form class="profile-form" method="POST" action="{{ url_for('auth.profile') }}">
+
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        value="{{ username }}" 
+                        placeholder="Enter your username"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        value="{{ email }}" 
+                        placeholder="Enter your email"
+                    >
+                </div>
+
+                <div class="password-section">
+                    <h3>Change Password</h3>
+
+                    <div class="form-group">
+                        <label for="current_password">Current Password</label>
+                        <input 
+                            type="password" 
+                            id="current_password" 
+                            name="current_password" 
+                            placeholder="Enter current password"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_password">New Password</label>
+                        <input 
+                            type="password" 
+                            id="new_password" 
+                            name="new_password" 
+                            placeholder="Enter new password"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password">Confirm New Password</label>
+                        <input 
+                            type="password" 
+                            id="confirm_password" 
+                            name="confirm_password" 
+                            placeholder="Confirm new password"
+                        >
+                    </div>
+                </div>
+
+                <div class="profile-buttons">
+                    <button type="submit" class="profile-btn profile-btn-primary">
+                        Edit Profile Information
+                    </button>
+
+                    <a href="{{ url_for('auth.player_dashboard') }}" class="profile-btn profile-btn-secondary">
+                        Back to Dashboard
+                    </a>
+
+                    <a href="{{ url_for('auth.logout') }}" class="profile-btn profile-btn-danger">
+                        Logout
+                    </a>
+                </div>
+
+                <p class="profile-note">
+                    Leave password fields blank if you do not want to change your password.
+                </p>
+
+            </form>
+        </section>
+
+    </div>
+</body>
+</html>
