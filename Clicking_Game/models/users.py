@@ -121,3 +121,16 @@ def authenticate(email, password):
         return None
 
     return user
+
+def list_users(search=None, role=None):
+    session = get_session()
+    stmt = select(User).order_by(User.created_at.desc(), User.id.desc())
+
+    if role in {"admin", "player"}:
+        stmt = stmt.where(User.role == role)
+
+    if search:
+        term = f"%{search.strip()}%"
+        stmt = stmt.where((User.name.ilike(term)) | (User.email.ilike(term)))
+
+    return session.scalars(stmt).all()
