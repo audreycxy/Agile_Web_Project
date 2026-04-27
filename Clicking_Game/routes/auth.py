@@ -78,12 +78,90 @@ def signup():
 
     return render_template("signup.html", error=error)
 
-
+# ADMIN
 @bp.route("/admin_dashboard")
 @login_required(role="admin")
 def admin_dashboard():
-    return render_template("admin_dashboard.html", name=g.user.name)
+    
+    search = request.args.get("search", "").strip()
 
+    total_users = 2
+    player_count = 1
+    total_results = 3
+    highest_score = 42
+
+    recent_results = [
+        {
+            "user": {"name": "Player One", "email": "player1@example.com"},
+            "score": 42,
+            "created_at": "22 Apr 2026 13:30",
+        },
+        {
+            "user": {"name": "Player Two", "email": "player2@example.com"},
+            "score": 35,
+            "created_at": "22 Apr 2026 13:10",
+        },
+        {
+            "user": {"name": "Player Three", "email": "player3@example.com"},
+            "score": 28,
+            "created_at": "22 Apr 2026 12:50",
+        },
+    ]
+
+    if search:
+        recent_results = [
+            result for result in recent_results
+            if search.lower() in result["user"]["name"].lower()
+            or search.lower() in result["user"]["email"].lower()
+        ]
+        
+    return render_template(
+        "admin_dashboard.html",
+        name=session.get("name", "Admin"),
+        total_users=total_users,
+        player_count=player_count,
+        total_results=total_results,
+        highest_score=highest_score,
+        search=search,
+        recent_results=recent_results,
+    )
+    
+    # all_users = users.list_users()
+    # admin_count = sum(1 for user in all_users if user.role == "admin")
+    # player_count = sum(1 for user in all_users if user.role == "player")
+    # search = request.args.get("search", "").strip()
+    # recent_results = users.list_recent_results(limit=5, search=search or None)
+
+    # return render_template(
+    #     "admin_dashboard.html",
+    #     name=g.user.name,
+    #     total_users=len(all_users),
+    #     admin_count=admin_count,
+    #     player_count=player_count,
+    #     total_results=users.total_results_count(),
+    #     highest_score=users.highest_score(),
+    #     search=search,
+    #     recent_results=recent_results,
+    # )
+
+@bp.route("/admin/accounts")
+@login_required(role="admin")
+def admin_accounts():
+    search = request.args.get("search", "").strip()
+    role = request.args.get("role", "all").strip().lower()
+    selected_role = role if role in {"admin", "player"} else "all"
+    role_filter = None if selected_role == "all" else selected_role
+
+    account_list = users.list_users(search=search, role=role_filter)
+
+    return render_template(
+        "admin_accounts.html",
+        name=g.user.name,
+        accounts=account_list,
+        search=search,
+        selected_role=selected_role,
+        total_accounts=len(account_list),
+    )
 
 @bp.route("/admin_account_management")
 @login_required(role="admin")
