@@ -32,15 +32,24 @@
 
                 <!-- Game (Middle Panel) -->
                 <div class="col-12 col-lg-6 order-1 order-lg-2">
-                    <div class="card shadow h-100 p-5 border-primary mb-4">
-                        <div class="card-body d-flex flex-column justify-content-center align-items-center text-center">
-                            <h1 class="display-2 fw-bold" id="egg-count">0</h1>
-                            <p class="text-muted">Eggs Collected</p>
-                            
-                            <button id="egg-btn" class="btn btn-primary rounded-circle shadow my-4 d-block mx-auto" style="width: 250px; height: 250px; font-size: 1.5rem; font-weight: bold;">
-                            CLICK!
-                            </button>
-                        </div>
+                    <div class="h-100 p-5 mb-4 d-flex flex-column justify-content-center align-items-center text-center">
+                        <h1 class="display-2 fw-bold" id="egg-count">0</h1>
+                        <p class="text-muted">Eggs Collected</p>
+                        
+                        <button id="egg-btn"
+                                class="btn d-block mx-auto border-0 p-0"
+                                style="width: 250px; height: 250px; 
+                                        background-image: url('../static/images/defaultegg_nobackground.png'); 
+                                        background-size: contain; 
+                                        background-repeat: no-repeat; 
+                                        background-position: center; 
+                                        background-color: transparent; 
+                                        image-rendering: pixelated; 
+                                        text-indent: -9999px;
+                                        outline: none;
+                                        filter: drop-shadow(0px 10px 15px rgba(0,0,0,0.2));">
+                        CLICK!
+                        </button>
                     </div>
                 </div>
 
