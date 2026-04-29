@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# Creates a custom user form the command line
 import argparse
 from pathlib import Path
 import sys
@@ -9,7 +10,6 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from Clicking_Game import create_app
 from Clicking_Game.models import users
-
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Add a user to the Clicking Game database.")
@@ -23,7 +23,6 @@ def parse_args():
         help="User role. Defaults to player.",
     )
     return parser.parse_args()
-
 
 def main():
     args = parse_args()

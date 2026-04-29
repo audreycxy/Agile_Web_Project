@@ -1,24 +1,24 @@
+# Handles authentication routes for login, signup, dashboards, history, profile, and logout
 from flask import Blueprint, g, redirect, render_template, request, session, url_for
 from sqlalchemy import select
-
 from Clicking_Game.models import users
 from Clicking_Game.utils.auth import login_required
 
 bp = Blueprint("auth", __name__)
 
-
+# Load the logged-in user before each request
 @bp.before_app_request
 def load_logged_in_user():
     user_id = session.get("user_id")
     g.user = users.get_by_id(user_id) if user_id is not None else None
 
-
+# Helper function to determine dashboard URL based on user role
 def dashboard_url_for(user):
     if user.role == "admin":
         return url_for("auth.admin_dashboard")
     return url_for("auth.player_dashboard")
 
-
+# Route for user login
 @bp.route("/login", methods=("GET", "POST"))
 def login():
     if g.user is not None:
@@ -48,7 +48,8 @@ def login():
 
     return render_template("login.html", error=error)
 
-
+# Route for user signup
+# New users are created with the "player" role by default
 @bp.route("/signup", methods=("GET", "POST"))
 def signup():
     if g.user is not None:
@@ -78,55 +79,58 @@ def signup():
 
     return render_template("signup.html", error=error)
 
-
+# ADMIN ROUTES
+# Admin dashboard shows user stats and recent game results
 @bp.route("/admin_dashboard")
+# Only admin can access it
 @login_required(role="admin")
 def admin_dashboard():
-    return render_template("admin_dashboard.html", name=g.user.name)
-
-
-@bp.route("/admin_account_management")
-@login_required(role="admin")
-def admin_account_management():
-    user_list = users.get_session().scalars(
-        select(users.User).order_by(users.User.id.asc())
-    ).all()
+    search = request.args.get("search", "").strip()
+    all_users = users.list_users(search=search)
 
     return render_template(
-        "admin_account_management.html",
-        users=user_list,
+        "admin_dashboard.html",
+        name=g.user.name,
+        search=search,
+        total_users=len(all_users),
+        player_count=len([user for user in all_users if user.role == "player"]),
+        total_results=0,
+        highest_score=0,
+        recent_results=[],
     )
 
-
-@bp.route("/admin_player_results")
+# Admin accounts page allows searching and filtering users by role
+@bp.route("/admin_accounts")
 @login_required(role="admin")
-def admin_player_results():
-    result_list = users.get_session().scalars(
-        select(users.GameResult).order_by(users.GameResult.created_at.desc())
-    ).all()
+def admin_accounts():
+    search = request.args.get("search", "").strip()
+    selected_role = request.args.get("role", "all")
 
-    highest_scores = {}
-
-    for result in result_list:
-        if result.user_id is not None:
-            current_highest = highest_scores.get(result.user_id, 0)
-            highest_scores[result.user_id] = max(current_highest, result.score)
+    accounts = users.list_users(
+        search=search,
+        role=selected_role if selected_role != "all" else None,
+    )
 
     return render_template(
-        "admin_player_results.html",
-        results=result_list,
-        highest_scores=highest_scores,
+        "admin_accounts.html",
+        name=g.user.name,
+        accounts=accounts,
+        total_accounts=len(accounts),
+        search=search,
+        selected_role=selected_role,
     )
 
-
+# PLAYER ROUTES
+# Player dashboard shows links to game and history
 @bp.route("/player_dashboard")
 @login_required(role="player")
 def player_dashboard():
     return render_template("player_dashboard.html", name=g.user.name)
 
-
+# Player history page shows past game scores and stats
 @bp.route("/history")
 def history():
+    # CHANGE THIS AT THE END
     sample_history = [
         {"score": 80, "date": "2026-04-20", "time": "14:32"},
         {"score": 95, "date": "2026-04-21", "time": "10:15"},
@@ -138,18 +142,16 @@ def history():
 
     return render_template(
         "history.html",
-        username="chd777",
+        username=g.user.name,
         game_history=sample_history,
         highest_score=max(scores),
         latest_score=sample_history[-1]["score"],
         average_score=round(sum(scores) / len(scores), 1),
     )
 
-
+# Player profile page allows updating username, email, and password
 @bp.route("/profile", methods=["GET", "POST"])
 def profile():
-    username = session.get("username", "chd777")
-    email = session.get("email", "1417595655@qq.com")
 
     if request.method == "POST":
         new_username = request.form.get("username")
@@ -169,11 +171,11 @@ def profile():
 
     return render_template(
         "profile.html",
-        username=username,
-        email=email,
+        username=g.user.name,
+        email=g.user.email,
     )
 
-
+# Route for user logout
 @bp.route("/logout")
 def logout():
     session.clear()

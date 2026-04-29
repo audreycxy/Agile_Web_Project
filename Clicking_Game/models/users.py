@@ -1,15 +1,13 @@
+# Defining database tables and user-related helper functions
 from __future__ import annotations
-
 from datetime import datetime
-
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
-
 from .database import Base, get_session
 
-
+# User table
 class User(Base):
     __tablename__ = "users"
     __table_args__ = (
@@ -53,7 +51,7 @@ class User(Base):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
-
+# Game result table
 class GameResult(Base):
     __tablename__ = "game_results"
 
@@ -72,11 +70,12 @@ class GameResult(Base):
 
     user: Mapped[User | None] = relationship(back_populates="results")
 
-
+# HELPER FUNCTIONS
+# Strips spaces and lowercase email 
 def normalize_email(email):
     return email.strip().lower()
 
-
+# Finds a user by email
 def get_by_email(email):
     normalized_email = normalize_email(email)
     if not normalized_email:
@@ -84,14 +83,14 @@ def get_by_email(email):
 
     return get_session().scalar(select(User).where(User.email == normalized_email))
 
-
+# Finds a user by ID
 def get_by_id(user_id):
     if user_id is None:
         return None
 
     return get_session().get(User, user_id)
 
-
+# Creates a new user with the given details
 def create_user(name, email, password, role="player"):
     session = get_session()
     user = User(
@@ -110,7 +109,7 @@ def create_user(name, email, password, role="player"):
 
     return user
 
-
+# Authenticates a user by email and password, returning the user if valid
 def authenticate(email, password):
     user = get_by_email(email)
 
@@ -121,3 +120,17 @@ def authenticate(email, password):
         return None
 
     return user
+
+# Lists users for admin pages
+def list_users(search=None, role=None):
+    session = get_session()
+    stmt = select(User).order_by(User.created_at.desc(), User.id.desc())
+
+    if role in {"admin", "player"}:
+        stmt = stmt.where(User.role == role)
+
+    if search:
+        term = f"%{search.strip()}%"
+        stmt = stmt.where((User.name.ilike(term)) | (User.email.ilike(term)))
+
+    return session.scalars(stmt).all()

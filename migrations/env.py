@@ -1,3 +1,4 @@
+# Alembic's migration environment file
 from logging.config import fileConfig
 from pathlib import Path
 import sys
@@ -9,6 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
+# Import SQLAlchemy models so Alebic knows what tables exist
 from Clicking_Game.models.database import Base
 from Clicking_Game.models import users  # noqa: F401 - registers model metadata.
 

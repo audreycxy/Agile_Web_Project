@@ -1,10 +1,8 @@
 import os
-
 from Clicking_Game import create_app
 
-
+# Creates the application when run python -m Clicking_Game.app
 app = create_app()
-
 
 if __name__ == "__main__":
     app.run(
