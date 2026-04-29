@@ -11,3 +11,8 @@ def home():
 @bp.route("/guest")
 def guest():
     return render_template("guest.html")
+
+
+@bp.route("/game")
+def game():
+    return render_template("game.html")
