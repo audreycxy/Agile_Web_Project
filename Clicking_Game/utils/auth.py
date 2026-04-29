@@ -1,8 +1,8 @@
+# Decorator to enforce login and role-based access control
 from functools import wraps
-
 from flask import g, redirect, url_for
 
-# Decorator to enforce login and role-based access control
+# Check if the user is logged in and check for a specific role
 def login_required(role=None):
     def decorator(view):
         @wraps(view)
