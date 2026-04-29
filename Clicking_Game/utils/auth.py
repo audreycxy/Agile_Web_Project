@@ -2,7 +2,7 @@ from functools import wraps
 
 from flask import g, redirect, url_for
 
-
+# Decorator to enforce login and role-based access control
 def login_required(role=None):
     def decorator(view):
         @wraps(view)
