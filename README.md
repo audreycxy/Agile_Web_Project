@@ -150,7 +150,7 @@ Run the development server:
 
 ```bash
 $env:FLASK_DEBUG = "1"
-python Clicking_Game/app.py
+python -m Clicking_Game.appp
 ```
 
 Open:
