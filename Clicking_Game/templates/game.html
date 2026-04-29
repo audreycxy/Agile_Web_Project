@@ -14,6 +14,19 @@
     </head>
 
     <body class="bg-light">
+        <nav class="navbar navbar-dark bg-dark sticky-top mb-3">
+            <div class="container-fluid">
+                <a class="navbar-brand nav-click-anim" href="{{ url_for('main.home') }}">
+                Home
+                </a>
+                <div class="navbar-nav ms-auto">
+                    <a class="btn btn-outline-light btn-sm nav-click-anim" href="{{ url_for('auth.login')}}">
+                    Log In
+                    </a>
+                </div>
+            </div>
+        </nav>
+
         <div class="container-fluid vh-100 d-flex flex-column px-0">
             <div class="row g-0 flex-grow-1 overflow-hidden">
                 <!-- Upgrades (Left Panel) -->
@@ -33,8 +46,8 @@
                 <!-- Game (Middle Panel) -->
                 <div class="col-12 col-lg-6 order-1 order-lg-2">
                     <div class="h-100 p-5 mb-4 d-flex flex-column justify-content-center align-items-center text-center">
-                        <h1 class="display-2 fw-bold" id="egg-count">0</h1>
-                        <p class="text-muted">Eggs Collected</p>
+                        <h1 class="display-2 fw-bold" id="egg-points">0</h1>
+                        <p class="text-muted">Points</p>
                         
                         <button id="egg-btn"
                                 class="btn d-block mx-auto border-0 p-0"
@@ -71,5 +84,9 @@
                 </div>
             </div>
         </div>
+        
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <script src="{{ url_for('static', filename='js/game.js') }}"></script>
+        <!-- <script src="../static/js/game.js"></script> !-->
     </body>
 </html>

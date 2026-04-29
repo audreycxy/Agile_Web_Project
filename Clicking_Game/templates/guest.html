@@ -20,7 +20,7 @@
             <div class="card-body p-5">
                 <h1 class="display-4 fw-bold mb-4">Clicker Game</h1>
                 <div class="d-grid col-md-4 mx-auto mb-4">
-                    <button class="btn btn-success btn-lg btn-play">Play</button>
+                    <a href="{{ url_for('main.game') }}" class="btn btn-success btn-lg btn-play">Play</a>
                 </div>
                 <p class="mb-0">
                     You need to be <a href="{{ url_for('auth.login') }}">signed in</a> to an account to save your data!
