@@ -5,12 +5,12 @@ bp = Blueprint("main", __name__)
 
 @bp.route("/")
 def home():
-    return render_template("home.html")
+    return render_template("public/home.html")
 
 @bp.route("/guest")
 def guest():
-    return render_template("guest.html")
+    return render_template("public/guest.html")
 
 @bp.route("/game")
 def game():
-    return render_template("game.html")
+    return render_template("player/game.html")
