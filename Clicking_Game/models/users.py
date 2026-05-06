@@ -134,3 +134,22 @@ def list_users(search=None, role=None):
         stmt = stmt.where((User.name.ilike(term)) | (User.email.ilike(term)))
 
     return session.scalars(stmt).all()
+
+# Lists saved game results for admin/player pages
+def list_results(search=None, user_id=None, limit=None):
+    session = get_session()
+    stmt = select(GameResult).order_by(GameResult.created_at.desc(), GameResult.id.desc())
+
+    if search:
+        term = f"%{search.strip()}%"
+        stmt = stmt.join(GameResult.user).where(
+            (User.name.ilike(term)) | (User.email.ilike(term))
+        )
+
+    if user_id is not None:
+        stmt = stmt.where(GameResult.user_id == user_id)
+
+    if limit is not None:
+        stmt = stmt.limit(limit)
+
+    return session.scalars(stmt).all()

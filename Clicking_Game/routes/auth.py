@@ -1,6 +1,5 @@
 # Handles authentication routes for login, signup, dashboards, history, profile, and logout
 from flask import Blueprint, g, redirect, render_template, request, session, url_for
-from sqlalchemy import select
 from Clicking_Game.models import users
 from Clicking_Game.utils.auth import login_required
 
@@ -46,7 +45,7 @@ def login():
 
                 return redirect(dashboard_url_for(user))
 
-    return render_template("login.html", error=error)
+    return render_template("public/login.html", error=error)
 
 # Route for user signup
 # New users are created with the "player" role by default
@@ -77,7 +76,7 @@ def signup():
             else:
                 return redirect(url_for("auth.login"))
 
-    return render_template("signup.html", error=error)
+    return render_template("public/signup.html", error=error)
 
 # ADMIN ROUTES
 # Admin dashboard shows user stats and recent game results
@@ -87,16 +86,17 @@ def signup():
 def admin_dashboard():
     search = request.args.get("search", "").strip()
     all_users = users.list_users(search=search)
+    all_results = users.list_results(search=search)
 
     return render_template(
-        "admin_dashboard.html",
+        "admin/admin_dashboard.html",
         name=g.user.name,
         search=search,
         total_users=len(all_users),
         player_count=len([user for user in all_users if user.role == "player"]),
-        total_results=0,
-        highest_score=0,
-        recent_results=[],
+        total_results=len(all_results),
+        highest_score=max((result.score for result in all_results), default=0),
+        recent_results=all_results[:10],
     )
 
 # Admin accounts page allows searching and filtering users by role
@@ -112,7 +112,7 @@ def admin_accounts():
     )
 
     return render_template(
-        "admin_accounts.html",
+        "admin/admin_accounts.html",
         name=g.user.name,
         accounts=accounts,
         total_accounts=len(accounts),
@@ -120,15 +120,39 @@ def admin_accounts():
         selected_role=selected_role,
     )
 
+# Admin results page shows saved scores across all players
+@bp.route("/admin_player_results")
+@login_required(role="admin")
+def admin_player_results():
+    search = request.args.get("search", "").strip()
+    results = users.list_results(search=search)
+    highest_scores = {}
+
+    for result in results:
+        if result.user_id is None:
+            continue
+
+        current_high = highest_scores.get(result.user_id, 0)
+        if result.score > current_high:
+            highest_scores[result.user_id] = result.score
+
+    return render_template(
+        "admin/admin_player_results.html",
+        results=results,
+        highest_scores=highest_scores,
+        search=search,
+    )
+
 # PLAYER ROUTES
 # Player dashboard shows links to game and history
 @bp.route("/player_dashboard")
 @login_required(role="player")
 def player_dashboard():
-    return render_template("player_dashboard.html", name=g.user.name)
+    return render_template("player/player_dashboard.html", name=g.user.name)
 
 # Player history page shows past game scores and stats
 @bp.route("/history")
+@login_required(role="player")
 def history():
     # CHANGE THIS AT THE END
     sample_history = [
@@ -141,7 +165,7 @@ def history():
     scores = [game["score"] for game in sample_history]
 
     return render_template(
-        "history.html",
+        "player/history.html",
         username=g.user.name,
         game_history=sample_history,
         highest_score=max(scores),
@@ -151,6 +175,7 @@ def history():
 
 # Player profile page allows updating username, email, and password
 @bp.route("/profile", methods=["GET", "POST"])
+@login_required(role="player")
 def profile():
 
     if request.method == "POST":
@@ -170,7 +195,7 @@ def profile():
         return redirect(url_for("auth.profile"))
 
     return render_template(
-        "profile.html",
+        "player/profile.html",
         username=g.user.name,
         email=g.user.email,
     )
