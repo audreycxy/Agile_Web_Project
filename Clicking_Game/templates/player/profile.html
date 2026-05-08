@@ -86,13 +86,8 @@
                         Edit Profile Information
                     </button>
 
-                    <a href="{{ url_for('auth.player_dashboard') }}" class="profile-btn profile-btn-primary">
-                        Back to Dashboard
-                    </a>
-
-                    <a href="{{ url_for('auth.logout') }}" class="profile-btn profile-btn-danger">
-                        Logout
-                    </a>
+                    <a href="{{ url_for('auth.admin_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
                 </div>
 
                 <p class="profile-note">
