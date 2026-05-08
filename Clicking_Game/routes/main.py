@@ -16,8 +16,9 @@ def guest():
 def game():
     initial_state = {
         "points": 0,
-        "current_level": 1,
+        "current_infinity_level": 0,
         "current_type": "standard",
+        "highest_type": "standard",
         "clicks_remaining": None,
         "progress_percent": 0,
         "is_guest": True
@@ -27,8 +28,9 @@ def game():
     if g.user:
         initial_state.update({
             "points": g.user.points,
-            "current_level": g.user.current_level,
+            "current_infinity_level": g.user.current_infinity_level,
             "current_type": g.user.current_type,
+            "highest_type": g.user.highest_type,
             "clicks_remaining": g.user.clicks_remainiing,
             "progress_percent": g.user.progress_percent,
             "is_guest": False
