@@ -180,27 +180,54 @@ def history():
 @bp.route("/profile", methods=["GET", "POST"])
 @login_required(role="player")
 def profile():
+    error = None
+    success = None
+    form_username = g.user.name
+    form_email = g.user.email
 
     if request.method == "POST":
-        new_username = request.form.get("username")
-        new_email = request.form.get("email")
-        new_password = request.form.get("new_password")
-        confirm_password = request.form.get("confirm_password")
+        new_username = request.form.get("username", "").strip()
+        new_email = request.form.get("email", "").strip().lower()
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
 
-        
-        if new_password or confirm_password:
-            if new_password != confirm_password:
-                return redirect(url_for("auth.profile"))
+        # Repopulate the form with what the user typed if validation fails.
+        form_username = new_username
+        form_email = new_email
 
-        session["username"] = new_username
-        session["email"] = new_email
+        password_changing = bool(new_password)
 
-        return redirect(url_for("auth.profile"))
+        if not new_username or not new_email:
+            error = "Username and email are required."
+        elif password_changing and not current_password:
+            error = "Current password is required to change your password."
+        elif password_changing and not g.user.check_password(current_password):
+            error = "Current password is incorrect."
+        elif password_changing and new_password != confirm_password:
+            error = "New passwords do not match."
+        elif new_email != g.user.email and users.get_by_email(new_email) is not None:
+            error = "Email already in use."
+        elif users.update_profile(
+            g.user,
+            name=new_username,
+            email=new_email,
+            password=new_password or None,
+        ):
+            session["name"] = g.user.name
+            session["email"] = g.user.email
+            success = "Profile updated."
+            form_username = g.user.name
+            form_email = g.user.email
+        else:
+            error = "Email already in use."
 
     return render_template(
         "player/profile.html",
-        username=g.user.name,
-        email=g.user.email,
+        username=form_username,
+        email=form_email,
+        error=error,
+        success=success,
     )
 
 # Route for user logout
