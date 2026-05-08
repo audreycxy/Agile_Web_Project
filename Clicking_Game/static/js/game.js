@@ -11,8 +11,9 @@ if (playBtns.length > 0) {
 (function() {
     // Egg Data:
     const EGG_CONFIG = {
-        standard: {name: "Egg", baseClicks: 10, basePoints: 1, image: "static/images/defaultegg_nobackground.png"},
-        water: {name: "Water Egg", baseClicks: 20, basePoints: 5, image: "static/images/defaultegg_nobackground.png"} // example additonal type
+        standard: {name: "Standard", baseClicks: 10, basePoints: 1, image: "static/images/defaultegg_nobackground.png"},
+        water: {name: "Water", baseClicks: 20, basePoints: 5, image: "static/images/wateregg.png"}, // example additonal type
+        gold: {name: "Golden", baseClicks: 1, basePoints: 1, image: "static/images/defaultegg_nobackground.png"}
     };
 
     // Game State (default/guest):
@@ -41,6 +42,15 @@ if (playBtns.length > 0) {
             const earned = calculateReward();
             gameState.totalPoints += earned;
             updatePointsUI(earned);
+
+            // need to add a check for out of bounds
+            const eggKeys = Object.keys(EGG_CONFIG);
+            const nextIndex =  eggKeys.indexOf(gameState.currentType) + 1;
+            gameState.currentType = eggKeys[nextIndex];
+
+            gameState.clicksRemaning = EGG_CONFIG[gameState.currentType].baseClicks;
+            updateProgressUI()
+            
             triggerEggBreak();
         }
     }
@@ -81,6 +91,8 @@ if (playBtns.length > 0) {
         const bottom = document.getElementById('bottom-half');
         const next = document.getElementById('next-egg');
 
+        next.style.backgroundImage = `url('${EGG_CONFIG[gameState.currentType].image}')`;
+
         // local helper for swapping visibility
         const setBreakingMode = (isBreaking) => {
             const displayState = isBreaking ? 'block' : 'none';
@@ -107,6 +119,7 @@ if (playBtns.length > 0) {
             next.classList.remove('reveal-egg');
 
             isAnimating = false; // animation lock released
+            updateEggImage()
         }, 600)
 
         console.log('broke and replaced the egg')
