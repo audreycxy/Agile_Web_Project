@@ -100,6 +100,7 @@
               Edit Profile Information
             </button>
 
+<<<<<<< HEAD
             <a
               href="{{ url_for('auth.player_dashboard') }}"
               class="profile-btn profile-btn-primary"
@@ -114,6 +115,18 @@
               Logout
             </a>
           </div>
+=======
+                    <a href="{{ url_for('auth.admin_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+                    <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
+                </div>
+
+                <p class="profile-note">
+                    Leave password fields blank if you do not want to change your password.
+                </p>
+
+            </form>
+        </section>
+>>>>>>> 5f2e31e (Added fucntionality for admin)
 
           <p class="profile-note">
             Leave password fields blank if you do not want to change your
