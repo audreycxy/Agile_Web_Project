@@ -18,7 +18,7 @@
       <div>
         <p class="text-uppercase text-muted mb-1 small fw-semibold">Admin Panel</p>
         <h1 class="h3 mb-1">Account Management</h1>
-        <p class="text-muted mb-0">Manage registered users, review roles, and search for accounts.</p>
+        <p class="text-muted mb-0">Manage registered users, update roles, and activate or inactivate accounts.</p>
       </div>
       <div class="d-flex gap-2">
         <a href="{{ url_for('auth.admin_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
@@ -26,20 +26,33 @@
       </div>
     </div>
 
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="mb-4">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
     <div class="card shadow-sm border-0 mb-4">
       <div class="card-body p-4">
         <form method="get" class="row g-3 align-items-end">
           <div class="col-md-6">
             <label for="search" class="form-label fw-semibold">Search accounts</label>
-            <input type="text" class="form-control" id="search" name="search"
-              value="{{ search }}" placeholder="Search by name or email">
+            <input type="text" class="form-control" id="search" name="search" value="{{ search }}"
+              placeholder="Search by name or email">
           </div>
           <div class="col-md-3">
             <label for="role" class="form-label fw-semibold">Role</label>
             <select class="form-select" id="role" name="role">
-              <option value="all" {% if selected_role == 'all' %}selected{% endif %}>All roles</option>
-              <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>Admin</option>
-              <option value="player" {% if selected_role == 'player' %}selected{% endif %}>Player</option>
+              <option value="all" {% if selected_role=='all' %}selected{% endif %}>All roles</option>
+              <option value="admin" {% if selected_role=='admin' %}selected{% endif %}>Admin</option>
+              <option value="player" {% if selected_role=='player' %}selected{% endif %}>Player</option>
             </select>
           </div>
           <div class="col-md-3 d-flex gap-2">
@@ -78,18 +91,97 @@
                 <td class="px-4 py-3 fw-semibold">{{ account.name }}</td>
                 <td class="py-3 text-muted">{{ account.email }}</td>
                 <td class="py-3">
-                  {% if account.role == 'admin' %}
-                  <span class="badge rounded-pill text-bg-primary">Admin</span>
+                  {% if account.id == session.get('user_id') %}
+                  <span class="badge rounded-pill text-bg-primary">
+                    {{ account.role|capitalize }}
+                  </span>
+
+                  <div class="small text-muted mt-1">
+                    You cannot change your own role.
+                  </div>
                   {% else %}
-                  <span class="badge rounded-pill text-bg-secondary">Player</span>
+                  <div class="dropdown">
+                    <button class="badge rounded-pill border-0 dropdown-toggle
+                      {% if account.role == 'admin' %}text-bg-primary{% else %}text-bg-info{% endif %}" type="button"
+                      data-bs-toggle="dropdown" aria-expanded="false">
+                      {{ account.role|capitalize }}
+                    </button>
+
+                    <ul class="dropdown-menu">
+                      <li>
+                        <form method="post" action="{{ url_for('auth.update_account_role', user_id=account.id) }}">
+                          <input type="hidden" name="search" value="{{ search }}">
+                          <input type="hidden" name="selected_role" value="{{ selected_role }}">
+                          <input type="hidden" name="role" value="player">
+
+                          <button type="submit"
+                            class="dropdown-item {% if account.role == 'player' %}active{% endif %}">
+                            Player
+                          </button>
+                        </form>
+                      </li>
+
+                      <li>
+                        <form method="post" action="{{ url_for('auth.update_account_role', user_id=account.id) }}">
+                          <input type="hidden" name="search" value="{{ search }}">
+                          <input type="hidden" name="selected_role" value="{{ selected_role }}">
+                          <input type="hidden" name="role" value="admin">
+
+                          <button type="submit" class="dropdown-item {% if account.role == 'admin' %}active{% endif %}">
+                            Admin
+                          </button>
+                        </form>
+                      </li>
+                    </ul>
+                  </div>
                   {% endif %}
                 </td>
                 <td class="py-3 text-muted">{{ account.created_at.strftime('%d %b %Y') }}</td>
-                <td class="py-3 text-end pe-4">
+                <td class="py-3 text-end pe-4" style="min-width: 180px;">
                   {% if account.id == session.get('user_id') %}
-                  <span class="badge rounded-pill text-bg-success">Current account</span>
+                  <span class="badge rounded-pill text-bg-success">
+                    Current account
+                  </span>
+
+                  <div class="small text-muted mt-1">
+                    You cannot inactivate your own account.
+                  </div>
                   {% else %}
-                  <span class="badge rounded-pill text-bg-light border text-dark">Active</span>
+                  <div class="dropdown">
+                    <button class="badge rounded-pill border-0 dropdown-toggle
+                      {% if account.is_active %}text-bg-success{% else %}text-bg-secondary{% endif %}" type="button"
+                      data-bs-toggle="dropdown" aria-expanded="false">
+                      {% if account.is_active %}
+                      Active
+                      {% else %}
+                      Inactive
+                      {% endif %}
+                    </button>
+
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <li>
+                        <form method="post" action="{{ url_for('auth.update_account_status', user_id=account.id) }}">
+                          <input type="hidden" name="search" value="{{ search }}">
+                          <input type="hidden" name="selected_role" value="{{ selected_role }}">
+                          <input type="hidden" name="action" value="activate">
+                          <button type="submit" class="dropdown-item {% if account.is_active %}active{% endif %}">
+                            Active
+                          </button>
+                        </form>
+                      </li>
+
+                      <li>
+                        <form method="post" action="{{ url_for('auth.update_account_status', user_id=account.id) }}">
+                          <input type="hidden" name="search" value="{{ search }}">
+                          <input type="hidden" name="selected_role" value="{{ selected_role }}">
+                          <input type="hidden" name="action" value="inactivate">
+                          <button type="submit" class="dropdown-item {% if not account.is_active %}active{% endif %}">
+                            Inactive
+                          </button>
+                        </form>
+                      </li>
+                    </ul>
+                  </div>
                   {% endif %}
                 </td>
               </tr>
