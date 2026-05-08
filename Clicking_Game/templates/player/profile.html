@@ -1,107 +1,124 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>User Profile</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
 
-<body>
+  <body>
     <div class="profile-page">
+      <section class="profile-main-card">
+        <h1>User Profile</h1>
 
-        <section class="profile-main-card">
-            <h1>User Profile</h1>
+        <h2>Welcome, {{ username }}</h2>
 
-            <h2>Welcome, {{ username }}</h2>
+        <p>
+          This page allows players to view and edit their profile information,
+          update their password, return to the player dashboard, or log out of
+          the system.
+        </p>
+      </section>
 
-            <p>
-                This page allows players to view and edit their profile information,
-                update their password, return to the player dashboard, or log out of the system.
-            </p>
-        </section>
+      <section class="profile-content-card">
+        <h2>Profile Information</h2>
 
-        <section class="profile-content-card">
-            <h2>Profile Information</h2>
+        {% if error %}
+        <p class="profile-error" style="color: #dc3545">{{ error }}</p>
+        {% endif %} {% if success %}
+        <p class="profile-success" style="color: #198754">{{ success }}</p>
+        {% endif %}
 
-            <form class="profile-form" method="POST" action="{{ url_for('auth.profile') }}">
+        <form
+          class="profile-form"
+          method="POST"
+          action="{{ url_for('auth.profile') }}"
+        >
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value="{{ username }}"
+              placeholder="Enter your username"
+            />
+          </div>
 
-                <div class="form-group">
-                    <label for="username">Username</label>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        value="{{ username }}" 
-                        placeholder="Enter your username"
-                    >
-                </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value="{{ email }}"
+              placeholder="Enter your email"
+            />
+          </div>
 
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input 
-                        type="email" 
-                        id="email" 
-                        name="email" 
-                        value="{{ email }}" 
-                        placeholder="Enter your email"
-                    >
-                </div>
+          <div class="password-section">
+            <h3>Change Password</h3>
 
-                <div class="password-section">
-                    <h3>Change Password</h3>
+            <div class="form-group">
+              <label for="current_password">Current Password</label>
+              <input
+                type="password"
+                id="current_password"
+                name="current_password"
+                placeholder="Enter current password"
+              />
+            </div>
 
-                    <div class="form-group">
-                        <label for="current_password">Current Password</label>
-                        <input 
-                            type="password" 
-                            id="current_password" 
-                            name="current_password" 
-                            placeholder="Enter current password"
-                        >
-                    </div>
+            <div class="form-group">
+              <label for="new_password">New Password</label>
+              <input
+                type="password"
+                id="new_password"
+                name="new_password"
+                placeholder="Enter new password"
+              />
+            </div>
 
-                    <div class="form-group">
-                        <label for="new_password">New Password</label>
-                        <input 
-                            type="password" 
-                            id="new_password" 
-                            name="new_password" 
-                            placeholder="Enter new password"
-                        >
-                    </div>
+            <div class="form-group">
+              <label for="confirm_password">Confirm New Password</label>
+              <input
+                type="password"
+                id="confirm_password"
+                name="confirm_password"
+                placeholder="Confirm new password"
+              />
+            </div>
+          </div>
 
-                    <div class="form-group">
-                        <label for="confirm_password">Confirm New Password</label>
-                        <input 
-                            type="password" 
-                            id="confirm_password" 
-                            name="confirm_password" 
-                            placeholder="Confirm new password"
-                        >
-                    </div>
-                </div>
+          <div class="profile-buttons">
+            <button type="submit" class="profile-btn profile-btn-primary">
+              Edit Profile Information
+            </button>
 
-                <div class="profile-buttons">
-                    <button type="submit" class="profile-btn profile-btn-primary">
-                        Edit Profile Information
-                    </button>
+            <a
+              href="{{ url_for('auth.player_dashboard') }}"
+              class="profile-btn profile-btn-primary"
+            >
+              Back to Dashboard
+            </a>
 
-                    <a href="{{ url_for('auth.player_dashboard') }}" class="profile-btn profile-btn-primary">
-                        Back to Dashboard
-                    </a>
+            <a
+              href="{{ url_for('auth.logout') }}"
+              class="profile-btn profile-btn-danger"
+            >
+              Logout
+            </a>
+          </div>
 
-                    <a href="{{ url_for('auth.logout') }}" class="profile-btn profile-btn-danger">
-                        Logout
-                    </a>
-                </div>
-
-                <p class="profile-note">
-                    Leave password fields blank if you do not want to change your password.
-                </p>
-
-            </form>
-        </section>
-
+          <p class="profile-note">
+            Leave password fields blank if you do not want to change your
+            password.
+          </p>
+        </form>
+      </section>
     </div>
-</body>
+  </body>
 </html>

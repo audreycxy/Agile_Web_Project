@@ -1,81 +1,92 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Game History</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-</head>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
 
-<body>
+  <body>
     <div class="history-page">
+      <section class="history-main-card">
+        <h1>Game History</h1>
 
-        <section class="history-main-card">
-            <h1>Game History</h1>
+        <h2>Welcome, {{ username }}</h2>
 
-            <h2>Welcome, {{ username }}</h2>
+        <p>
+          Here you can view your past game results, including your highest
+          score, latest score, and average score. You can also return to your
+          dashboard or log out of the system.
+        </p>
 
-            <p>
-                Here you can view your past game results, including your highest score,
-                latest score, and average score. You can also return to your dashboard
-                or log out of the system.
-            </p>
+        <div class="history-buttons">
+          <a
+            href="{{ url_for('auth.player_dashboard') }}"
+            class="history-btn history-btn-primary"
+          >
+            Back to Dashboard
+          </a>
 
-            <div class="history-buttons">
-                <a href="{{ url_for('auth.player_dashboard') }}" class="history-btn history-btn-primary">
-                    Back to Dashboard
-                </a>
+          <a
+            href="{{ url_for('auth.logout') }}"
+            class="history-btn history-btn-danger"
+          >
+            Logout
+          </a>
+        </div>
+      </section>
 
-                <a href="{{ url_for('auth.logout') }}" class="history-btn history-btn-danger">
-                    Logout
-                </a>
-            </div>
-        </section>
+      <h2 class="history-section-title">Game Statistics</h2>
 
-        <h2 class="history-section-title">Game Statistics</h2>
+      <section class="history-stats">
+        <div class="history-stat-card">
+          <h3>Highest Score</h3>
+          <p>{{ highest_score }}</p>
+        </div>
 
-        <section class="history-stats">
-            <div class="history-stat-card">
-                <h3>Highest Score</h3>
-                <p>{{ highest_score }}</p>
-            </div>
+        <div class="history-stat-card">
+          <h3>Latest Score</h3>
+          <p>{{ latest_score }}</p>
+        </div>
 
-            <div class="history-stat-card">
-                <h3>Latest Score</h3>
-                <p>{{ latest_score }}</p>
-            </div>
+        <div class="history-stat-card">
+          <h3>Average Score</h3>
+          <p>{{ average_score }}</p>
+        </div>
+      </section>
 
-            <div class="history-stat-card">
-                <h3>Average Score</h3>
-                <p>{{ average_score }}</p>
-            </div>
-        </section>
+      <section class="history-list-card">
+        <h2>List of Past Scores</h2>
 
-        <section class="history-list-card">
-            <h2>List of Past Scores</h2>
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Game No.</th>
+              <th>Score</th>
+              <th>Date</th>
+              <th>Time</th>
+            </tr>
+          </thead>
 
-            <table class="history-table">
-                <thead>
-                    <tr>
-                        <th>Game No.</th>
-                        <th>Score</th>
-                        <th>Date</th>
-                        <th>Time</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for game in game_history %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>{{ game.score }}</td>
-                        <td>{{ game.date }}</td>
-                        <td>{{ game.time }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </section>
-
+          <tbody>
+            {% for game in game_history %}
+            <tr>
+              <td>{{ loop.index }}</td>
+              <td>{{ game.score }}</td>
+              <td>{{ game.date }}</td>
+              <td>{{ game.time }}</td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4">No games played yet.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </section>
     </div>
-</body>
+  </body>
 </html>
