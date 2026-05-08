@@ -154,23 +154,26 @@ def player_dashboard():
 @bp.route("/history")
 @login_required(role="player")
 def history():
-    # CHANGE THIS AT THE END
-    sample_history = [
-        {"score": 80, "date": "2026-04-20", "time": "14:32"},
-        {"score": 95, "date": "2026-04-21", "time": "10:15"},
-        {"score": 90, "date": "2026-04-22", "time": "18:40"},
-        {"score": 120, "date": "2026-04-23", "time": "20:08"},
+    # list_results returns newest first; flip to chronological for the table.
+    results = list(reversed(users.list_results(user_id=g.user.id)))
+    game_history = [
+        {
+            "score": result.score,
+            "date": result.created_at.strftime("%Y-%m-%d"),
+            "time": result.created_at.strftime("%H:%M"),
+        }
+        for result in results
     ]
 
-    scores = [game["score"] for game in sample_history]
+    scores = [result.score for result in results]
 
     return render_template(
         "player/history.html",
         username=g.user.name,
-        game_history=sample_history,
-        highest_score=max(scores),
-        latest_score=sample_history[-1]["score"],
-        average_score=round(sum(scores) / len(scores), 1),
+        game_history=game_history,
+        highest_score=max(scores) if scores else 0,
+        latest_score=scores[-1] if scores else 0,
+        average_score=round(sum(scores) / len(scores), 1) if scores else 0,
     )
 
 # Player profile page allows updating username, email, and password
