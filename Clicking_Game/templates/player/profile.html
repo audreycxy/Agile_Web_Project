@@ -26,6 +26,12 @@
       <section class="profile-content-card">
         <h2>Profile Information</h2>
 
+        {% if error %}
+        <p class="profile-error" style="color: #dc3545">{{ error }}</p>
+        {% endif %} {% if success %}
+        <p class="profile-success" style="color: #198754">{{ success }}</p>
+        {% endif %}
+
         <form
           class="profile-form"
           method="POST"

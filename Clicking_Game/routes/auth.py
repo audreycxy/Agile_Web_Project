@@ -154,50 +154,80 @@ def player_dashboard():
 @bp.route("/history")
 @login_required(role="player")
 def history():
-    # CHANGE THIS AT THE END
-    sample_history = [
-        {"score": 80, "date": "2026-04-20", "time": "14:32"},
-        {"score": 95, "date": "2026-04-21", "time": "10:15"},
-        {"score": 90, "date": "2026-04-22", "time": "18:40"},
-        {"score": 120, "date": "2026-04-23", "time": "20:08"},
+    # list_results returns newest first; flip to chronological for the table.
+    results = list(reversed(users.list_results(user_id=g.user.id)))
+    game_history = [
+        {
+            "score": result.score,
+            "date": result.created_at.strftime("%Y-%m-%d"),
+            "time": result.created_at.strftime("%H:%M"),
+        }
+        for result in results
     ]
 
-    scores = [game["score"] for game in sample_history]
+    scores = [result.score for result in results]
 
     return render_template(
         "player/history.html",
         username=g.user.name,
-        game_history=sample_history,
-        highest_score=max(scores),
-        latest_score=sample_history[-1]["score"],
-        average_score=round(sum(scores) / len(scores), 1),
+        game_history=game_history,
+        highest_score=max(scores) if scores else 0,
+        latest_score=scores[-1] if scores else 0,
+        average_score=round(sum(scores) / len(scores), 1) if scores else 0,
     )
 
 # Player profile page allows updating username, email, and password
 @bp.route("/profile", methods=["GET", "POST"])
 @login_required(role="player")
 def profile():
+    error = None
+    success = None
+    form_username = g.user.name
+    form_email = g.user.email
 
     if request.method == "POST":
-        new_username = request.form.get("username")
-        new_email = request.form.get("email")
-        new_password = request.form.get("new_password")
-        confirm_password = request.form.get("confirm_password")
+        new_username = request.form.get("username", "").strip()
+        new_email = request.form.get("email", "").strip().lower()
+        current_password = request.form.get("current_password", "")
+        new_password = request.form.get("new_password", "")
+        confirm_password = request.form.get("confirm_password", "")
 
-        
-        if new_password or confirm_password:
-            if new_password != confirm_password:
-                return redirect(url_for("auth.profile"))
+        # Repopulate the form with what the user typed if validation fails.
+        form_username = new_username
+        form_email = new_email
 
-        session["username"] = new_username
-        session["email"] = new_email
+        password_changing = bool(new_password)
 
-        return redirect(url_for("auth.profile"))
+        if not new_username or not new_email:
+            error = "Username and email are required."
+        elif password_changing and not current_password:
+            error = "Current password is required to change your password."
+        elif password_changing and not g.user.check_password(current_password):
+            error = "Current password is incorrect."
+        elif password_changing and new_password != confirm_password:
+            error = "New passwords do not match."
+        elif new_email != g.user.email and users.get_by_email(new_email) is not None:
+            error = "Email already in use."
+        elif users.update_profile(
+            g.user,
+            name=new_username,
+            email=new_email,
+            password=new_password or None,
+        ):
+            session["name"] = g.user.name
+            session["email"] = g.user.email
+            success = "Profile updated."
+            form_username = g.user.name
+            form_email = g.user.email
+        else:
+            error = "Email already in use."
 
     return render_template(
         "player/profile.html",
-        username=g.user.name,
-        email=g.user.email,
+        username=form_username,
+        email=form_email,
+        error=error,
+        success=success,
     )
 
 # Route for user logout

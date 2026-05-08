@@ -109,6 +109,22 @@ def create_user(name, email, password, role="player"):
 
     return user
 
+# Updates a user's name/email/password; returns False on duplicate-email conflict
+def update_profile(user, name=None, email=None, password=None):
+    session = get_session()
+    if name is not None:
+        user.name = name.strip()
+    if email is not None:
+        user.email = normalize_email(email)
+    if password:
+        user.set_password(password)
+    try:
+        session.commit()
+        return True
+    except IntegrityError:
+        session.rollback()
+        return False
+
 # Authenticates a user by email and password, returning the user if valid
 def authenticate(email, password):
     user = get_by_email(email)
