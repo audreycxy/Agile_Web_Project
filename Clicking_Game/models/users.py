@@ -1,7 +1,7 @@
 # Defining database tables and user-related helper functions
 from __future__ import annotations
 from datetime import datetime
-from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, String, func, select
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -43,6 +43,13 @@ class User(Base):
     results: Mapped[list["GameResult"]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
+    )
+    is_active: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        server_default="1",
+        index=True,
+        nullable=False,
     )
 
     def set_password(self, password):
@@ -97,6 +104,7 @@ def create_user(name, email, password, role="player"):
         email=normalize_email(email),
         name=name.strip(),
         role=role,
+        is_active=True,
     )
     user.set_password(password)
 
@@ -109,6 +117,22 @@ def create_user(name, email, password, role="player"):
 
     return user
 
+# Updates a user's name/email/password; returns False on duplicate-email conflict
+def update_profile(user, name=None, email=None, password=None):
+    session = get_session()
+    if name is not None:
+        user.name = name.strip()
+    if email is not None:
+        user.email = normalize_email(email)
+    if password:
+        user.set_password(password)
+    try:
+        session.commit()
+        return True
+    except IntegrityError:
+        session.rollback()
+        return False
+
 # Authenticates a user by email and password, returning the user if valid
 def authenticate(email, password):
     user = get_by_email(email)
@@ -118,7 +142,10 @@ def authenticate(email, password):
 
     if not user.check_password(password):
         return None
-
+    
+    if not user.is_active:
+        return None 
+    
     return user
 
 # Lists users for admin pages
@@ -134,3 +161,49 @@ def list_users(search=None, role=None):
         stmt = stmt.where((User.name.ilike(term)) | (User.email.ilike(term)))
 
     return session.scalars(stmt).all()
+
+# Lists saved game results for admin/player pages
+def list_results(search=None, user_id=None, limit=None):
+    session = get_session()
+    stmt = select(GameResult).order_by(GameResult.created_at.desc(), GameResult.id.desc())
+
+    if search:
+        term = f"%{search.strip()}%"
+        stmt = stmt.join(GameResult.user).where(
+            (User.name.ilike(term)) | (User.email.ilike(term))
+        )
+
+    if user_id is not None:
+        stmt = stmt.where(GameResult.user_id == user_id)
+
+    if limit is not None:
+        stmt = stmt.limit(limit)
+
+    return session.scalars(stmt).all()
+
+# Updates a user's role from the admin account management page
+def update_user_role(user_id, new_role):
+    if new_role not in {"admin", "player"}:
+        return False
+
+    session = get_session()
+    user = session.get(User, user_id)
+
+    if user is None:
+        return False
+
+    user.role = new_role
+    session.commit()
+    return True
+
+# Activates or inactivates a user account from the admin account management page
+def set_user_active(user_id, is_active):
+    session = get_session()
+    user = session.get(User, user_id)
+
+    if user is None:
+        return False
+
+    user.is_active = bool(is_active)
+    session.commit()
+    return True

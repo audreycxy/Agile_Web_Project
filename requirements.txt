@@ -1,5 +1,6 @@
 # Packages needed for Project
 Flask>=3.0,<4
+Flask-WTF>=1.2,<2
 SQLAlchemy>=2.0,<3
 alembic>=1.16,<2
 waitress>=3.0,<4

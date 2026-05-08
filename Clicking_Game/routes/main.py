@@ -6,11 +6,11 @@ bp = Blueprint("main", __name__)
 
 @bp.route("/")
 def home():
-    return render_template("home.html")
+    return render_template("public/home.html")
 
 @bp.route("/guest")
 def guest():
-    return render_template("guest.html")
+    return render_template("public/guest.html")
 
 @bp.route("/game")
 def game():
@@ -34,4 +34,4 @@ def game():
             "is_guest": False
         })
     
-    return render_template("game.html", state=initial_state)
+    return render_template("player/game.html", state=initial_state)

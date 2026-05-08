@@ -2,8 +2,11 @@
 import os
 from pathlib import Path
 from flask import Flask
+from flask_wtf.csrf import CSRFProtect
 from .models import database
 from .routes import auth, main
+
+csrf = CSRFProtect()
 
 # Helper function to construct a SQLite URI from a file path
 def _sqlite_uri(database_path):
@@ -51,8 +54,9 @@ def create_app(test_config=None):
     if not app.config.get("SQLALCHEMY_DATABASE_URI"):
         app.config["SQLALCHEMY_DATABASE_URI"] = _sqlite_uri(app.config["DATABASE"])
 
-    # Initializes database connection and registers route files
+    # Initializes database connection, CSRF protection, and registers route files
     database.init_app(app)
+    csrf.init_app(app)
     app.register_blueprint(main.bp)
     app.register_blueprint(auth.bp)
 
