@@ -6,6 +6,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 from .database import Base, get_session
+import secrets
 
 # User table
 class User(Base):
@@ -44,12 +45,29 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    # is_active = admin Whether to disable the account
     is_active: Mapped[bool] = mapped_column(
         Boolean,
         default=True,
         server_default="1",
         index=True,
         nullable=False,
+    )
+
+    # email_verified = Has the user completed the email verification
+    email_verified: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        server_default="0",
+        index=True,
+        nullable=False,
+    )
+
+    email_verification_token: Mapped[str | None] = mapped_column(
+        String(255),
+        unique=True,
+        index=True,
+        nullable=True,
     )
 
     def set_password(self, password):
@@ -105,6 +123,8 @@ def create_user(name, email, password, role="player"):
         name=name.strip(),
         role=role,
         is_active=True,
+        email_verified=False,
+        email_verification_token=secrets.token_urlsafe(32),
     )
     user.set_password(password)
 
@@ -116,6 +136,28 @@ def create_user(name, email, password, role="player"):
         return None
 
     return user
+
+# Find the user's function through tokens
+def get_by_verification_token(token):
+    if not token:
+        return None
+
+    return get_session().scalar(
+        select(User).where(User.email_verification_token == token)
+    )
+
+# Verify function
+def verify_email_token(token):
+    session = get_session()
+    user = get_by_verification_token(token)
+
+    if user is None:
+        return False
+
+    user.email_verified = True
+    user.email_verification_token = None
+    session.commit()
+    return True
 
 # Updates a user's name/email/password; returns False on duplicate-email conflict
 def update_profile(user, name=None, email=None, password=None):
@@ -134,6 +176,7 @@ def update_profile(user, name=None, email=None, password=None):
         return False
 
 # Authenticates a user by email and password, returning the user if valid
+# Prevent unverified users from logging in
 def authenticate(email, password):
     user = get_by_email(email)
 
@@ -144,7 +187,10 @@ def authenticate(email, password):
         return None
     
     if not user.is_active:
-        return None 
+        return None
+
+    if not user.email_verified:
+        return None
     
     return user
 
