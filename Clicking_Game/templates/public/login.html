@@ -33,13 +33,17 @@
         style="max-width: 420px; width: 100%"
       >
         <div class="card-body p-4">
-
           <!-- Login form title -->
           <h2 class="text-center mb-4">Login</h2>
 
           <!-- Display error message if login fails -->
           {% if error %}
           <div class="alert alert-danger">{{ error }}</div>
+          {% endif %}
+
+          <!-- Display success message after email verification -->
+          {% if success %}
+          <div class="alert alert-success">{{ success }}</div>
           {% endif %}
 
           <!-- Login form submitted to the Flask login route -->
