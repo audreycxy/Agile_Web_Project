@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- Page metadata and external style resources -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Admin Dashboard</title>
@@ -24,6 +25,8 @@
   <div class="container py-5">
     <div class="card shadow-sm border-0 mx-auto" style="max-width: 1100px;">
       <div class="card-body p-4 p-lg-5">
+
+        <!-- Admin dashboard header with welcome message and logout button -->
         <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
           <div>
             <p class="text-uppercase text-muted mb-1 small fw-semibold">Administrator Dashboard</p>
@@ -34,6 +37,7 @@
           <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">Logout</a>
         </div>
 
+        <!-- Display key admin statistics in summary cards -->
         <div class="row g-3 mb-4">
           <div class="col-md-6 col-xl-3">
             <div class="border rounded-4 p-3 h-100 bg-light">
@@ -61,6 +65,7 @@
           </div>
         </div>
 
+        <!-- Search section for finding player accounts or results -->
         <div class="row g-4 mb-4">
           <div class="col-lg-8">
             <div class="border rounded-4 p-4 h-100">
@@ -80,6 +85,8 @@
                   <button type="submit" class="btn btn-outline-primary">Search dashboard results</button>
                 </div>
               </form>
+
+              <!-- Quick links to detailed admin pages using the current search value -->
               <div class="d-flex flex-wrap gap-2 mt-3">
                 <a href="{{ url_for('auth.admin_accounts', search=search) }}" class="btn btn-primary">View Player
                   Accounts</a>
@@ -89,6 +96,8 @@
             </div>
           </div>
           <div class="col-lg-4">
+
+            <!-- Explain the access permissions for different user types -->
             <div class="border rounded-4 p-4 h-100 bg-light">
               <h2 class="h5 mb-3">Access overview</h2>
               <ul class="mb-0 ps-3 text-muted">
@@ -101,6 +110,7 @@
           </div>
         </div>
 
+        <!-- Recent player results table -->
         <div class="border rounded-4 p-4">
           <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center mb-3">
             <div>
@@ -109,6 +119,8 @@
             </div>
             <a href="{{ url_for('auth.admin_player_results', search=search) }}" class="btn btn-outline-secondary">Open full results page</a>
           </div>
+
+          <!-- Display recent saved scores, or show an empty message if there are no results -->
           <div class="table-responsive">
             <table class="table align-middle mb-0">
               <thead>
@@ -142,6 +154,7 @@
     </div>
   </div>
 
+  <!-- Bootstrap JavaScript for interactive components -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
