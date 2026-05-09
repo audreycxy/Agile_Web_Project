@@ -2,42 +2,74 @@
 const playBtns = document.querySelectorAll(".btn-play");
 if (playBtns.length > 0) {
     Array.from(playBtns).forEach(btn => {
-        button.addEventListener('click', () => {
+        btn.addEventListener('click', () => {
             window.location.href = "/game";
         });
     });
 }
 
-(function() {
+(function () {
+    if (typeof INITIAL_STATE === "undefined") {
+        return;
+    }
+
     // Egg Data:
     const EGG_CONFIG = {
-        standard: {name: "Standard", baseClicks: 10, basePoints: 1, image: "static/images/defaultegg_nobackground.png"},
-        water: {name: "Water", baseClicks: 20, basePoints: 5, image: "static/images/wateregg.png"}, // example additonal type
-        gold: {name: "Golden", baseClicks: 1, basePoints: 1, image: "static/images/defaultegg_nobackground.png"}
+        standard: { name: "Standard", baseClicks: 10, basePoints: 1, image: "static/images/defaultegg_nobackground.png" },
+        water: { name: "Water", baseClicks: 20, basePoints: 5, image: "static/images/wateregg.png" }, // example additonal type
+        gold: { name: "Golden", baseClicks: 1, basePoints: 1, image: "static/images/defaultegg_nobackground.png" }
     };
 
     // Game State (default/guest):
     let gameState = {
         totalPoints: INITIAL_STATE.points,
-        currentLevel: INITIAL_STATE.current_level,
+        // currentLevel: INITIAL_STATE.current_level,
+        currentLevel: INITIAL_STATE.current_infinity_level,
         currentType: INITIAL_STATE.current_type,
-        clicksRemaning: INITIAL_STATE.clicks_remaining ?? EGG_CONFIG[INITIAL_STATE.current_type].baseClicks,
+        highestType: INITIAL_STATE.highest_type ?? INITIAL_STATE.current_type,
+        clicksRemaining: INITIAL_STATE.clicks_remaining ?? EGG_CONFIG[INITIAL_STATE.current_type].baseClicks,
+        progressPercent: INITIAL_STATE.progress_percent ?? 0,
         isGuest: INITIAL_STATE.is_guest
     };
 
-    
+    function jsonPostOptions(payload) {
+        return {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": CSRF_TOKEN,
+            },
+            body: JSON.stringify(payload),
+        };
+    }
+
+    function saveGameState() {
+        if (gameState.isGuest) {
+            return Promise.resolve();
+        }
+
+        return fetch("/save_game_state", jsonPostOptions({
+            points: gameState.totalPoints,
+            current_infinity_level: gameState.currentLevel,
+            current_type: gameState.currentType,
+            highest_type: gameState.highestType,
+            clicks_remaining: gameState.clicksRemaining,
+            progress_percent: gameState.progressPercent,
+        }));
+    }
 
     updateProgressUI();
 
     let isAnimating = false;
+    let isRestarting = false;
 
     function handleEggClick() {
         if (isAnimating) return;
 
-        gameState.clicksRemaning--;
+        gameState.clicksRemaining--;
         updateProgressUI()
 
-        if (gameState.clicksRemaning <= 0) {
+        if (gameState.clicksRemaining <= 0) {
             console.log("zero clicks left"); // no clicks left print
             const earned = calculateReward();
             gameState.totalPoints += earned;
@@ -45,12 +77,15 @@ if (playBtns.length > 0) {
 
             // need to add a check for out of bounds
             const eggKeys = Object.keys(EGG_CONFIG);
-            const nextIndex =  eggKeys.indexOf(gameState.currentType) + 1;
-            gameState.currentType = eggKeys[nextIndex];
+            const currentIndex = eggKeys.indexOf(gameState.currentType);
+            const nextIndex = (currentIndex + 1) % eggKeys.length;
 
-            gameState.clicksRemaning = EGG_CONFIG[gameState.currentType].baseClicks;
+            gameState.currentType = eggKeys[nextIndex];
+            gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].baseClicks;
+            updateHighestType(eggKeys);
             updateProgressUI()
-            
+            saveGameState().finally(fetchLeaderboard);
+
             triggerEggBreak();
         }
     }
@@ -69,11 +104,86 @@ if (playBtns.length > 0) {
 
     function updateProgressUI() {
         const requiredClicks = EGG_CONFIG[gameState.currentType].baseClicks
-        const percentage = ((requiredClicks - gameState.clicksRemaning) / requiredClicks) * 100;
+        const percentage = ((requiredClicks - gameState.clicksRemaining) / requiredClicks) * 100;
         const barWidth = Math.min(Math.max(percentage, 0), 100);
 
+        gameState.progressPercent = barWidth;
         document.getElementById('progress-bar').style.width = `${barWidth}%`;
-        document.getElementById('click-count').innerText = `${gameState.clicksRemaning}/${requiredClicks} left`;
+        document.getElementById('click-count').innerText = `${gameState.clicksRemaining}/${requiredClicks} left`;
+    }
+
+    function updateHighestType(eggKeys) {
+        const currentHighestIndex = eggKeys.indexOf(gameState.highestType);
+        const currentTypeIndex = eggKeys.indexOf(gameState.currentType);
+
+        if (currentTypeIndex > currentHighestIndex) {
+            gameState.highestType = gameState.currentType;
+        }
+    }
+
+    function formatScore(points) {
+        return Number(points || 0).toLocaleString();
+    }
+
+    function renderLeaderboard(players, currentUserId) {
+        const leaderboardList = document.getElementById("leaderboard-list");
+
+        if (!leaderboardList) {
+            return;
+        }
+
+        if (!players.length) {
+            const emptyItem = document.createElement("li");
+            emptyItem.className = "list-group-item text-muted";
+            emptyItem.textContent = "No scores yet.";
+            leaderboardList.replaceChildren(emptyItem);
+            return;
+        }
+
+        const items = players.map((player, index) => {
+            const isCurrentUser = currentUserId === player.id;
+            const listItem = document.createElement("li");
+            const nameSpan = document.createElement("span");
+            const scoreBadge = document.createElement("span");
+            const displayName = isCurrentUser ? `${player.name} (You)` : player.name;
+
+            listItem.className = isCurrentUser
+                ? "list-group-item list-group-item-warning d-flex justify-content-between align-items-center"
+                : "list-group-item d-flex justify-content-between align-items-center";
+            nameSpan.textContent = `${index + 1}. ${displayName}`;
+            scoreBadge.className = "badge bg-dark rounded-pill";
+            scoreBadge.textContent = formatScore(player.points);
+
+            listItem.append(nameSpan, scoreBadge);
+            return listItem;
+        });
+
+        leaderboardList.replaceChildren(...items);
+    }
+
+    function fetchLeaderboard() {
+        return fetch(LEADERBOARD_API_URL)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Leaderboard request failed with status ${response.status}`);
+                }
+
+                return response.json();
+            })
+            .then(data => {
+                renderLeaderboard(data.players ?? [], data.current_user_id ?? null);
+            })
+            .catch(error => {
+                console.error("Failed to load leaderboard", error);
+
+                const leaderboardList = document.getElementById("leaderboard-list");
+                if (leaderboardList) {
+                    const errorItem = document.createElement("li");
+                    errorItem.className = "list-group-item text-danger";
+                    errorItem.textContent = "Unable to load leaderboard.";
+                    leaderboardList.replaceChildren(errorItem);
+                }
+            });
     }
 
     function updateEggImage() {
@@ -125,11 +235,58 @@ if (playBtns.length > 0) {
         console.log('broke and replaced the egg')
     }
 
+    // Save Result (only for logged in users):
+    function saveResult() {
+        if (gameState.isGuest) {
+            return;
+        }
+
+        fetch("/save_result", {
+            ...jsonPostOptions({
+                score: gameState.totalPoints,
+                duration_seconds: null
+            })
+        });
+    }
+
+    const restartBtn = document.getElementById("restart-game-btn");
+
+    if (restartBtn) {
+        restartBtn.addEventListener("click", function (event) {
+            event.preventDefault();
+
+            const confirmRestart = confirm("Are you sure you want to restart your game? Your current progress will be reset.");
+
+            if (!confirmRestart) {
+                return;
+            }
+
+            fetch("/restart_game", jsonPostOptions({}))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isRestarting = true;
+                        window.location.reload();
+                    }
+                });
+        });
+    }
+
     // Event Listeners/Triggers:
     document.getElementById('egg-btn').addEventListener('click', handleEggClick);
 
     window.addEventListener('load', () => { // only displays game content on the html once all assets are loaded
         document.getElementById('loading-overlay').style.display = 'none';
-        document.getElementById('game-screen').style.display ='';
+        document.getElementById('game-screen').style.display = '';
+        fetchLeaderboard();
     })
+
+    const leaderboardRefresh = window.setInterval(fetchLeaderboard, 5000);
+
+    window.addEventListener("beforeunload", () => {
+        window.clearInterval(leaderboardRefresh);
+        if (!isRestarting) {
+            saveGameState();
+        }
+    });
 })();

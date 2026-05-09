@@ -1,5 +1,5 @@
 # Handles public routes that don't require authentication 
-from flask import Blueprint, render_template, g
+from flask import Blueprint, g, jsonify, render_template
 from Clicking_Game.models import users
 
 bp = Blueprint("main", __name__)
@@ -31,9 +31,28 @@ def game():
             "current_infinity_level": g.user.current_infinity_level,
             "current_type": g.user.current_type,
             "highest_type": g.user.highest_type,
-            "clicks_remaining": g.user.clicks_remainiing,
+            "clicks_remaining": g.user.clicks_remaining,
             "progress_percent": g.user.progress_percent,
             "is_guest": False
         })
-    
+        
     return render_template("player/game.html", state=initial_state)
+
+
+@bp.route("/api/leaderboard")
+def leaderboard():
+    leaderboard_users = users.list_leaderboard(limit=10)
+
+    return jsonify(
+        {
+            "current_user_id": g.user.id if g.user else None,
+            "players": [
+                {
+                    "id": user.id,
+                    "name": user.name,
+                    "points": user.points,
+                }
+                for user in leaderboard_users
+            ],
+        }
+    )
