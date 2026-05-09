@@ -271,22 +271,6 @@ def logout():
     session.clear()
     return redirect(url_for("main.home"))
 
-# @bp.route("/save_result", methods=["POST"])
-# @login_required(role="player")
-# def save_result():
-#     data = request.get_json() or {}
-
-#     score = int(data.get("score", 0))
-#     duration_seconds = data.get("duration_seconds")
-
-#     users.create_game_result(
-#         user_id=g.user.id,
-#         score=score,
-#         duration_seconds=duration_seconds,
-#     )
-
-#     return jsonify({"success": True})
-
 @bp.route("/save_game_state", methods=["POST"])
 @login_required(role="player")
 def save_game_state():

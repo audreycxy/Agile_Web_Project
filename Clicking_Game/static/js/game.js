@@ -235,20 +235,6 @@ if (playBtns.length > 0) {
         console.log('broke and replaced the egg')
     }
 
-    // Save Result (only for logged in users):
-    function saveResult() {
-        if (gameState.isGuest) {
-            return;
-        }
-
-        fetch("/save_result", {
-            ...jsonPostOptions({
-                score: gameState.totalPoints,
-                duration_seconds: null
-            })
-        });
-    }
-
     const restartBtn = document.getElementById("restart-game-btn");
 
     if (restartBtn) {
