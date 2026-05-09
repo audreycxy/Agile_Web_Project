@@ -32,10 +32,18 @@ def login():
         if not email or not password:
             error = "Please fill in all fields."
         else:
-            user = users.authenticate(email, password)
+            # The user experience is clearer and more like a complete function
+            # Wrong password/email → Invalid email or password.
+            # Deactivated account → This account has been deactivated.
+            # Unverified email → Please verify your email before logging in.
+            user = users.get_by_email(email)
 
-            if user is None:
+            if user is None or not user.check_password(password):
                 error = "Invalid email or password."
+            elif not user.is_active:
+                error = "This account has been deactivated."
+            elif not user.email_verified:
+                error = "Please verify your email before logging in."
             else:
                 session.clear()
                 session["user_id"] = user.id
@@ -74,9 +82,37 @@ def signup():
             if user is None:
                 error = "Account already exists."
             else:
-                return redirect(url_for("auth.login"))
+                verification_url = url_for(
+                    "auth.verify_email",
+                    token=user.email_verification_token,
+                    _external=True,
+                )
+
+                return render_template(
+                    "public/signup.html",
+                    success="Account created. Please verify your email before logging in.",
+                    verification_url=verification_url,
+                    error=None,
+                )
 
     return render_template("public/signup.html", error=error)
+
+# Verify_email(token) route
+# When the user clicks the verification link, they will be redirected to the login page.
+@bp.route("/verify-email/<token>")
+def verify_email(token):
+    if users.verify_email_token(token):
+        return render_template(
+            "public/login.html",
+            success="Email verified successfully. You can now log in.",
+            error=None,
+        )
+
+    return render_template(
+        "public/login.html",
+        error="Invalid or expired verification link.",
+        success=None,
+    )
 
 # ADMIN ROUTES
 # Admin dashboard shows user stats and recent game results
