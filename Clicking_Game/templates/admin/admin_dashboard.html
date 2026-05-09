@@ -30,6 +30,7 @@
         🥚 Egg Clicker
       </a>
 
+<<<<<<< HEAD
       <div class="game-nav-links">
         <a href="{{ url_for('auth.admin_accounts', search=search) }}"
           >Accounts</a
@@ -38,6 +39,112 @@
           >Results</a
         >
         <a href="{{ url_for('auth.logout') }}" class="nav-signup">Logout</a>
+=======
+        <div class="row g-3 mb-4">
+          <div class="col-md-6 col-xl-3">
+            <div class="border rounded-4 p-3 h-100 bg-light">
+              <p class="text-muted mb-1">Total Accounts</p>
+              <h2 class="mb-0">{{ total_users }}</h2>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="border rounded-4 p-3 h-100 bg-light">
+              <p class="text-muted mb-1">Players</p>
+              <h2 class="mb-0">{{ player_count }}</h2>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="border rounded-4 p-3 h-100 bg-light">
+              <p class="text-muted mb-1">Players With Points</p>
+              <h2 class="mb-0">{{ tracked_players }}</h2>
+            </div>
+          </div>
+          <div class="col-md-6 col-xl-3">
+            <div class="border rounded-4 p-3 h-100 bg-light">
+              <p class="text-muted mb-1">Highest Live Points</p>
+              <h2 class="mb-0">{{ highest_score }}</h2>
+            </div>
+          </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+          <div class="col-lg-8">
+            <div class="border rounded-4 p-4 h-100">
+              <div class="d-flex flex-column flex-md-row justify-content-between gap-3 mb-3 align-items-md-center">
+                <div>
+                  <h2 class="h5 mb-1">Search for a player</h2>
+                  <p class="text-muted mb-0">Search by player name or email, then jump to accounts or results.</p>
+                </div>
+              </div>
+              <form method="get" action="{{ url_for('auth.admin_dashboard') }}" class="row g-2 align-items-end">
+                <div class="col-md-8">
+                  <label for="search" class="form-label">Player search</label>
+                  <input type="text" class="form-control" id="search" name="search" value="{{ search }}"
+                    placeholder="Search name or email">
+                </div>
+                <div class="col-md-4 d-grid">
+                  <button type="submit" class="btn btn-outline-primary">Search dashboard results</button>
+                </div>
+              </form>
+              <div class="d-flex flex-wrap gap-2 mt-3">
+                <a href="{{ url_for('auth.admin_accounts', search=search) }}" class="btn btn-primary">View Player
+                  Accounts</a>
+                <!-- Change this line once admin functionality is implemented -->
+                <a href="{{ url_for('auth.admin_player_results', search=search) }}" class="btn btn-dark">View Player Results</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-lg-4">
+            <div class="border rounded-4 p-4 h-100 bg-light">
+              <h2 class="h5 mb-3">Access overview</h2>
+              <ul class="mb-0 ps-3 text-muted">
+                <li>Admins can open player account records.</li>
+                <li>Admins can view saved player results.</li>
+                <li>Players cannot access admin pages.</li>
+                <li>Guests do not have permanent player history.</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div class="border rounded-4 p-4">
+          <div class="d-flex flex-column flex-md-row justify-content-between gap-3 align-items-md-center mb-3">
+            <div>
+              <h2 class="h5 mb-1">Recent player progress</h2>
+              <p class="text-muted mb-0">Latest live game activity {% if search %}matching "{{ search }}"{% endif %}.</p>
+            </div>
+            <a href="{{ url_for('auth.admin_player_results', search=search) }}" class="btn btn-outline-secondary">Open full progress page</a>
+          </div>
+          <div class="table-responsive">
+            <table class="table align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>Player</th>
+                  <th>Email</th>
+                  <th>Points</th>
+                  <th>Last Updated</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% if recent_players %}
+                {% for player in recent_players %}
+                <tr>
+                  <td>{{ player.name }}</td>
+                  <td>{{ player.email }}</td>
+                  <td>{{ player.points }}</td>
+                  <td>{{ player.updated_at.strftime('%d %b %Y %H:%M') if player.updated_at else '-' }}</td>
+                </tr>
+                {% endfor %}
+                {% else %}
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">No live player progress found yet.</td>
+                </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+>>>>>>> ed44597 (Show live player progress on admin page)
       </div>
     </nav>
 
