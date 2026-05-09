@@ -21,7 +21,9 @@ if (playBtns.length > 0) {
         totalPoints: INITIAL_STATE.points,
         currentLevel: INITIAL_STATE.current_level,
         currentType: INITIAL_STATE.current_type,
+        highestType: INITIAL_STATE.highest_type,
         clicksRemaning: INITIAL_STATE.clicks_remaining ?? EGG_CONFIG[INITIAL_STATE.current_type].baseClicks,
+        progressPercent: INITIAL_STATE.progress_percent,
         isGuest: INITIAL_STATE.is_guest
     };
 
@@ -46,11 +48,15 @@ if (playBtns.length > 0) {
             // need to add a check for out of bounds
             const eggKeys = Object.keys(EGG_CONFIG);
             const nextIndex =  eggKeys.indexOf(gameState.currentType) + 1;
-            gameState.currentType = eggKeys[nextIndex];
 
+            if (gameState.highestType == gameState.currentType) {
+                gameState.highestType = eggKeys[nextIndex];
+            }
+
+            gameState.currentType = eggKeys[nextIndex];
             gameState.clicksRemaning = EGG_CONFIG[gameState.currentType].baseClicks;
+
             updateProgressUI()
-            
             triggerEggBreak();
         }
     }
@@ -81,6 +87,7 @@ if (playBtns.length > 0) {
         eggImage.forEach(eggImage => {
             eggImage.style.backgroundImage = `url('${EGG_CONFIG[gameState.currentType].image}')`
         })
+        document.getElementById('egg-type-display').innerText = gameState.currentType;
     }
 
     function triggerEggBreak() {
@@ -125,6 +132,23 @@ if (playBtns.length > 0) {
         console.log('broke and replaced the egg')
     }
 
+    function changeEgg(direction) {
+        const eggKeys = Object.keys(EGG_CONFIG);
+        const nextIndex = eggKeys.indexOf(gameState.currentType) + direction;
+        const highestIndex = eggKeys.indexOf(gameState.highestType);
+
+        if (nextIndex < 0 || nextIndex >= highestIndex) {
+            console.log("Egg locked or doesn't exist");
+            return;
+        }
+
+        gameState.currentType = eggKeys[nextIndex];
+        gameState.clicksRemaning = EGG_CONFIG[gameState.currentType].baseClicks;
+
+        updateEggImage();
+        updateProgressUI();
+    }
+
     // Event Listeners/Triggers:
     document.getElementById('egg-btn').addEventListener('click', handleEggClick);
 
@@ -132,4 +156,6 @@ if (playBtns.length > 0) {
         document.getElementById('loading-overlay').style.display = 'none';
         document.getElementById('game-screen').style.display ='';
     })
+
+    window.changeEgg = changeEgg;
 })();

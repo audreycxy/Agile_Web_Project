@@ -59,6 +59,15 @@
             .cracked-top { transform: translateY(-100px) rotate(-15deg); opacity: 0; }
             .cracked-bottom { transform: translateY(100px) rotate(15deg); opacity: 0; }
             .reveal-egg { transform: scale(1); opacity: 1; }
+
+            /* cuts long egg names */
+            #egg-type-display {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                display: block;
+            }
+
         </style>
     </head>
 
@@ -110,7 +119,8 @@
                         </div>
 
                         <!-- Game Content (Middle - Egg & Points)-->
-                        <div class="mt-auto mb-auto">
+                        <div class="mt-auto mb-auto w-100 px-2">
+                            <!-- Points Display -->
                             <h1 class="display-2 fw-bold" id="egg-points">{{ state.points }}</h1>
                             <p class="text-muted">Points</p>
                             
@@ -121,6 +131,27 @@
                                 <div class="egg-image shell-top" id="top-half" style="display: none;"></div>
                                 <div class="egg-image shell-bottom" id="bottom-half" style="display: none;"></div>
                             </button>
+
+                            <div class="d-flex align-items-center justify-content-center">
+                                <!-- Left Arrow -->
+                                <button id="prev-egg" class="btn btn-outline-dark border-2 rounded-circle d-flex align-items-center justify-content-center" 
+                                        style="width: 45px; height: 45px;" onclick="changeEgg(-1)">
+                                    <span class="fw-bold">&lt;</span>
+                                </button>
+                                
+                                <!-- Egg Type Name & Tier Label -->
+                                <div class="text-center mx-3" style="min-width: 160px;">
+                                    <h4 id="egg-type-display" class="egg-type-text tier-text-standard mb-0">
+                                        {{ state.current_type }}
+                                    </h4>
+                                </div>
+                                
+                                <!-- Right Arrow -->
+                                <button id="next-egg-btn" class="btn btn-outline-dark border-2 rounded-circle d-flex align-items-center justify-content-center" 
+                                        style="width: 45px; height: 45px;" onclick="changeEgg(1)">
+                                    <span class="fw-bold">&gt;</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
