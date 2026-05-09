@@ -157,20 +157,9 @@
               </thead>
 
               <tbody>
-                <!--
-                  Jinja loop.
-                  Flask knowledge point:
-                  The backend route passes a results list into this template.
-                  Jinja renders one table row for each result record.
-                -->
                 {% for player in players %}
                 <tr>
                   <td>
-                    <!--
-                      Conditional rendering.
-                      If the result still has a linked user account, display the user's name.
-                      Otherwise, show Guest/Deleted User.
-                    -->
                     {{ player.name }}
                   </td>
 
@@ -180,9 +169,7 @@
                   <td>{{ player.points }}</td>
 
                   <!--
-                    Display the highest score for the related user.
-                    The backend provides highest_scores as a dictionary.
-                    If there is no value found, result.score is used as a fallback.
+                    Display the current infinity level stored in this game result record.
                   -->
                   <td>{{ player.current_infinity_level }}</td>
 
