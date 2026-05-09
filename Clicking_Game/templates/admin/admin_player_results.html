@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
     <!-- Page title shown in the browser tab -->
-    <title>Admin Player Results</title>
+    <title>Admin Player Progress</title>
 
     <!--
       Bootstrap CSS CDN.
@@ -66,14 +66,14 @@
           -->
           <div class="d-flex justify-content-between align-items-center mb-4">
             <div>
-              <h2 class="mb-1">Admin Player Results</h2>
+              <h2 class="mb-1">Admin Player Progress</h2>
 
               <!--
                 Page description for the admin user.
                 This explains the purpose of the page in plain language.
               -->
               <p class="text-muted mb-0">
-                View player scores and game result records.
+                View live player points and current game progress.
               </p>
             </div>
 
@@ -113,7 +113,7 @@
             </div>
 
             <div class="col-md-6">
-              <label for="sortSelect" class="form-label">Sort results by</label>
+              <label for="sortSelect" class="form-label">Sort progress by</label>
 
               <!--
                 Dropdown menu for sorting the table.
@@ -125,9 +125,9 @@
                 The change event is connected in the external JS file.
               -->
               <select id="sortSelect" class="form-select">
-                <option value="score">Score</option>
-                <option value="highest">Highest Score</option>
-                <option value="date">Date Played</option>
+                <option value="score">Current Points</option>
+                <option value="highest">Current Level</option>
+                <option value="date">Last Updated</option>
               </select>
             </div>
           </div>
@@ -150,9 +150,9 @@
               <thead class="table-light">
                 <tr>
                   <th>Player Username</th>
-                  <th>Score</th>
-                  <th>Highest Score</th>
-                  <th>Date Played</th>
+                  <th>Current Points</th>
+                  <th>Current Level</th>
+                  <th>Last Updated</th>
                 </tr>
               </thead>
 
@@ -163,7 +163,7 @@
                   The backend route passes a results list into this template.
                   Jinja renders one table row for each result record.
                 -->
-                {% for result in results %}
+                {% for player in players %}
                 <tr>
                   <td>
                     <!--
@@ -171,23 +171,20 @@
                       If the result still has a linked user account, display the user's name.
                       Otherwise, show Guest/Deleted User.
                     -->
-                    {% if result.user %} {{ result.user.name }} {% else %}
-                    Guest/Deleted User {% endif %}
+                    {{ player.name }}
                   </td>
 
                   <!--
                     Display the score stored in this game result record.
                   -->
-                  <td>{{ result.score }}</td>
+                  <td>{{ player.points }}</td>
 
                   <!--
                     Display the highest score for the related user.
                     The backend provides highest_scores as a dictionary.
                     If there is no value found, result.score is used as a fallback.
                   -->
-                  <td>
-                    {{ highest_scores.get(result.user_id, result.score) }}
-                  </td>
+                  <td>{{ player.current_infinity_level }}</td>
 
                   <!--
                     Date column.
@@ -195,9 +192,9 @@
                     The data-date attribute stores the original date value so JavaScript
                     can sort the records accurately by date.
                   -->
-                  <td data-date="{{ result.created_at }}">
-                    {% if result.created_at %} {{
-                    result.created_at.strftime('%Y-%m-%d %H:%M:%S') }} {% else
+                  <td data-date="{{ player.updated_at }}">
+                    {% if player.updated_at %} {{
+                    player.updated_at.strftime('%Y-%m-%d %H:%M:%S') }} {% else
                     %} N/A {% endif %}
                   </td>
                 </tr>
@@ -209,7 +206,7 @@
                 {% else %}
                 <tr>
                   <td colspan="4" class="text-center text-muted">
-                    No player results found.
+                    No player progress found.
                   </td>
                 </tr>
                 {% endfor %}
