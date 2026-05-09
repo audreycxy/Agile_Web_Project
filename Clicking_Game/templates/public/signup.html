@@ -33,13 +33,25 @@
         style="max-width: 460px; width: 100%"
       >
         <div class="card-body p-4">
-
           <!-- Sign-up form title -->
           <h2 class="text-center mb-4">Sign Up</h2>
 
           <!-- Display error message if account registration fails -->
           {% if error %}
           <div class="alert alert-danger">{{ error }}</div>
+          {% endif %}
+
+          <!-- Display success message after account creation -->
+          {% if success %}
+          <div class="alert alert-success">{{ success }}</div>
+          {% endif %}
+
+          <!-- Development verification link for testing email verification flow -->
+          {% if verification_url %}
+          <div class="alert alert-info">
+            <p class="mb-2">Development verification link:</p>
+            <a href="{{ verification_url }}">{{ verification_url }}</a>
+          </div>
           {% endif %}
 
           <!-- Sign-up form submitted to the Flask sign-up route -->
