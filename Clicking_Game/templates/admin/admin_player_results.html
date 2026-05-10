@@ -105,48 +105,24 @@
               </tr>
             </thead>
 
-              <tbody>
-                <!--
-                  Jinja loop.
-                  Flask knowledge point:
-                  The backend route passes a results list into this template.
-                  Jinja renders one table row for each result record.
-                -->
-                {% for player in players %}
-                <tr>
-                  <td>
-                    <!--
-                      Conditional rendering.
-                      If the result still has a linked user account, display the user's name.
-                      Otherwise, show Guest/Deleted User.
-                    -->
-                    {{ player.name }}
-                  </td>
+            <tbody>
+              {% for result in results %}
+              <tr>
+                <td>
+                  {% if result.user %} {{ result.user.name }} {% else %}
+                  Guest/Deleted User {% endif %}
+                </td>
 
-                  <!--
-                    Display the score stored in this game result record.
-                  -->
-                  <td>{{ player.points }}</td>
+                <td>{{ result.score }}</td>
 
-                  <!--
-                    Display the highest score for the related user.
-                    The backend provides highest_scores as a dictionary.
-                    If there is no value found, result.score is used as a fallback.
-                  -->
-                  <td>{{ player.current_infinity_level }}</td>
+                <td>{{ highest_scores.get(result.user_id, result.score) }}</td>
 
-                  <!--
-                    Date column.
-                    The visible text is formatted for users.
-                    The data-date attribute stores the original date value so JavaScript
-                    can sort the records accurately by date.
-                  -->
-                  <td data-date="{{ player.updated_at }}">
-                    {% if player.updated_at %} {{
-                    player.updated_at.strftime('%Y-%m-%d %H:%M:%S') }} {% else
-                    %} N/A {% endif %}
-                  </td>
-                </tr>
+                <td data-date="{{ result.created_at }}">
+                  {% if result.created_at %} {{
+                  result.created_at.strftime('%Y-%m-%d %H:%M:%S') }} {% else %}
+                  N/A {% endif %}
+                </td>
+              </tr>
 
               {% else %}
               <tr>
