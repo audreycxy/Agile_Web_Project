@@ -123,6 +123,8 @@ def admin_dashboard():
     search = request.args.get("search", "").strip()
     all_users = users.list_users(search=search)
     player_progress = users.list_player_progress(search=search)
+    all_results = users.list_results(search=search)
+    recent_results = users.list_results(search=search, limit=10)
     recent_player_progress = users.list_player_progress(search=search, limit=10, sort_by="updated")
 
     return render_template(
@@ -131,8 +133,10 @@ def admin_dashboard():
         search=search,
         total_users=len(all_users),
         player_count=len([user for user in all_users if user.role == "player"]),
+        total_results=len(all_results),
         tracked_players=len([user for user in player_progress if user.points > 0]),
         highest_score=max((user.points for user in player_progress), default=0),
+        recent_results=recent_results,
         recent_players=recent_player_progress,
     )
 
@@ -162,11 +166,22 @@ def admin_accounts():
 @login_required(role="admin")
 def admin_player_results():
     search = request.args.get("search", "").strip()
-    players = users.list_player_progress(search=search)
+    results = users.list_results(search=search)
+    highest_scores = {}
+
+    for result in results:
+        if result.user_id is None:
+            continue
+
+        highest_scores[result.user_id] = max(
+            highest_scores.get(result.user_id, result.score),
+            result.score,
+        )
 
     return render_template(
         "admin/admin_player_results.html",
-        players=players,
+        results=results,
+        highest_scores=highest_scores,
         search=search,
     )
 
