@@ -755,6 +755,32 @@ a:hover {
     width: 240px;
     height: 240px;
   }
+
+  .admin-stat-grid,
+  .admin-dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-search-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-quick-actions {
+    flex-direction: column;
+  }
+
+  .admin-quick-actions .btn {
+    width: 100%;
+  }
+
+  .admin-table-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-table-header .btn {
+    width: 100%;
+  }
 }
 
 /* PLAYER DASHBOARD HERO REFINEMENT */
@@ -925,4 +951,58 @@ a:hover {
 .profile-form-actions .btn {
   flex: 1;
   min-width: 220px;
+}
+
+/* ADMIN DASHBOARD PAGE */
+
+.admin-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.admin-dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  gap: 22px;
+}
+
+.admin-search-panel,
+.admin-access-panel {
+  width: 100%;
+}
+
+.admin-panel-description {
+  color: var(--egg-muted-brown);
+  line-height: 1.65;
+}
+
+.admin-search-form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: end;
+  margin-top: 22px;
+}
+
+.admin-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.admin-access-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--egg-muted-brown);
+  line-height: 1.9;
+  font-weight: 600;
+}
+
+.admin-table-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
 }
