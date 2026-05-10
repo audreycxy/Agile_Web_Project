@@ -54,10 +54,11 @@ a:hover {
   text-decoration: none;
 }
 
-/* SHARED GAME BACKGROUND Home + Login + future auth pages */
+/* SHARED GAME BACKGROUND */
 
 .game-home-page,
-.auth-page {
+.auth-page,
+.dashboard-page {
   min-height: 100vh;
   margin: 0;
   font-family: "Poppins", sans-serif;
@@ -139,7 +140,7 @@ a:hover {
   background: var(--egg-gold-hover);
 }
 
-/* SHARED HERO BADGE This fixes the different yellow badge issue */
+/* SHARED HERO BADGE */
 
 .hero-badge,
 .auth-intro .hero-badge,
@@ -162,6 +163,7 @@ a:hover {
 
 .game-home-page .btn-warning,
 .auth-page .btn-warning,
+.dashboard-page .btn-warning,
 .auth-primary-btn {
   color: var(--egg-text-dark);
   background: var(--egg-gold);
@@ -172,6 +174,7 @@ a:hover {
 
 .game-home-page .btn-warning:hover,
 .auth-page .btn-warning:hover,
+.dashboard-page .btn-warning:hover,
 .auth-primary-btn:hover {
   color: var(--egg-text-dark);
   background: var(--egg-gold-hover);
@@ -179,7 +182,8 @@ a:hover {
 }
 
 .game-home-page .btn-outline-light,
-.auth-page .btn-outline-light {
+.auth-page .btn-outline-light,
+.dashboard-page .btn-outline-light {
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.82);
   border-radius: 999px;
@@ -187,7 +191,8 @@ a:hover {
 }
 
 .game-home-page .btn-outline-light:hover,
-.auth-page .btn-outline-light:hover {
+.auth-page .btn-outline-light:hover,
+.dashboard-page .btn-outline-light:hover {
   color: var(--egg-text-dark);
   background: var(--egg-cream-soft);
   border-color: var(--egg-cream-soft);
@@ -195,6 +200,7 @@ a:hover {
 
 .game-home-page .btn-light,
 .auth-page .btn-light,
+.dashboard-page .btn-light,
 .auth-secondary-btn {
   color: var(--egg-text-dark);
   background: #ffffff;
@@ -205,6 +211,7 @@ a:hover {
 
 .game-home-page .btn-light:hover,
 .auth-page .btn-light:hover,
+.dashboard-page .btn-light:hover,
 .auth-secondary-btn:hover {
   color: var(--egg-text-dark);
   background: #fff4cf;
@@ -440,7 +447,7 @@ a:hover {
   font-size: 1.1rem;
 }
 
-/* AUTH PAGES Login / later Signup */
+/* AUTH PAGES */
 
 .auth-layout {
   min-height: calc(100vh - 78px);
@@ -549,6 +556,139 @@ a:hover {
   text-decoration: underline;
 }
 
+/* PLAYER DASHBOARD PAGE */
+
+.dashboard-layout {
+  min-height: calc(100vh - 78px);
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 34px;
+  padding: 70px 7vw 90px;
+}
+
+.dashboard-hero {
+  padding: 48px;
+  background: rgba(255, 255, 255, 0.1);
+  border: var(--egg-soft-border);
+  border-radius: 36px;
+  box-shadow: var(--egg-card-shadow);
+}
+
+.dashboard-hero h1 {
+  max-width: 900px;
+  margin-bottom: 24px;
+  font-size: clamp(3rem, 6vw, 6.4rem);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+
+.dashboard-hero p {
+  max-width: 760px;
+  margin-bottom: 30px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 1.15rem;
+  line-height: 1.75;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.dashboard-action-btn {
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  border-radius: 999px;
+  line-height: 1.2;
+  text-align: center;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.dashboard-danger-btn {
+  color: #ffffff;
+  background: #b94a35;
+  border: none;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.dashboard-danger-btn:hover {
+  color: #ffffff;
+  background: #963723;
+}
+
+.dashboard-action-message {
+  margin: 22px 0 0;
+  color: var(--egg-gold) !important;
+  font-weight: 800;
+}
+
+.dashboard-panel {
+  padding: 42px;
+  background: rgba(255, 248, 222, 0.95);
+  color: var(--egg-text-dark);
+  border-radius: 36px;
+  box-shadow: var(--egg-card-shadow);
+}
+
+.dashboard-panel-header {
+  margin-bottom: 28px;
+}
+
+.dashboard-panel-header h2 {
+  margin-bottom: 0;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1.08;
+  font-weight: 800;
+}
+
+.dashboard-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.dashboard-stat-card {
+  min-height: 210px;
+  padding: 28px;
+  background: #ffffff;
+  border: 1px solid rgba(43, 23, 7, 0.08);
+  border-radius: 28px;
+  box-shadow: 0 16px 44px rgba(85, 52, 15, 0.12);
+}
+
+.stat-label {
+  display: inline-flex;
+  margin-bottom: 14px;
+  padding: 8px 12px;
+  color: var(--egg-text-dark);
+  background: var(--egg-cream-soft);
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+}
+
+.dashboard-stat-card h3 {
+  margin-bottom: 12px;
+  color: var(--egg-text-dark);
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 800;
+  word-break: break-word;
+}
+
+.dashboard-stat-card p {
+  margin-bottom: 0;
+  color: var(--egg-muted-brown);
+  line-height: 1.65;
+}
+
 /* ALERTS */
 
 .alert {
@@ -576,14 +716,25 @@ a:hover {
     padding: 42px 6vw 70px;
   }
 
+  .dashboard-layout {
+    padding: 42px 6vw 70px;
+  }
+
+  .dashboard-hero,
+  .dashboard-panel {
+    padding: 28px;
+  }
+
   .hero-stats,
   .auth-feature-list,
-  .feature-grid {
+  .feature-grid,
+  .dashboard-stat-grid {
     grid-template-columns: 1fr;
   }
 
   .hero-text h1,
-  .auth-intro h1 {
+  .auth-intro h1,
+  .dashboard-hero h1 {
     font-size: 3.1rem;
     line-height: 1.08;
   }
@@ -592,8 +743,82 @@ a:hover {
     padding: 28px;
   }
 
+  .dashboard-actions {
+    flex-direction: column;
+  }
+
+  .dashboard-actions .btn {
+    width: 100%;
+  }
+
   .demo-egg-button {
     width: 240px;
     height: 240px;
+  }
+}
+
+/* PLAYER DASHBOARD HERO REFINEMENT */
+
+.dashboard-hero-split {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  align-items: center;
+  gap: 36px;
+}
+
+.dashboard-hero-text h1 {
+  max-width: 860px;
+}
+
+.dashboard-start-card {
+  padding: 34px;
+  background: rgba(255, 248, 222, 0.95);
+  color: var(--egg-text-dark);
+  border-radius: 32px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.28);
+}
+
+.dashboard-start-card h2 {
+  margin: 14px 0 14px;
+  font-size: clamp(2rem, 3vw, 3rem);
+  line-height: 1.1;
+  font-weight: 800;
+}
+
+.dashboard-start-card p {
+  margin-bottom: 24px;
+  color: var(--egg-muted-brown);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.dashboard-start-btn {
+  width: 100%;
+  min-height: 64px;
+  font-size: 1.25rem;
+  box-shadow: 0 14px 30px rgba(43, 23, 7, 0.18);
+}
+
+.dashboard-start-btn:hover {
+  transform: translateY(-1px);
+}
+
+.dashboard-start-card .dashboard-action-message {
+  margin: 18px 0 0;
+  color: var(--egg-muted-brown) !important;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .dashboard-hero-split {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-start-card {
+    padding: 28px;
+  }
+
+  .dashboard-start-btn {
+    min-height: 58px;
   }
 }
