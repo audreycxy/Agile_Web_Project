@@ -45,6 +45,11 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan",
     )
+    game_state: Mapped["GameState"] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+        uselist=False,
+    )
     # is_active = admin Whether to disable the account
     is_active: Mapped[bool] = mapped_column(
         Boolean,
@@ -94,6 +99,28 @@ class GameResult(Base):
     )
 
     user: Mapped[User | None] = relationship(back_populates="results")
+
+# Game state table
+class GameState(Base):
+    __tablename__ = "game_states"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int | None] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"),
+        unique=True,
+        index=True
+    )
+
+    points: Mapped[int] = mapped_column(Integer, default=0)
+    current_infinity_level: Mapped[int] = mapped_column(Integer, default=0)
+    current_type: Mapped[str] = mapped_column(String(50), default="standard")
+    highest_type: Mapped[str] = mapped_column(String(50), default="standard")
+    clicks_remaining: Mapped[int | None] = mapped_column(Integer)
+
+    click_power_lvl: Mapped[int] = mapped_column(Integer, default=1)
+    autoclicker_lvl: Mapped[int] = mapped_column(Integer, default=0)
+
+    user: Mapped["User"] = relationship(back_populates="game_state")
 
 # HELPER FUNCTIONS
 # Strips spaces and lowercase email 
