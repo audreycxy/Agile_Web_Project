@@ -5,16 +5,20 @@ from Clicking_Game.game_logic import EGG_CONFIG
 
 bp = Blueprint("main", __name__)
 
+
 @bp.route("/")
 def home():
     return render_template("public/home.html")
+
 
 @bp.route("/guest")
 def guest():
     return render_template("public/guest.html")
 
+
 @bp.route("/game")
 def game():
+    # Default game state for guest users or users without saved progress fields
     initial_state = {
         "points": 0,
         "current_infinity_level": 0,
