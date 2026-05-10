@@ -105,13 +105,23 @@
               </tr>
             </thead>
 
-            <tbody>
-              {% for result in results %}
-              <tr>
-                <td>
-                  {% if result.user %} {{ result.user.name }} {% else %}
-                  Guest/Deleted User {% endif %}
-                </td>
+              <tbody>
+                <!--
+                  Jinja loop.
+                  Flask knowledge point:
+                  The backend route passes a results list into this template.
+                  Jinja renders one table row for each result record.
+                -->
+                {% for player in players %}
+                <tr>
+                  <td>
+                    <!--
+                      Conditional rendering.
+                      If the result still has a linked user account, display the user's name.
+                      Otherwise, show Guest/Deleted User.
+                    -->
+                    {{ player.name }}
+                  </td>
 
                   <!--
                     Display the score stored in this game result record.
