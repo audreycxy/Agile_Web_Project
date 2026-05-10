@@ -1,3 +1,5 @@
+// Handle sign-up form submission
+// Validate that all fields are filled and that the password matches the confirmation password
 const signupForm = document.getElementById("signupForm");
 
 if (signupForm) {

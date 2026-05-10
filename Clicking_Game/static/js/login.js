@@ -1,3 +1,5 @@
+// Handle login form submission
+// Check whether the email and password fields are filled before allowing the form to submit
 const loginForm = document.getElementById("loginForm");
 
 if (loginForm) {

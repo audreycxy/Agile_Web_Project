@@ -5,10 +5,13 @@ Revises:
 Create Date: 2026-04-15 00:00:00
 
 """
+
+# Import Alembic and SQLAlchemy tools for defining database migrations
 from alembic import op
 import sqlalchemy as sa
 
 
+# Define Alembic revision information for this migration file
 revision = "0001_create_initial_tables"
 down_revision = None
 branch_labels = None
@@ -16,6 +19,8 @@ depends_on = None
 
 
 def upgrade():
+    # Create the initial database tables for users and game results
+
     op.create_table(
         "users",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -29,6 +34,8 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
         if_not_exists=True,
     )
+
+    # Add indexes to improve user lookup by email and role
     op.create_index(
         op.f("ix_users_email"),
         "users",
@@ -38,6 +45,7 @@ def upgrade():
     )
     op.create_index(op.f("ix_users_role"), "users", ["role"], unique=False, if_not_exists=True)
 
+    # Create the game results table and link each result to a user account
     op.create_table(
         "game_results",
         sa.Column("id", sa.Integer(), nullable=False),
@@ -49,6 +57,8 @@ def upgrade():
         sa.PrimaryKeyConstraint("id"),
         if_not_exists=True,
     )
+
+    # Add an index for faster searching of game results by user ID
     op.create_index(
         op.f("ix_game_results_user_id"),
         "game_results",
@@ -59,6 +69,8 @@ def upgrade():
 
 
 def downgrade():
+    # Remove the initial tables and indexes when rolling back this migration
+
     op.drop_index(op.f("ix_game_results_user_id"), table_name="game_results")
     op.drop_table("game_results")
     op.drop_index(op.f("ix_users_role"), table_name="users")

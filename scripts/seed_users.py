@@ -1,14 +1,20 @@
 #!/usr/bin/env python
+# Command-line script for creating default admin and player accounts
+
 from pathlib import Path
 import sys
 
+# Add the project root directory to the Python path so project modules can be imported
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from Clicking_Game import create_app
 from Clicking_Game.models import users
+from Clicking_Game.models.database import get_session
 
+
+# Default user accounts used to initialise the database
 DEFAULT_USERS = (
     {
         "email": "admin@example.com",
@@ -26,22 +32,40 @@ DEFAULT_USERS = (
 
 
 def seed_users():
+    # Create the Flask app context and insert default users if they do not already exist
     app = create_app()
     created = 0
+    updated = 0
 
     with app.app_context():
+        session = get_session()
+
         for user_data in DEFAULT_USERS:
             existing_user = users.get_by_email(user_data["email"])
+
+            # If the default user already exists, make sure it is verified for local testing
             if existing_user is not None:
-                print(f"Skipped existing user: {existing_user.email}")
+                existing_user.email_verified = True
+                existing_user.email_verification_token = None
+                updated += 1
+                print(f"Updated existing user as verified: {existing_user.email}")
                 continue
 
             user = users.create_user(**user_data)
-            created += 1
-            print(f"Created {user.role} user: {user.email}")
 
-    print(f"Seed complete. Created {created} user(s).")
+            # Seeded users are trusted default accounts, so they should be email-verified
+            user.email_verified = True
+            user.email_verification_token = None
+
+            created += 1
+            print(f"Created verified {user.role} user: {user.email}")
+
+        session.commit()
+
+    # Display the number of new users created and existing users updated
+    print(f"Seed complete. Created {created} user(s), updated {updated} user(s).")
 
 
 if __name__ == "__main__":
+    # Run the seed function when this file is executed directly
     seed_users()
