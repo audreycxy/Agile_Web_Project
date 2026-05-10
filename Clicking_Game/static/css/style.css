@@ -822,3 +822,55 @@ a:hover {
     min-height: 58px;
   }
 }
+
+/* PLAYER HISTORY PAGE */
+
+.history-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 24px;
+  border: 1px solid rgba(43, 23, 7, 0.08);
+  background: #ffffff;
+  box-shadow: 0 16px 44px rgba(85, 52, 15, 0.1);
+}
+
+.history-table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  color: var(--egg-text-dark);
+  text-align: center;
+}
+
+.history-table thead {
+  background: var(--egg-text-dark);
+  color: #ffffff;
+}
+
+.history-table th,
+.history-table td {
+  padding: 16px 18px;
+  border-bottom: 1px solid rgba(43, 23, 7, 0.08);
+}
+
+.history-table th {
+  font-weight: 800;
+}
+
+.history-table td {
+  font-weight: 600;
+}
+
+.history-table tbody tr:hover {
+  background: #fff8e6;
+}
+
+.history-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.history-empty {
+  padding: 28px 18px;
+  color: var(--egg-muted-brown);
+  font-weight: 700;
+}
