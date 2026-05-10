@@ -1,5 +1,7 @@
 # Handles authentication routes for login, signup, dashboards, history, profile, and logout
-from flask import Blueprint, g, redirect, render_template, request, session, url_for
+import os
+from openai import OpenAI
+from flask import Blueprint, g, jsonify, redirect, render_template, request, session, url_for
 from Clicking_Game.models import users
 from Clicking_Game.utils.auth import login_required
 
@@ -211,6 +213,56 @@ def history():
         latest_score=scores[-1] if scores else 0,
         average_score=round(sum(scores) / len(scores), 1) if scores else 0,
     )
+
+# AI feedback route for player performance coaching
+@bp.route("/ai_feedback", methods=["POST"])
+@login_required(role="player")
+def ai_feedback():
+    api_key = os.environ.get("OPENAI_API_KEY")
+
+    if not api_key:
+        return jsonify({
+            "feedback": "AI feedback is unavailable because the API key is not configured."
+        }), 503
+
+    recent_results = users.list_results(user_id=g.user.id, limit=5)
+
+    if not recent_results:
+        return jsonify({
+            "feedback": "Play a few rounds first, then I can give you more useful performance feedback."
+        })
+
+    scores = [result.score for result in recent_results]
+    latest_score = scores[0]
+    highest_score = max(scores)
+    average_score = round(sum(scores) / len(scores), 1)
+
+    prompt = (
+        "You are an AI performance coach for a browser clicking game called Egg Clicker.\n\n"
+        f"The player's recent scores from newest to oldest are: {scores}.\n"
+        f"Latest score: {latest_score}.\n"
+        f"Highest score: {highest_score}.\n"
+        f"Average score: {average_score}.\n\n"
+        "Give one short, encouraging, practical suggestion for improving future game performance. "
+        "Keep it under 40 words. Do not mention anything outside the game."
+    )
+
+    try:
+        client = OpenAI(api_key=api_key)
+
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=prompt,
+        )
+
+        return jsonify({
+            "feedback": response.output_text
+        })
+
+    except Exception:
+        return jsonify({
+            "feedback": "AI feedback is unavailable right now. Please try again later."
+        }), 500
 
 # Player profile page allows updating username, email, and password
 @bp.route("/profile", methods=["GET", "POST"])
