@@ -789,6 +789,10 @@ a:hover {
   .admin-account-filter-form .btn {
     width: 100%;
   }
+
+  .admin-results-controls {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* PLAYER DASHBOARD HERO REFINEMENT */
@@ -1109,4 +1113,17 @@ a:hover {
 .admin-empty-state p {
   margin-bottom: 0;
   color: var(--egg-muted-brown);
+}
+
+/* ADMIN PLAYER RESULTS PAGE */
+
+.admin-results-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.admin-results-table th,
+.admin-results-table td {
+  vertical-align: middle;
 }
