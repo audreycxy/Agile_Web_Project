@@ -781,6 +781,14 @@ a:hover {
   .admin-table-header .btn {
     width: 100%;
   }
+
+  .admin-account-filter-form {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-account-filter-form .btn {
+    width: 100%;
+  }
 }
 
 /* PLAYER DASHBOARD HERO REFINEMENT */
@@ -1005,4 +1013,100 @@ a:hover {
   align-items: flex-end;
   justify-content: space-between;
   gap: 18px;
+}
+
+/* ADMIN ACCOUNTS PAGE */
+
+.admin-flash-area {
+  display: grid;
+  gap: 12px;
+}
+
+.admin-account-filter-form {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr auto auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.admin-signed-in-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  color: var(--egg-text-dark);
+  background: var(--egg-cream-soft);
+  border-radius: 999px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.admin-account-table th,
+.admin-account-table td {
+  vertical-align: middle;
+}
+
+.admin-account-name {
+  font-weight: 800 !important;
+}
+
+.admin-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.admin-pill-button {
+  border: none;
+}
+
+.admin-pill-primary {
+  color: #ffffff;
+  background: #6b4de6;
+}
+
+.admin-pill-info {
+  color: var(--egg-text-dark);
+  background: #bdeaf7;
+}
+
+.admin-pill-success {
+  color: #ffffff;
+  background: #3b8f5a;
+}
+
+.admin-pill-muted {
+  color: #ffffff;
+  background: #7b7b7b;
+}
+
+.admin-small-note {
+  margin-top: 6px;
+  color: var(--egg-muted-brown);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.admin-empty-state {
+  padding: 48px 24px;
+  text-align: center;
+  background: #ffffff;
+  border-radius: 24px;
+  border: 1px solid rgba(43, 23, 7, 0.08);
+}
+
+.admin-empty-state h3 {
+  margin-bottom: 8px;
+  color: var(--egg-text-dark);
+  font-weight: 800;
+}
+
+.admin-empty-state p {
+  margin-bottom: 0;
+  color: var(--egg-muted-brown);
 }
