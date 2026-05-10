@@ -1,252 +1,146 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <!--
-      Basic HTML document settings.
-      This page is a Jinja template rendered by Flask.
-      It displays game result records for admin users.
-    -->
+    <!-- Page metadata and external style resources -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Player Results | Egg Clicker</title>
 
-    <!-- Page title shown in the browser tab -->
-    <title>Admin Player Results</title>
-
-    <!--
-      Bootstrap CSS CDN.
-      Knowledge point: using a front-end framework to quickly create responsive layout,
-      buttons, cards, tables, spacing, and form controls.
-    -->
+    <!-- Bootstrap and Google Fonts -->
     <link
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
       rel="stylesheet"
     />
-
-    <!--
-      Google Fonts connection.
-      Knowledge point: external resources can be linked in the HTML head section
-      to improve the visual design of the page.
-    -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
 
-    <!--
-      Project custom CSS file.
-      Flask knowledge point: url_for('static', filename='...') is used to correctly
-      load static files such as CSS, JavaScript, and images from the static folder.
-    -->
+    <!-- Custom CSS file -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
   </head>
 
-  <body>
-    <!--
-      Main page container.
-      Bootstrap knowledge point: container and py-5 are used to center the content
-      and add vertical spacing.
-    -->
-    <div class="container py-5">
-      <!--
-        Bootstrap card component.
-        This card groups all admin player result content into one visual section.
-      -->
-      <div class="card shadow-sm border-0 mx-auto" style="max-width: 1100px">
-        <div class="card-body p-4">
-          <!--
-            Header section.
-            It includes the page title, description, and navigation button.
-            Knowledge point: d-flex and justify-content-between create a horizontal layout.
-          -->
-          <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-              <h2 class="mb-1">Admin Player Results</h2>
+  <body class="dashboard-page">
+    <!-- Shared game-style navigation bar -->
+    <nav class="game-navbar">
+      <a href="{{ url_for('auth.admin_dashboard') }}" class="game-logo">
+        🥚 Egg Clicker
+      </a>
 
-              <!--
-                Page description for the admin user.
-                This explains the purpose of the page in plain language.
-              -->
-              <p class="text-muted mb-0">
-                View player scores and game result records.
-              </p>
-            </div>
+      <div class="game-nav-links">
+        <a href="{{ url_for('auth.admin_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('auth.admin_accounts') }}">Accounts</a>
+        <a href="{{ url_for('auth.logout') }}" class="nav-signup">Logout</a>
+      </div>
+    </nav>
 
-            <!--
-              Navigation link back to the admin dashboard.
-              Flask/Jinja knowledge point:
-              url_for('auth.admin_dashboard') generates the correct URL based on
-              the Flask route name, rather than hard-coding the URL.
-            -->
-            <a href="{{ url_for('auth.admin_dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    <main class="dashboard-layout">
+      <!-- Page header -->
+      <section class="dashboard-hero">
+        <p class="hero-badge">Admin Results</p>
+
+        <h1>Review player game results.</h1>
+
+        <p>
+          Search player result records, sort saved scores, and review game
+          activity across Egg Clicker players.
+        </p>
+      </section>
+
+      <!-- Search and sort controls -->
+      <section class="dashboard-panel">
+        <div class="dashboard-panel-header">
+          <p class="section-label">Result controls</p>
+          <h2>Search and sort records</h2>
+        </div>
+
+        <div class="admin-results-controls">
+          <div>
+            <label for="searchInput" class="auth-label">Search player</label>
+            <input
+              type="text"
+              id="searchInput"
+              class="form-control auth-input"
+              placeholder="Enter player username"
+            />
           </div>
 
-          <!--
-            Search and sort controls.
-            Client-side interaction is handled by admin_player_results.js.
-            This keeps HTML structure separate from JavaScript behaviour.
-          -->
-          <div class="row g-3 mb-4">
-            <div class="col-md-6">
-              <label for="searchInput" class="form-label">Search player</label>
-
-              <!--
-                Search input for filtering player usernames.
-                Knowledge point: the input has an id so JavaScript can select it
-                using document.getElementById("searchInput").
-                
-                Important:
-                There is no inline onkeyup="searchTable()" here.
-                The keyup event is connected in the external JS file.
-              -->
-              <input
-                type="text"
-                id="searchInput"
-                class="form-control"
-                placeholder="Enter player username"
-              />
-            </div>
-
-            <div class="col-md-6">
-              <label for="sortSelect" class="form-label">Sort results by</label>
-
-              <!--
-                Dropdown menu for sorting the table.
-                Knowledge point: each option value is used by JavaScript to decide
-                which column should be used for sorting.
-                
-                Important:
-                There is no inline onchange="sortTable()" here.
-                The change event is connected in the external JS file.
-              -->
-              <select id="sortSelect" class="form-select">
-                <option value="score">Score</option>
-                <option value="highest">Highest Score</option>
-                <option value="date">Date Played</option>
-              </select>
-            </div>
-          </div>
-
-          <!--
-            Responsive table wrapper.
-            Bootstrap knowledge point: table-responsive helps the table display
-            properly on smaller screens.
-          -->
-          <div class="table-responsive">
-            <!--
-              Results table.
-              The id="resultsTable" allows the external JavaScript file to find
-              this table and apply search/sort behaviour.
-            -->
-            <table
-              class="table table-bordered table-hover align-middle"
-              id="resultsTable"
-            >
-              <thead class="table-light">
-                <tr>
-                  <th>Player Username</th>
-                  <th>Score</th>
-                  <th>Highest Score</th>
-                  <th>Date Played</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <!--
-                  Jinja loop.
-                  Flask knowledge point:
-                  The backend route passes a results list into this template.
-                  Jinja renders one table row for each result record.
-                -->
-                {% for result in results %}
-                <tr>
-                  <td>
-                    <!--
-                      Conditional rendering.
-                      If the result still has a linked user account, display the user's name.
-                      Otherwise, show Guest/Deleted User.
-                    -->
-                    {% if result.user %} {{ result.user.name }} {% else %}
-                    Guest/Deleted User {% endif %}
-                  </td>
-
-                  <!--
-                    Display the score stored in this game result record.
-                  -->
-                  <td>{{ result.score }}</td>
-
-                  <!--
-                    Display the highest score for the related user.
-                    The backend provides highest_scores as a dictionary.
-                    If there is no value found, result.score is used as a fallback.
-                  -->
-                  <td>
-                    {{ highest_scores.get(result.user_id, result.score) }}
-                  </td>
-
-                  <!--
-                    Date column.
-                    The visible text is formatted for users.
-                    The data-date attribute stores the original date value so JavaScript
-                    can sort the records accurately by date.
-                  -->
-                  <td data-date="{{ result.created_at }}">
-                    {% if result.created_at %} {{
-                    result.created_at.strftime('%Y-%m-%d %H:%M:%S') }} {% else
-                    %} N/A {% endif %}
-                  </td>
-                </tr>
-
-                <!--
-                  Jinja else block.
-                  This is displayed when the results list is empty.
-                -->
-                {% else %}
-                <tr>
-                  <td colspan="4" class="text-center text-muted">
-                    No player results found.
-                  </td>
-                </tr>
-                {% endfor %}
-              </tbody>
-            </table>
-          </div>
-
-          <!--
-            Logout button.
-            Flask/Jinja knowledge point:
-            url_for('auth.logout') generates the correct logout route URL.
-          -->
-          <div class="mt-3">
-            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">
-              Logout
-            </a>
+          <div>
+            <label for="sortSelect" class="auth-label">Sort results by</label>
+            <select id="sortSelect" class="form-select auth-input">
+              <option value="score">Score</option>
+              <option value="highest">Highest Score</option>
+              <option value="date">Date Played</option>
+            </select>
           </div>
         </div>
-      </div>
-    </div>
+      </section>
 
-    <!--
-      Bootstrap JavaScript bundle.
-      This enables Bootstrap interactive components if needed.
-    -->
+      <!-- Player results table -->
+      <section class="dashboard-panel">
+        <div class="dashboard-panel-header admin-table-header">
+          <div>
+            <p class="section-label">Saved results</p>
+            <h2>Player result records</h2>
+            <p class="admin-panel-description mb-0">
+              Use the search box and sorting dropdown above to review player
+              game results.
+            </p>
+          </div>
+        </div>
+
+        <div class="history-table-wrap">
+          <table class="history-table admin-results-table" id="resultsTable">
+            <thead>
+              <tr>
+                <th>Player Username</th>
+                <th>Score</th>
+                <th>Highest Score</th>
+                <th>Date Played</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {% for result in results %}
+              <tr>
+                <td>
+                  {% if result.user %} {{ result.user.name }} {% else %}
+                  Guest/Deleted User {% endif %}
+                </td>
+
+                <td>{{ result.score }}</td>
+
+                <td>{{ highest_scores.get(result.user_id, result.score) }}</td>
+
+                <td data-date="{{ result.created_at }}">
+                  {% if result.created_at %} {{
+                  result.created_at.strftime('%Y-%m-%d %H:%M:%S') }} {% else %}
+                  N/A {% endif %}
+                </td>
+              </tr>
+
+              {% else %}
+              <tr>
+                <td colspan="4" class="history-empty">
+                  No player results found.
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bootstrap JavaScript bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!--
-      External JavaScript file for this page.
-      Project requirement / issue:
-      "Separate script to js folder and html remains in the templates."
-
-      This means:
-      - HTML structure remains in templates/admin_player_results.html
-      - JavaScript behaviour is moved to static/js/admin_player_results.js
-      - The template only links to the JS file using url_for('static', ...)
-    -->
+    <!-- External JavaScript file for search and sorting -->
     <script src="{{ url_for('static', filename='js/admin_player_results.js') }}"></script>
   </body>
 </html>

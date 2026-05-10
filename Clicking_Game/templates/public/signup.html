@@ -4,7 +4,7 @@
     <!-- Page metadata and external style resources -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Sign Up</title>
+    <title>Sign Up | Egg Clicker</title>
 
     <!-- Bootstrap, Google Fonts, and custom CSS file -->
     <link
@@ -14,7 +14,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
     <link
@@ -23,107 +23,148 @@
     />
   </head>
 
-  <body>
-    <!-- Centered sign-up page layout -->
-    <div
-      class="container min-vh-100 d-flex align-items-center justify-content-center"
-    >
-      <div
-        class="card shadow-sm border-0"
-        style="max-width: 460px; width: 100%"
-      >
-        <div class="card-body p-4">
-          <!-- Sign-up form title -->
-          <h2 class="text-center mb-4">Sign Up</h2>
+  <body class="auth-page">
+    <!-- Shared game-style navigation bar -->
+    <nav class="game-navbar">
+      <a href="{{ url_for('main.home') }}" class="game-logo">🥚 Egg Clicker</a>
 
-          <!-- Display error message if account registration fails -->
-          {% if error %}
-          <div class="alert alert-danger">{{ error }}</div>
-          {% endif %}
-
-          <!-- Display success message after account creation -->
-          {% if success %}
-          <div class="alert alert-success">{{ success }}</div>
-          {% endif %}
-
-          <!-- Development verification link for testing email verification flow -->
-          {% if verification_url %}
-          <div class="alert alert-info">
-            <p class="mb-2">Development verification link:</p>
-            <a href="{{ verification_url }}">{{ verification_url }}</a>
-          </div>
-          {% endif %}
-
-          <!-- Sign-up form submitted to the Flask sign-up route -->
-          <form
-            id="signupForm"
-            method="POST"
-            action="{{ url_for('auth.signup') }}"
-          >
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-
-            <!-- Username input field -->
-            <div class="mb-3">
-              <input
-                id="username"
-                type="text"
-                name="username"
-                class="form-control"
-                placeholder="Enter your username"
-                required
-              />
-            </div>
-
-            <!-- Email input field -->
-            <div class="mb-3">
-              <input
-                id="email"
-                type="email"
-                name="email"
-                class="form-control"
-                placeholder="Enter your email"
-                required
-              />
-            </div>
-
-            <!-- Password input field -->
-            <div class="mb-3">
-              <input
-                id="password"
-                type="password"
-                name="password"
-                class="form-control"
-                placeholder="Enter your password"
-                required
-              />
-            </div>
-
-            <!-- Confirm password field used to check that both passwords match -->
-            <div class="mb-3">
-              <input
-                id="confirmPassword"
-                type="password"
-                name="confirm_password"
-                class="form-control"
-                placeholder="Confirm your password"
-                required
-              />
-            </div>
-
-            <!-- Message area used by JavaScript for form validation feedback -->
-            <p id="message" class="text-danger mb-3"></p>
-
-            <button type="submit" class="btn btn-success w-100">Sign Up</button>
-          </form>
-
-          <!-- Link to the login page for users who already have an account -->
-          <p class="text-center mt-3 mb-0">
-            Already have an account?
-            <a href="{{ url_for('auth.login') }}">Login here</a>
-          </p>
-        </div>
+      <div class="game-nav-links">
+        <a href="{{ url_for('main.home') }}">Home</a>
+        <a href="{{ url_for('auth.login') }}">Login</a>
       </div>
-    </div>
+    </nav>
+
+    <!-- Sign-up page layout -->
+    <main class="auth-layout">
+      <!-- Left brand panel -->
+      <section class="auth-intro">
+        <p class="hero-badge">Start your journey</p>
+
+        <h1>Create an account and save your progress.</h1>
+
+        <p>
+          Sign up as a player to save your scores, review previous results, and
+          continue improving your clicking performance over time.
+        </p>
+
+        <div class="auth-feature-list">
+          <div>
+            <strong>Save</strong>
+            <span>store your game results</span>
+          </div>
+          <div>
+            <strong>Track</strong>
+            <span>review your score history</span>
+          </div>
+          <div>
+            <strong>Grow</strong>
+            <span>build your progress over time</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sign-up form card -->
+      <section class="auth-card">
+        <h2>Sign Up</h2>
+        <p class="auth-subtitle">
+          Create your player account to start saving your progress.
+        </p>
+
+        <!-- Display error message if account registration fails -->
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <!-- Display success message after account creation -->
+        {% if success %}
+        <div class="alert alert-success">{{ success }}</div>
+        {% endif %}
+
+        <!-- Development verification link for testing email verification flow -->
+        {% if verification_url %}
+        <div class="alert alert-info">
+          <p class="mb-2">Development verification link:</p>
+          <a href="{{ verification_url }}">{{ verification_url }}</a>
+        </div>
+        {% endif %}
+
+        <!-- Sign-up form submitted to the Flask sign-up route -->
+        <form
+          id="signupForm"
+          method="POST"
+          action="{{ url_for('auth.signup') }}"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+          <!-- Username input field -->
+          <div class="mb-3">
+            <label for="username" class="auth-label">Username</label>
+            <input
+              id="username"
+              type="text"
+              name="username"
+              class="form-control auth-input"
+              placeholder="Enter your username"
+              required
+            />
+          </div>
+
+          <!-- Email input field -->
+          <div class="mb-3">
+            <label for="email" class="auth-label">Email</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              class="form-control auth-input"
+              placeholder="Enter your email"
+              required
+            />
+          </div>
+
+          <!-- Password input field -->
+          <div class="mb-3">
+            <label for="password" class="auth-label">Password</label>
+            <input
+              id="password"
+              type="password"
+              name="password"
+              class="form-control auth-input"
+              placeholder="Enter your password"
+              required
+            />
+          </div>
+
+          <!-- Confirm password field used to check that both passwords match -->
+          <div class="mb-3">
+            <label for="confirmPassword" class="auth-label"
+              >Confirm Password</label
+            >
+            <input
+              id="confirmPassword"
+              type="password"
+              name="confirm_password"
+              class="form-control auth-input"
+              placeholder="Confirm your password"
+              required
+            />
+          </div>
+
+          <!-- Message area used by JavaScript for form validation feedback -->
+          <p id="message" class="text-danger mb-3"></p>
+
+          <button type="submit" class="btn auth-primary-btn w-100">
+            Sign Up
+          </button>
+        </form>
+
+        <!-- Link to the login page for users who already have an account -->
+        <p class="auth-switch-link">
+          Already have an account?
+          <a href="{{ url_for('auth.login') }}">Login here</a>
+        </p>
+      </section>
+    </main>
 
     <!-- Bootstrap JavaScript and custom sign-up form script -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
