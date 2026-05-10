@@ -515,6 +515,12 @@ a:hover {
 .auth-primary-btn {
   min-height: 52px;
   margin-top: 4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .auth-secondary-btn {
@@ -522,6 +528,9 @@ a:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  padding: 12px 24px;
+  line-height: 1.2;
+  text-align: center;
 }
 
 .auth-switch-link {
