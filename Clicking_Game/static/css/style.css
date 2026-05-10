@@ -1,5 +1,37 @@
-/* SHARED STYLES */
+/* SHARED THEME VARIABLES */
+
+:root {
+  --egg-dark: #2b1707;
+  --egg-brown: #6b3b12;
+  --egg-deep: #1f1308;
+
+  --egg-navbar: rgba(32, 18, 8, 0.82);
+
+  --egg-gold: #ffd966;
+  --egg-gold-hover: #f1c84d;
+
+  --egg-cream: #fff8de;
+  --egg-cream-soft: #fff0b8;
+
+  --egg-text-dark: #2b1707;
+  --egg-muted-brown: #75552b;
+
+  --egg-card-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  --egg-soft-border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+/* GLOBAL BASE STYLES */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
+  margin: 0;
   font-family: "Poppins", sans-serif;
   background-color: #f8f9fa;
 }
@@ -11,7 +43,7 @@ body {
 h1,
 h2,
 h3 {
-  font-weight: 700;
+  font-weight: 800;
 }
 
 a {
@@ -19,367 +51,13 @@ a {
 }
 
 a:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
-/* .profile-page {
-    width: 85%;
-    max-width: 1100px;
-    margin: 55px auto;
-    text-align: center;
-}
+/* SHARED GAME BACKGROUND Home + Login + future auth pages */
 
-.profile-main-card {
-    background-color: #ffffff;
-    border-radius: 1rem;
-    padding: 55px 70px;
-    margin-bottom: 30px;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-}
-
-.profile-main-card h1 {
-    font-size: 46px;
-    font-weight: 700;
-    margin: 0 0 18px;
-}
-
-.profile-main-card h2 {
-    font-size: 26px;
-    font-weight: 700;
-    color: #6c757d;
-    margin-bottom: 24px;
-}
-
-.profile-main-card p {
-    max-width: 850px;
-    margin: 0 auto 30px;
-    font-size: 20px;
-    line-height: 1.5;
-    color: #6c757d;
-}
-
-.profile-content-card {
-    background-color: #ffffff;
-    border-radius: 1rem;
-    padding: 40px 50px;
-    margin-bottom: 30px;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-    text-align: left;
-}
-
-.profile-content-card h2 {
-    text-align: center;
-    font-size: 32px;
-    font-weight: 700;
-    margin: 0 0 30px;
-}
-
-.profile-form {
-    max-width: 650px;
-    margin: 0 auto;
-}
-
-.form-group {
-    margin-bottom: 22px;
-}
-
-.form-group label {
-    display: block;
-    font-size: 18px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: #212529;
-}
-
-.form-group input {
-    width: 100%;
-    padding: 13px 15px;
-    border: 1px solid #ced4da;
-    border-radius: 7px;
-    font-size: 17px;
-    box-sizing: border-box;
-    font-family: 'Poppins', sans-serif;
-}
-
-.form-group input:focus {
-    outline: none;
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
-}
-
-.password-section {
-    margin-top: 30px;
-    padding-top: 25px;
-    border-top: 1px solid #dee2e6;
-}
-
-.password-section h3 {
-    font-size: 24px;
-    margin: 0 0 20px;
-    text-align: center;
-}
-
-.profile-buttons {
-    width: 520px;
-    max-width: 100%;
-    margin: 30px auto 0;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.profile-btn {
-    display: block;
-    width: 100%;
-    padding: 13px 18px;
-    border-radius: 7px;
-    font-size: 20px;
-    text-decoration: none;
-    text-align: center;
-    box-sizing: border-box;
-    border: none;
-    cursor: pointer;
-    font-family: 'Poppins', sans-serif;
-    transition: 0.2s;
-}
-
-.profile-btn-primary {
-    background-color: #0d6efd;
-    color: #ffffff;
-}
-
-.profile-btn-primary:hover {
-    background-color: #0b5ed7;
-    text-decoration: none;
-}
-
-.profile-btn-secondary {
-    background-color: #ffffff;
-    color: #0d6efd;
-    border: 1px solid #0d6efd;
-}
-
-.profile-btn-secondary:hover {
-    background-color: #eff6ff;
-    text-decoration: none;
-}
-
-.profile-btn-danger {
-    background-color: #dc3545;
-    color: #ffffff;
-}
-
-.profile-btn-danger:hover {
-    background-color: #bb2d3b;
-    text-decoration: none;
-}
-
-.profile-note {
-    text-align: center;
-    color: #6c757d;
-    font-size: 15px;
-    margin-top: 12px;
-}
-
-@media (max-width: 768px) {
-    .profile-page {
-        width: 92%;
-        margin: 30px auto;
-    }
-
-    .profile-main-card {
-        padding: 35px 25px;
-    }
-
-    .profile-main-card h1 {
-        font-size: 36px;
-    }
-
-    .profile-main-card p {
-        font-size: 17px;
-    }
-
-    .profile-content-card {
-        padding: 30px 22px;
-    }
-}
-
-.history-page {
-    width: 85%;
-    max-width: 1200px;
-    margin: 55px auto;
-    text-align: center;
-}
-
-.history-main-card {
-    background-color: #ffffff;
-    border-radius: 1rem;
-    padding: 55px 70px;
-    margin-bottom: 30px;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-}
-
-.history-main-card h1 {
-    font-size: 46px;
-    font-weight: 700;
-    margin: 0 0 18px;
-}
-
-.history-main-card h2 {
-    font-size: 26px;
-    font-weight: 700;
-    color: #6c757d;
-    margin-bottom: 24px;
-}
-
-.history-main-card p {
-    max-width: 850px;
-    margin: 0 auto 30px;
-    font-size: 20px;
-    line-height: 1.5;
-    color: #6c757d;
-}
-
-.history-buttons {
-    width: 520px;
-    max-width: 100%;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.history-btn {
-    display: block;
-    width: 100%;
-    padding: 13px 18px;
-    border-radius: 7px;
-    font-size: 20px;
-    text-decoration: none;
-    box-sizing: border-box;
-    transition: 0.2s;
-}
-
-.history-btn-primary {
-    background-color: #0d6efd;
-    color: #ffffff;
-}
-
-.history-btn-primary:hover {
-    background-color: #0b5ed7;
-    text-decoration: none;
-}
-
-.history-btn-danger {
-    background-color: #dc3545;
-    color: #ffffff;
-}
-
-.history-btn-danger:hover {
-    background-color: #bb2d3b;
-    text-decoration: none;
-}
-
-.history-section-title {
-    font-size: 32px;
-    font-weight: 700;
-    margin: 25px 0;
-}
-
-.history-stats {
-    display: flex;
-    justify-content: center;
-    gap: 24px;
-    margin-bottom: 35px;
-    flex-wrap: wrap;
-}
-
-.history-stat-card {
-    background-color: #ffffff;
-    width: 260px;
-    padding: 20px 25px;
-    border-radius: 1rem;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-}
-
-.history-stat-card h3 {
-    font-size: 22px;
-    font-weight: 700;
-    margin: 0 0 10px;
-}
-
-.history-stat-card p {
-    font-size: 18px;
-    margin: 0;
-}
-
-.history-list-card {
-    background-color: #ffffff;
-    border-radius: 1rem;
-    padding: 35px 45px;
-    margin-top: 25px;
-    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
-}
-
-.history-list-card h2 {
-    font-size: 30px;
-    font-weight: 700;
-    margin: 0 0 25px;
-}
-
-.history-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 18px;
-}
-
-.history-table th {
-    background-color: #f3f4f6;
-    font-weight: 700;
-    padding: 14px;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.history-table td {
-    padding: 14px;
-    border-bottom: 1px solid #dee2e6;
-}
-
-.history-table tr:hover {
-    background-color: #f8f9fa;
-}
-
-@media (max-width: 768px) {
-    .history-page {
-        width: 92%;
-        margin: 30px auto;
-    }
-
-    .history-main-card {
-        padding: 35px 25px;
-    }
-
-    .history-main-card h1 {
-        font-size: 36px;
-    }
-
-    .history-main-card p {
-        font-size: 17px;
-    }
-
-    .history-table {
-        font-size: 15px;
-    }
-
-    .history-list-card {
-        padding: 25px 15px;
-        overflow-x: auto;
-    }
-} */
-
-/* HOME PAGE REDESIGN */
-
-.game-home-page {
+.game-home-page,
+.auth-page {
   min-height: 100vh;
   margin: 0;
   font-family: "Poppins", sans-serif;
@@ -394,10 +72,17 @@ a:hover {
       rgba(255, 255, 255, 0.18),
       transparent 30%
     ),
-    linear-gradient(135deg, #2b1707 0%, #6b3b12 45%, #1f1308 100%);
+    linear-gradient(
+      135deg,
+      var(--egg-dark) 0%,
+      var(--egg-brown) 45%,
+      var(--egg-deep) 100%
+    );
   color: #ffffff;
   overflow-x: hidden;
 }
+
+/* SHARED NAVBAR */
 
 .game-navbar {
   position: sticky;
@@ -407,7 +92,7 @@ a:hover {
   align-items: center;
   justify-content: space-between;
   padding: 18px 7vw;
-  background: rgba(32, 18, 8, 0.78);
+  background: var(--egg-navbar);
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
@@ -416,12 +101,12 @@ a:hover {
   color: #fff4cf;
   font-size: 1.35rem;
   font-weight: 800;
-  text-decoration: none;
   letter-spacing: 0.3px;
+  text-decoration: none;
 }
 
 .game-logo:hover {
-  color: #ffd966;
+  color: var(--egg-gold);
   text-decoration: none;
 }
 
@@ -433,21 +118,100 @@ a:hover {
 
 .game-nav-links a {
   color: rgba(255, 255, 255, 0.86);
+  font-weight: 700;
   text-decoration: none;
-  font-weight: 600;
 }
 
 .game-nav-links a:hover {
-  color: #ffd966;
+  color: var(--egg-gold);
   text-decoration: none;
 }
 
 .game-nav-links .nav-signup {
-  padding: 10px 16px;
-  color: #2b1707;
-  background: #ffd966;
+  padding: 10px 18px;
+  color: var(--egg-text-dark);
+  background: var(--egg-gold);
   border-radius: 999px;
 }
+
+.game-nav-links .nav-signup:hover {
+  color: var(--egg-text-dark);
+  background: var(--egg-gold-hover);
+}
+
+/* SHARED HERO BADGE This fixes the different yellow badge issue */
+
+.hero-badge,
+.auth-intro .hero-badge,
+.hero-text .hero-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 10px 22px;
+  margin-bottom: 26px;
+  color: var(--egg-text-dark) !important;
+  background: var(--egg-cream-soft) !important;
+  border-radius: 999px;
+  font-weight: 800;
+  line-height: 1.2;
+  box-shadow: 0 8px 24px rgba(43, 23, 7, 0.12);
+}
+
+/* SHARED CTA BUTTONS */
+
+.game-home-page .btn-warning,
+.auth-page .btn-warning,
+.auth-primary-btn {
+  color: var(--egg-text-dark);
+  background: var(--egg-gold);
+  border: none;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.game-home-page .btn-warning:hover,
+.auth-page .btn-warning:hover,
+.auth-primary-btn:hover {
+  color: var(--egg-text-dark);
+  background: var(--egg-gold-hover);
+  text-decoration: none;
+}
+
+.game-home-page .btn-outline-light,
+.auth-page .btn-outline-light {
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.game-home-page .btn-outline-light:hover,
+.auth-page .btn-outline-light:hover {
+  color: var(--egg-text-dark);
+  background: var(--egg-cream-soft);
+  border-color: var(--egg-cream-soft);
+}
+
+.game-home-page .btn-light,
+.auth-page .btn-light,
+.auth-secondary-btn {
+  color: var(--egg-text-dark);
+  background: #ffffff;
+  border: 1px solid rgba(43, 23, 7, 0.15);
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.game-home-page .btn-light:hover,
+.auth-page .btn-light:hover,
+.auth-secondary-btn:hover {
+  color: var(--egg-text-dark);
+  background: #fff4cf;
+  text-decoration: none;
+}
+
+/* HOME PAGE */
 
 .home-hero {
   min-height: calc(100vh - 78px);
@@ -458,21 +222,11 @@ a:hover {
   padding: 70px 7vw 90px;
 }
 
-.hero-badge {
-  display: inline-flex;
-  padding: 8px 14px;
-  margin-bottom: 18px;
-  color: #3a210b;
-  background: #fff0b8;
-  border-radius: 999px;
-  font-weight: 700;
-}
-
 .hero-text h1 {
-  max-width: 740px;
-  margin-bottom: 22px;
+  max-width: 760px;
+  margin-bottom: 28px;
   font-size: clamp(3rem, 6vw, 6.8rem);
-  line-height: 0.95;
+  line-height: 1.08;
   font-weight: 800;
   letter-spacing: -2px;
 }
@@ -493,33 +247,40 @@ a:hover {
 }
 
 .hero-actions .btn {
+  padding: 12px 24px;
   border-radius: 999px;
-  padding: 12px 22px;
-  font-weight: 700;
+  font-weight: 800;
   text-decoration: none;
 }
 
-.hero-stats {
+.hero-stats,
+.auth-feature-list {
   display: grid;
   grid-template-columns: repeat(3, minmax(120px, 1fr));
   gap: 14px;
   max-width: 650px;
 }
 
-.hero-stats div {
+.hero-stats div,
+.auth-feature-list div {
   padding: 16px;
   background: rgba(255, 255, 255, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: var(--egg-soft-border);
   border-radius: 22px;
 }
 
-.hero-stats strong {
+.hero-stats strong,
+.auth-feature-list strong {
   display: block;
-  color: #ffd966;
+  color: var(--egg-gold);
   font-size: 1.2rem;
+  font-weight: 800;
 }
 
-.hero-stats span {
+.hero-stats span,
+.auth-feature-list span {
+  display: block;
+  margin-top: 4px;
   color: rgba(255, 255, 255, 0.72);
   font-size: 0.9rem;
 }
@@ -529,9 +290,9 @@ a:hover {
   padding: 28px;
   text-align: center;
   background: rgba(255, 248, 222, 0.95);
-  color: #2b1707;
+  color: var(--egg-text-dark);
   border-radius: 36px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--egg-card-shadow);
 }
 
 .game-card-top {
@@ -543,13 +304,16 @@ a:hover {
 }
 
 .demo-egg-button {
+  width: 300px;
+  height: 300px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   background: transparent;
-  border: 0;
+  border: none;
   box-shadow: none;
+  overflow: visible;
   cursor: pointer;
   transition: transform 0.12s ease;
 }
@@ -562,33 +326,9 @@ a:hover {
   transform: scale(0.96);
 }
 
-.demo-egg-button {
-  width: 260px;
-  height: 260px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-  overflow: visible;
-}
-
 .demo-egg-button img {
-  width: 260px;
+  width: 78%;
   max-width: none;
-  height: auto;
-  pointer-events: none;
-}
-
-.demo-egg-button:hover {
-  transform: scale(1.03);
-}
-
-.demo-egg-button:active {
-  transform: scale(0.96);
-}
-
-.demo-egg-button img {
-  width: 72%;
   height: auto;
   pointer-events: none;
 }
@@ -609,7 +349,7 @@ a:hover {
 #demoProgressBar {
   width: 0%;
   height: 100%;
-  background: linear-gradient(90deg, #f9a825, #ffd966);
+  background: linear-gradient(90deg, #f9a825, var(--egg-gold));
   border-radius: 999px;
   transition: width 0.2s ease;
 }
@@ -617,7 +357,7 @@ a:hover {
 .demo-hint {
   margin: 14px 0 0;
   color: #735324;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .home-section {
@@ -630,6 +370,7 @@ a:hover {
 .home-final-cta h2 {
   margin-bottom: 34px;
   font-size: clamp(2.2rem, 4vw, 4rem);
+  line-height: 1.08;
   font-weight: 800;
   letter-spacing: -1px;
 }
@@ -668,7 +409,7 @@ a:hover {
 
 .dark-section .feature-card {
   background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: var(--egg-soft-border);
 }
 
 .feature-card h3 {
@@ -699,6 +440,115 @@ a:hover {
   font-size: 1.1rem;
 }
 
+/* AUTH PAGES Login / later Signup */
+
+.auth-layout {
+  min-height: calc(100vh - 78px);
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+  padding: 70px 7vw 90px;
+}
+
+.auth-intro h1 {
+  max-width: 760px;
+  margin-bottom: 28px;
+  font-size: clamp(3rem, 6vw, 6.8rem);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -2px;
+}
+
+.auth-intro p {
+  max-width: 620px;
+  margin-bottom: 30px;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 1.18rem;
+  line-height: 1.75;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 460px;
+  justify-self: center;
+  padding: 38px;
+  background: rgba(255, 248, 222, 0.95);
+  color: var(--egg-text-dark);
+  border-radius: 34px;
+  box-shadow: var(--egg-card-shadow);
+}
+
+.auth-card h2 {
+  margin-bottom: 8px;
+  font-size: 2.25rem;
+  line-height: 1.15;
+  font-weight: 800;
+  text-align: center;
+}
+
+.auth-subtitle {
+  margin-bottom: 26px;
+  color: var(--egg-muted-brown);
+  text-align: center;
+  line-height: 1.6;
+}
+
+.auth-label {
+  margin-bottom: 8px;
+  color: var(--egg-text-dark);
+  font-weight: 800;
+}
+
+.auth-input {
+  min-height: 52px;
+  border: 1px solid rgba(43, 23, 7, 0.18);
+  border-radius: 16px;
+  font-weight: 500;
+}
+
+.auth-input:focus {
+  border-color: #f1b737;
+  box-shadow: 0 0 0 0.2rem rgba(241, 183, 55, 0.24);
+}
+
+.auth-primary-btn {
+  min-height: 52px;
+  margin-top: 4px;
+}
+
+.auth-secondary-btn {
+  min-height: 50px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.auth-switch-link {
+  margin: 20px 0 16px;
+  color: var(--egg-muted-brown);
+  text-align: center;
+}
+
+.auth-switch-link a {
+  color: #7a4e2a;
+  font-weight: 800;
+}
+
+.auth-switch-link a:hover {
+  color: var(--egg-text-dark);
+  text-decoration: underline;
+}
+
+/* ALERTS */
+
+.alert {
+  border-radius: 16px;
+  font-weight: 600;
+}
+
+/* RESPONSIVE DESIGN */
+
 @media (max-width: 900px) {
   .game-navbar {
     align-items: flex-start;
@@ -711,17 +561,30 @@ a:hover {
     gap: 12px;
   }
 
-  .home-hero {
+  .home-hero,
+  .auth-layout {
     grid-template-columns: 1fr;
-    padding-top: 42px;
+    padding: 42px 6vw 70px;
   }
 
   .hero-stats,
+  .auth-feature-list,
   .feature-grid {
     grid-template-columns: 1fr;
   }
 
-  .hero-text h1 {
-    font-size: 3.2rem;
+  .hero-text h1,
+  .auth-intro h1 {
+    font-size: 3.1rem;
+    line-height: 1.08;
+  }
+
+  .auth-card {
+    padding: 28px;
+  }
+
+  .demo-egg-button {
+    width: 240px;
+    height: 240px;
   }
 }
