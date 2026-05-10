@@ -338,6 +338,8 @@ a:hover {
   max-width: none;
   height: auto;
   pointer-events: none;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 
 .demo-score {
