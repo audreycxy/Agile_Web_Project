@@ -1,6 +1,6 @@
 # Handles authentication routes for login, signup, dashboards, history, profile, and logout
 import os
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 from flask import Blueprint, g, jsonify, redirect, render_template, request, session, url_for
 from Clicking_Game.models import users
 from Clicking_Game.utils.auth import login_required
@@ -259,7 +259,13 @@ def ai_feedback():
             "feedback": response.output_text
         })
 
-    except Exception:
+    except RateLimitError:
+        return jsonify({
+            "feedback": "AI feedback is unavailable because the API quota has been reached. Please check API billing or try again later."
+        }), 429
+
+    except Exception as e:
+        print("AI feedback error:", repr(e))
         return jsonify({
             "feedback": "AI feedback is unavailable right now. Please try again later."
         }), 500
