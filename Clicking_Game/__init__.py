@@ -5,6 +5,7 @@ from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 from .models import database
 from .routes import auth, main
+from dotenv import load_dotenv
 
 csrf = CSRFProtect()
 
@@ -23,6 +24,8 @@ def _bool_env(name, default=False):
 
 # Building and configuring the Flask application
 def create_app(test_config=None):
+    load_dotenv()
+    
     project_root = Path(__file__).resolve().parent.parent
     instance_path = project_root / "instance"
     default_database = instance_path / "app.db"

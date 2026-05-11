@@ -1,19 +1,24 @@
 # Handles public routes that don't require authentication 
-from flask import Blueprint, g, jsonify, render_template
-from Clicking_Game.models import users
+from flask import Blueprint, render_template, g, request, jsonify
+from Clicking_Game.models import users, database
+from Clicking_Game.game_logic import EGG_CONFIG
 
 bp = Blueprint("main", __name__)
+
 
 @bp.route("/")
 def home():
     return render_template("public/home.html")
 
+
 @bp.route("/guest")
 def guest():
     return render_template("public/guest.html")
 
+
 @bp.route("/game")
 def game():
+    # Default game state for guest users or users without saved progress fields
     initial_state = {
         "points": 0,
         "current_infinity_level": 0,
@@ -21,38 +26,21 @@ def game():
         "highest_type": "standard",
         "clicks_remaining": None,
         "progress_percent": 0,
-        "is_guest": True
-    }
+        "is_guest": True,
 
-    # Check if auth.py set g.user
+        "click_power_lvl": 1,
+        "autoclicker_lvl": 0
+    }
+    # Check if the player has an account
     if g.user:
         initial_state.update({
             "points": g.user.points,
             "current_infinity_level": g.user.current_infinity_level,
             "current_type": g.user.current_type,
             "highest_type": g.user.highest_type,
-            "clicks_remaining": g.user.clicks_remaining,
+            "clicks_remaining": g.user.clicks_remainiing,
             "progress_percent": g.user.progress_percent,
             "is_guest": False
         })
-        
+    
     return render_template("player/game.html", state=initial_state)
-
-
-@bp.route("/api/leaderboard")
-def leaderboard():
-    leaderboard_users = users.list_leaderboard(limit=10)
-
-    return jsonify(
-        {
-            "current_user_id": g.user.id if g.user else None,
-            "players": [
-                {
-                    "id": user.id,
-                    "name": user.name,
-                    "points": user.points,
-                }
-                for user in leaderboard_users
-            ],
-        }
-    )

@@ -22,6 +22,8 @@
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
     />
+
+    <meta name="csrf-token" content="{{ csrf_token() }}" />
   </head>
 
   <body class="dashboard-page">
@@ -77,6 +79,30 @@
             <h3>{{ average_score }}</h3>
             <p>Your average score across saved games.</p>
           </article>
+        </div>
+      </section>
+
+      <!-- AI performance coach -->
+      <section class="dashboard-panel">
+        <div class="dashboard-panel-header">
+          <p class="section-label">AI Coach</p>
+          <h2>Performance feedback</h2>
+        </div>
+
+        <p class="admin-panel-description">
+          Get a short AI-generated suggestion based on your recent saved scores.
+        </p>
+
+        <button
+          id="aiFeedbackBtn"
+          type="button"
+          class="btn auth-primary-btn dashboard-action-btn"
+        >
+          Get AI Feedback
+        </button>
+
+        <div id="aiFeedbackBox" class="ai-feedback-box">
+          Your AI feedback will appear here.
         </div>
       </section>
 

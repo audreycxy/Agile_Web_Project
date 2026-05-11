@@ -69,23 +69,19 @@ if (playBtns.length > 0) {
         gameState.clicksRemaining--;
         updateProgressUI()
 
-        if (gameState.clicksRemaining <= 0) {
+        if (gameState.clicksRemaning <= 0) {
             console.log("zero clicks left"); // no clicks left print
             const earned = calculateReward();
             gameState.totalPoints += earned;
-            updatePointsUI(earned);
 
             // need to add a check for out of bounds
             const eggKeys = Object.keys(EGG_CONFIG);
-            const currentIndex = eggKeys.indexOf(gameState.currentType);
-            const nextIndex = (currentIndex + 1) % eggKeys.length;
-
+            const nextIndex =  eggKeys.indexOf(gameState.currentType) + 1;
             gameState.currentType = eggKeys[nextIndex];
-            gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].baseClicks;
-            updateHighestType(eggKeys);
-            updateProgressUI()
-            saveGameState().finally(fetchLeaderboard);
 
+            gameState.clicksRemaning = EGG_CONFIG[gameState.currentType].baseClicks;
+            updateProgressUI()
+            
             triggerEggBreak();
         }
     }
@@ -94,17 +90,16 @@ if (playBtns.length > 0) {
         const level = 1 // placeholder for level (should probably be renamed to power to not be confused with levels as in stages)
 
         const egg = EGG_CONFIG[gameState.currentType];
-        return Math.floor(egg.basePoints * level);
+        return Math.floor(egg.base_points * level);
     }
 
-    function updatePointsUI(pointsEarned) {
+    function updatePointsUI() {
         document.getElementById('egg-points').innerText = gameState.totalPoints;
-        console.log(`Earned ${pointsEarned} points!`); // amount rewarded print
     }
 
     function updateProgressUI() {
         const requiredClicks = EGG_CONFIG[gameState.currentType].baseClicks
-        const percentage = ((requiredClicks - gameState.clicksRemaining) / requiredClicks) * 100;
+        const percentage = ((requiredClicks - gameState.clicksRemaning) / requiredClicks) * 100;
         const barWidth = Math.min(Math.max(percentage, 0), 100);
 
         gameState.progressPercent = barWidth;
@@ -191,6 +186,7 @@ if (playBtns.length > 0) {
         eggImage.forEach(eggImage => {
             eggImage.style.backgroundImage = `url('${EGG_CONFIG[gameState.currentType].image}')`
         })
+        document.getElementById('egg-type-display').innerText = gameState.currentType;
     }
 
     function triggerEggBreak() {
@@ -235,29 +231,6 @@ if (playBtns.length > 0) {
         console.log('broke and replaced the egg')
     }
 
-    const restartBtn = document.getElementById("restart-game-btn");
-
-    if (restartBtn) {
-        restartBtn.addEventListener("click", function (event) {
-            event.preventDefault();
-
-            const confirmRestart = confirm("Are you sure you want to restart your game? Your current progress will be reset.");
-
-            if (!confirmRestart) {
-                return;
-            }
-
-            fetch("/restart_game", jsonPostOptions({}))
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        isRestarting = true;
-                        window.location.reload();
-                    }
-                });
-        });
-    }
-
     // Event Listeners/Triggers:
     document.getElementById('egg-btn').addEventListener('click', handleEggClick);
 
@@ -266,13 +239,4 @@ if (playBtns.length > 0) {
         document.getElementById('game-screen').style.display = '';
         fetchLeaderboard();
     })
-
-    const leaderboardRefresh = window.setInterval(fetchLeaderboard, 5000);
-
-    window.addEventListener("beforeunload", () => {
-        window.clearInterval(leaderboardRefresh);
-        if (!isRestarting) {
-            saveGameState();
-        }
-    });
 })();
