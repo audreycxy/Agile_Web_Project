@@ -1,6 +1,7 @@
 # Handles authentication routes for login, signup, dashboards, history, profile, and logout
 import os
-from openai import OpenAI, RateLimitError
+from google import genai
+from google.genai import errors as genai_errors
 from flask import Blueprint, g, jsonify, redirect, render_template, request, session, url_for
 from Clicking_Game.models import users
 from Clicking_Game.utils.auth import login_required
@@ -218,11 +219,11 @@ def history():
 @bp.route("/ai_feedback", methods=["POST"])
 @login_required(role="player")
 def ai_feedback():
-    api_key = os.environ.get("OPENAI_API_KEY")
+    api_key = os.environ.get("GEMINI_API_KEY")
 
     if not api_key:
         return jsonify({
-            "feedback": "AI feedback is unavailable because the API key is not configured."
+            "feedback": "AI feedback is unavailable because the Gemini API key is not configured."
         }), 503
 
     recent_results = users.list_results(user_id=g.user.id, limit=5)
@@ -248,24 +249,27 @@ def ai_feedback():
     )
 
     try:
-        client = OpenAI(api_key=api_key)
+        client = genai.Client(api_key=api_key)
 
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=prompt,
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
         )
 
+        feedback = response.text or "AI feedback is unavailable right now."
+
         return jsonify({
-            "feedback": response.output_text
+            "feedback": feedback
         })
 
-    except RateLimitError:
+    except genai_errors.APIError as e:
+        print("Gemini API error:", repr(e))
         return jsonify({
-            "feedback": "AI feedback is unavailable because the API quota has been reached. Please check API billing or try again later."
-        }), 429
+            "feedback": "AI feedback is unavailable because the Gemini API request failed. Please check the API key, quota, or model access."
+        }), 500
 
     except Exception as e:
-        print("AI feedback error:", repr(e))
+        print("Gemini feedback error:", repr(e))
         return jsonify({
             "feedback": "AI feedback is unavailable right now. Please try again later."
         }), 500
