@@ -69,17 +69,18 @@ if (playBtns.length > 0) {
         gameState.clicksRemaining--;
         updateProgressUI()
 
-        if (gameState.clicksRemaning <= 0) {
+        if (gameState.clicksRemaining <= 0) {
             console.log("zero clicks left"); // no clicks left print
             const earned = calculateReward();
             gameState.totalPoints += earned;
+            updatePointsUI();
 
             // need to add a check for out of bounds
             const eggKeys = Object.keys(EGG_CONFIG);
             const nextIndex =  eggKeys.indexOf(gameState.currentType) + 1;
             gameState.currentType = eggKeys[nextIndex];
 
-            gameState.clicksRemaning = EGG_CONFIG[gameState.currentType].baseClicks;
+            gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].baseClicks;
             updateProgressUI()
             
             triggerEggBreak();
@@ -90,7 +91,7 @@ if (playBtns.length > 0) {
         const level = 1 // placeholder for level (should probably be renamed to power to not be confused with levels as in stages)
 
         const egg = EGG_CONFIG[gameState.currentType];
-        return Math.floor(egg.base_points * level);
+        return Math.floor(egg.basePoints * level);
     }
 
     function updatePointsUI() {
@@ -99,7 +100,7 @@ if (playBtns.length > 0) {
 
     function updateProgressUI() {
         const requiredClicks = EGG_CONFIG[gameState.currentType].baseClicks
-        const percentage = ((requiredClicks - gameState.clicksRemaning) / requiredClicks) * 100;
+        const percentage = ((requiredClicks - gameState.clicksRemaining) / requiredClicks) * 100;
         const barWidth = Math.min(Math.max(percentage, 0), 100);
 
         gameState.progressPercent = barWidth;

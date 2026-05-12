@@ -38,9 +38,25 @@ def game():
             "current_infinity_level": g.user.current_infinity_level,
             "current_type": g.user.current_type,
             "highest_type": g.user.highest_type,
-            "clicks_remaining": g.user.clicks_remainiing,
+            "clicks_remaining": g.user.clicks_remaining,
             "progress_percent": g.user.progress_percent,
             "is_guest": False
         })
     
     return render_template("player/game.html", state=initial_state)
+
+@bp.route("/leaderboard")
+def leaderboard():
+    players = users.list_leaderboard(limit=10)
+
+    return jsonify({
+        "players": [
+            {
+                "id": player.id,
+                "name": player.name,
+                "points": player.points,
+            }
+            for player in players
+        ],
+        "current_user_id": g.user.id if g.user else None,
+    })
