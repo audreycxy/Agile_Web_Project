@@ -1143,3 +1143,11 @@ a:hover {
   font-weight: 700;
   line-height: 1.7;
 }
+
+.game-nav-links a.active {
+  background: #fff3d6;
+  color: #b36b00;
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 0.45rem 0.9rem;
+}
