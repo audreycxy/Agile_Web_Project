@@ -56,7 +56,7 @@
 
       <p>
         Search registered users, review account roles, and check account
-        status from one admin management page.
+        status, including deleted accounts, from one admin management page.
       </p>
     </section>
 
@@ -139,7 +139,7 @@
 
               <!-- Role management dropdown for each account -->
               <td>
-                {% if account.id == session.get('user_id') %}
+                {% if account.id == session.get('user_id') or account.is_deleted %}
                 <span class="admin-pill admin-pill-primary">
                   {{ account.role.title() }}
                 </span>
@@ -180,7 +180,11 @@
 
               <!-- Account status management dropdown -->
               <td>
-                {% if account.id == session.get('user_id') %}
+                {% if account.is_deleted %}
+                <span class="admin-pill admin-pill-muted">
+                  Deleted{% if account.deleted_at %} · {{ account.deleted_at.strftime('%d %b %Y') }}{% endif %}
+                </span>
+                {% elif account.id == session.get('user_id') %}
                 <span class="admin-pill admin-pill-success">
                   Current account
                 </span>

@@ -10,7 +10,7 @@ def login_required(role=None):
             if g.user is None:
                 return redirect(url_for("auth.login"))
 
-            if not g.user.is_active:
+            if g.user.is_deleted or not g.user.is_active:
                 session.clear()
                 return redirect(url_for("auth.login"))
 

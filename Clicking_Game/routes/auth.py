@@ -24,9 +24,17 @@ def dashboard_url_for(user):
 @bp.route("/login", methods=("GET", "POST"))
 def login():
     if g.user is not None:
-        return redirect(dashboard_url_for(g.user))
+        if g.user.is_deleted or not g.user.is_active:
+            session.clear()
+        else:
+            return redirect(dashboard_url_for(g.user))
 
     error = None
+    success = (
+        "Your account has been deleted."
+        if request.args.get("account_deleted") == "1"
+        else None
+    )
 
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
@@ -43,6 +51,8 @@ def login():
 
             if user is None or not user.check_password(password):
                 error = "Invalid email or password."
+            elif user.is_deleted:
+                error = "This account has been deleted."
             elif not user.is_active:
                 error = "This account has been deactivated."
             elif not user.email_verified:
@@ -56,14 +66,17 @@ def login():
 
                 return redirect(dashboard_url_for(user))
 
-    return render_template("public/login.html", error=error)
+    return render_template("public/login.html", error=error, success=success)
 
 # Route for user signup
 # New users are created with the "player" role by default
 @bp.route("/signup", methods=("GET", "POST"))
 def signup():
     if g.user is not None:
-        return redirect(dashboard_url_for(g.user))
+        if g.user.is_deleted or not g.user.is_active:
+            session.clear()
+        else:
+            return redirect(dashboard_url_for(g.user))
 
     error = None
 
@@ -364,6 +377,34 @@ def profile():
         error=error,
         success=success,
     )
+
+
+@bp.route("/profile/delete", methods=["POST"])
+@login_required(role="player")
+def delete_account():
+    current_password = request.form.get("delete_password", "")
+
+    if not current_password:
+        return render_template(
+            "player/profile.html",
+            username=g.user.name,
+            email=g.user.email,
+            error="Current password is required to delete your account.",
+            success=None,
+        )
+
+    if not g.user.check_password(current_password):
+        return render_template(
+            "player/profile.html",
+            username=g.user.name,
+            email=g.user.email,
+            error="Current password is incorrect.",
+            success=None,
+        )
+
+    users.soft_delete_user(g.user)
+    session.clear()
+    return redirect(url_for("auth.login", account_deleted="1"))
 
 # Route for user logout
 @bp.route("/logout")
