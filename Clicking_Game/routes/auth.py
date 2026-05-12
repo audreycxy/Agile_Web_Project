@@ -164,6 +164,29 @@ def admin_accounts():
         selected_role=selected_role,
     )
 
+@bp.route("/admin_accounts/<int:user_id>/role", methods=("POST",))
+@login_required(role="admin")
+def update_account_role(user_id):
+    new_role = request.form.get("role")
+
+    if user_id == g.user.id:
+        return redirect(url_for("auth.admin_accounts"))
+
+    users.update_user_role(user_id, new_role)
+    return redirect(url_for("auth.admin_accounts"))
+
+
+@bp.route("/admin_accounts/<int:user_id>/status", methods=("POST",))
+@login_required(role="admin")
+def update_account_status(user_id):
+    new_status = request.form.get("is_active")
+
+    if user_id == g.user.id:
+        return redirect(url_for("auth.admin_accounts"))
+
+    users.set_user_active(user_id, new_status == "true")
+    return redirect(url_for("auth.admin_accounts"))
+
 # Admin results page shows saved scores across all players
 @bp.route("/admin_player_results")
 @login_required(role="admin")

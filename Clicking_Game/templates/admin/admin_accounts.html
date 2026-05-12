@@ -1,38 +1,31 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <!-- Page metadata and external style resources -->
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Accounts | Egg Clicker</title>
 
-    <!-- Bootstrap and Google Fonts -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+<head>
+  <!-- Page metadata and external style resources -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Accounts | Egg Clicker</title>
 
-    <!-- Custom CSS file -->
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
+  <!-- Bootstrap and Google Fonts -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
 
-  <body class="dashboard-page">
-    <!-- Shared game-style navigation bar -->
-    <nav class="game-navbar">
-      <a href="{{ url_for('auth.admin_dashboard') }}" class="game-logo">
-        🥚 Egg Clicker
-      </a>
+  <!-- Custom CSS file -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
 
-      <div class="game-nav-links">
+<body class="dashboard-page">
+  <!-- Shared game-style navigation bar -->
+  <nav class="game-navbar">
+    <a href="{{ url_for('auth.admin_dashboard') }}" class="game-logo">
+      🥚 Egg Clicker
+    </a>
+
+    <div class="game-nav-links">
       <a href="{{ url_for('auth.admin_dashboard') }}"
         class="{% if request.endpoint == 'auth.admin_dashboard' %}active{% endif %}">
         Dashboard
@@ -52,162 +45,201 @@
         Logout
       </a>
     </div>
-    </nav>
+  </nav>
 
-    <main class="dashboard-layout">
-      <!-- Page header -->
-      <section class="dashboard-hero">
-        <p class="hero-badge">Admin Panel</p>
+  <main class="dashboard-layout">
+    <!-- Page header -->
+    <section class="dashboard-hero">
+      <p class="hero-badge">Admin Panel</p>
 
-        <h1>Manage player accounts.</h1>
+      <h1>Manage player accounts.</h1>
 
-        <p>
-          Search registered users, review account roles, and check account
-          status from one admin management page.
-        </p>
-      </section>
+      <p>
+        Search registered users, review account roles, and check account
+        status from one admin management page.
+      </p>
+    </section>
 
-      <!-- Display flash messages such as success or error notifications -->
-      {% with messages = get_flashed_messages(with_categories=true) %} {% if
-      messages %}
-      <section class="admin-flash-area">
-        {% for category, message in messages %}
-        <div
-          class="alert alert-{{ category }} alert-dismissible fade show"
-          role="alert"
-        >
-          {{ message }}
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="alert"
-            aria-label="Close"
-          ></button>
-        </div>
-        {% endfor %}
-      </section>
-      {% endif %} {% endwith %}
+    <!-- Display flash messages such as success or error notifications -->
+    {% with messages = get_flashed_messages(with_categories=true) %} {% if
+    messages %}
+    <section class="admin-flash-area">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %} {% endwith %}
 
-      <!-- Search and role filter form -->
-      <section class="dashboard-panel">
-        <div class="dashboard-panel-header">
-          <p class="section-label">Account filters</p>
-          <h2>Find registered users</h2>
-        </div>
+    <!-- Search and role filter form -->
+    <section class="dashboard-panel">
+      <div class="dashboard-panel-header">
+        <p class="section-label">Account filters</p>
+        <h2>Find registered users</h2>
+      </div>
 
-        <form method="get" class="admin-account-filter-form">
-          <div>
-            <label for="search" class="auth-label">Search accounts</label>
-            <input
-              type="text"
-              class="form-control auth-input"
-              id="search"
-              name="search"
-              value="{{ search }}"
-              placeholder="Search by name or email"
-            />
-          </div>
-
-          <div>
-           <select class="form-select auth-input" id="role" name="role">
-              <option value="all" {% if selected_role == 'all' %}selected{% endif %}>
-                All roles
-              </option>
-              <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>
-                Admin
-              </option>
-              <option value="player" {% if selected_role == 'player' %}selected{% endif %}>
-                Player
-              </option>
-            </select>
-          </div>
-        </form>
-      </section>
-
-      <!-- Account table section -->
-      <section class="dashboard-panel">
-        <div class="dashboard-panel-header admin-table-header">
-          <div>
-            <p class="section-label">Accounts</p>
-            <h2>Registered users</h2>
-            <p class="admin-panel-description mb-0">
-              {{ total_accounts }} account{% if total_accounts != 1 %}s{% endif
-              %} found.
-            </p>
-          </div>
-
-          <span class="admin-signed-in-badge"> Signed in as {{ name }} </span>
+      <form method="get" class="admin-account-filter-form">
+        <div>
+          <label for="search" class="auth-label">Search accounts</label>
+          <input type="text" class="form-control auth-input" id="search" name="search" value="{{ search }}"
+            placeholder="Search by name or email" />
         </div>
 
-        {% if accounts %}
-        <div class="history-table-wrap">
-          <table class="history-table admin-account-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Role</th>
-                <th>Created</th>
-                <th>Status</th>
-              </tr>
-            </thead>
+        <div>
+          <select class="form-select auth-input" id="role" name="role">
+            <option value="all" {% if selected_role=='all' %}selected{% endif %}>
+              All roles
+            </option>
+            <option value="admin" {% if selected_role=='admin' %}selected{% endif %}>
+              Admin
+            </option>
+            <option value="player" {% if selected_role=='player' %}selected{% endif %}>
+              Player
+            </option>
+          </select>
+        </div>
+      </form>
+    </section>
 
-            <tbody>
-              {% for account in accounts %}
-              <tr>
-                <td class="admin-account-name">{{ account.name }}</td>
-                <td>{{ account.email }}</td>
+    <!-- Account table section -->
+    <section class="dashboard-panel">
+      <div class="dashboard-panel-header admin-table-header">
+        <div>
+          <p class="section-label">Accounts</p>
+          <h2>Registered users</h2>
+          <p class="admin-panel-description mb-0">
+            {{ total_accounts }} account{% if total_accounts != 1 %}s{% endif
+            %} found.
+          </p>
+        </div>
 
-                <!-- Role management dropdown for each account -->
-                <td>
-                  {% if account.role == 'admin' %}
-                  <span class="admin-pill admin-pill-primary">
-                    Admin
-                  </span>
-                  {% else %}
-                  <span class="admin-pill admin-pill-info">
-                    Player
-                  </span>
-                  {% endif %}
-                </td>
+        <span class="admin-signed-in-badge"> Signed in as {{ name }} </span>
+      </div>
 
-                <td>{{ account.created_at.strftime('%d %b %Y') }}</td>
+      {% if accounts %}
+      <div class="history-table-wrap">
+        <table class="history-table admin-account-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Created</th>
+              <th>Status</th>
+            </tr>
+          </thead>
 
-                <!-- Account status management dropdown -->
-                <td>
-                  {% if account.id == session.get('user_id') %}
-                  <span class="admin-pill admin-pill-success">
-                    Current account
-                  </span>
-                  {% elif account.is_active %}
-                  <span class="admin-pill admin-pill-success">
+          <tbody>
+            {% for account in accounts %}
+            <tr>
+              <td class="admin-account-name">{{ account.name }}</td>
+              <td>{{ account.email }}</td>
+
+              <!-- Role management dropdown for each account -->
+              <td>
+                {% if account.id == session.get('user_id') %}
+                <span class="admin-pill admin-pill-primary">
+                  {{ account.role.title() }}
+                </span>
+                {% else %}
+                <div class="dropdown">
+                  <button
+                    class="admin-pill {% if account.role == 'admin' %}admin-pill-primary{% else %}admin-pill-info{% endif %} dropdown-toggle border-0"
+                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    {{ account.role.title() }}
+                  </button>
+
+                  <ul class="dropdown-menu">
+                    <li>
+                      <form method="post" action="{{ url_for('auth.update_account_role', user_id=account.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <input type="hidden" name="role" value="admin" />
+                        <button type="submit" class="dropdown-item">
+                          Admin
+                        </button>
+                      </form>
+                    </li>
+
+                    <li>
+                      <form method="post" action="{{ url_for('auth.update_account_role', user_id=account.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <input type="hidden" name="role" value="player" />
+                        <button type="submit" class="dropdown-item">
+                          Player
+                        </button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+                {% endif %}
+              </td>
+
+              <td>{{ account.created_at.strftime('%d %b %Y') }}</td>
+
+              <!-- Account status management dropdown -->
+              <td>
+                {% if account.id == session.get('user_id') %}
+                <span class="admin-pill admin-pill-success">
+                  Current account
+                </span>
+                {% else %}
+                <div class="dropdown">
+                  <button
+                    class="admin-pill {% if account.is_active %}admin-pill-success{% else %}admin-pill-muted{% endif %} dropdown-toggle border-0"
+                    type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    {% if account.is_active %}
                     Active
-                  </span>
-                  {% else %}
-                  <span class="admin-pill admin-pill-muted">
+                    {% else %}
                     Inactive
-                  </span>
-                  {% endif %}
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+                    {% endif %}
+                  </button>
 
-        {% else %}
+                  <ul class="dropdown-menu">
+                    <li>
+                      <form method="post" action="{{ url_for('auth.update_account_status', user_id=account.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <input type="hidden" name="is_active" value="true" />
+                        <button type="submit" class="dropdown-item">
+                          Active
+                        </button>
+                      </form>
+                    </li>
 
-        <!-- Empty state shown when no accounts match the search or filter -->
-        <div class="admin-empty-state">
-          <h3>No accounts found</h3>
-          <p>Try a different search term or reset the filters.</p>
-        </div>
+                    <li>
+                      <form method="post" action="{{ url_for('auth.update_account_status', user_id=account.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                        <input type="hidden" name="is_active" value="false" />
+                        <button type="submit" class="dropdown-item">
+                          Inactive
+                        </button>
+                      </form>
+                    </li>
+                  </ul>
+                </div>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-        {% endif %}
-      </section>
-    </main>
+      {% else %}
 
-    <!-- Bootstrap JavaScript for dropdowns and dismissible alerts -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+      <!-- Empty state shown when no accounts match the search or filter -->
+      <div class="admin-empty-state">
+        <h3>No accounts found</h3>
+        <p>Try a different search term or reset the filters.</p>
+      </div>
+
+      {% endif %}
+    </section>
+  </main>
+
+  <!-- Bootstrap JavaScript for dropdowns and dismissible alerts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
 </html>
