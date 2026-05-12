@@ -115,8 +115,11 @@
                         <div class="p-3 border-bottom bg-light">Upgrades</div>
                         <div class="card-body d-flex flex-column p-0" id="upgrade-panel" style="overflow: hidden;">
                             <div class="flex-grow-1 overflow-auto p-3">
-                                <button id="upgrade-btn" class="btn btn-outline-success w-100 mb-2 py-3">
-                                    Auto-Clicker <br> <small>(Cost: 10)</small>
+                                <button id="clickpower-btn" class="btn btn-outline-success w-100 mb-2 py-3">
+                                    Click Power (lvl. {{ state.click_power_lvl }})<br> <small>(Cost: {{ (10 * (5**state.click_power_lvl)) }})</small>
+                                </button>
+                                <button id="autoclicker-btn" class="btn btn-outline-success w-100 mb-2 py-3">
+                                    Auto-Clicker (lvl. {{ state.autoclicker_lvl }})<br> <small>(Cost: {{ (10 * (5**state.autoclicker_lvl)) }})</small>
                                 </button>
                             </div>
                         </div>

@@ -1,6 +1,7 @@
 (function() {
+    // INITIALISATION
     // Egg Order:
-    const EGG_ORDER = ['standard', 'water', 'gold']
+    const EGG_ORDER = ['standard', 'water', 'gold'];
     // Game State:
     let gameState = {
         totalPoints: INITIAL_STATE.points,
@@ -9,25 +10,37 @@
         highestType: INITIAL_STATE.highest_type,
         clicksRemaining: INITIAL_STATE.clicks_remaining ?? EGG_CONFIG[INITIAL_STATE.current_type].base_clicks,
         progressPercent: INITIAL_STATE.progress_percent,
-        isGuest: INITIAL_STATE.is_guest
+        isGuest: INITIAL_STATE.is_guest,
+        clickPower: INITIAL_STATE.click_power_lvl,
+        autoClickerPower: INITIAL_STATE.autoclicker_lvl
     };
-
-    
-
     updateProgressUI();
+    updateUpgradeUI();
+    let isAnimating = false; // for egg break
+    let isSyncing = false;
 
-    let isAnimating = false;
 
-    function handleEggClick() {
-        if (isAnimating) return;
+    function handleEggClick(damageAmount = null) {
+        if (isAnimating || isSyncing) return;
 
-        gameState.clicksRemaining--;
-        updateProgressUI()
+        const damage = damageAmount !== null ? damageAmount : gameState.clickPower;
+        gameState.clicksRemaining -= damage;
+
+        console.log("click power", gameState.clickPower);
+        console.log("damage:", damage);
+
+        updateProgressUI();
 
         if (gameState.clicksRemaining <= 0) {
+            // lock click handling for reliable sync
+            gameState.clicksRemaining = 0;
+            isSyncing = true;
+
+            // calculate local reward
             const earned = calculateReward();
             gameState.totalPoints += earned;
 
+            // find next egg
             const eggKeys = EGG_ORDER;
             const nextIndex =  eggKeys.indexOf(gameState.currentType) + 1;
 
@@ -63,12 +76,20 @@
                         gameState.clicksRemaining = data.clicks_remaining;
 
                         console.log("Progress synced with server");
+                        isSyncing = false;
                         updatePointsUI();
+                        updateUpgradeUI();
                     }
                 })
+                .catch(err => {
+                    isSyncing = false;
+                    console.error("Sync failed:", err);
+                });
             } else {
                 console.log("Guest progress updated locally.");
+                isSyncing = false;
                 updatePointsUI();
+                updateUpgradeUI();
             }
             updateProgressUI();
             triggerEggBreak();
@@ -187,8 +208,104 @@
         }
     }
 
+    function buyUpgrade(type) {
+        const currentLevel = gameState[type];
+
+        // next level costs 5x as much as the last
+        const cost = Math.floor(10 * Math.pow(5, currentLevel));
+
+        // check if player can afford
+        if (gameState.totalPoints < cost) {
+            return;
+        }
+
+        const oldPoints = gameState.totalPoints;
+        const oldLevel = gameState[type];
+
+        // player can afford so deduct cost
+        gameState.totalPoints -= cost;
+        gameState[type] += 1;
+
+        updatePointsUI();
+        updateUpgradeUI();
+
+        // sync to server
+        if (!gameState.isGuest) {
+            fetch("/api/buy_upgrade", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({
+                    upgrade_type: type,
+                    new_level: gameState[type],
+                    new_points: gameState.totalPoints
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === "success") {
+                    gameState.totalPoints = data.new_points;
+                    gameState[type] = data.new_level;
+                    updatePointsUI();
+                    updateUpgradeUI();
+                } else {
+                    gameState.totalPoints = oldPoints;
+                    gameState[type] = oldLevel;
+                    updatePointsUI();
+                    updateUpgradeUI()
+                    console.error("Sync failed:", err);
+                }
+            })
+            .catch(err => {
+                gameState.totalPoints = oldPoints;
+                gameState[type] = oldLevel;
+                updatePointsUI();
+                updateUpgradeUI();
+                console.error("Sync failed:", err);
+            });
+        } else {
+            console.log("Guest purchase done locally.");
+        }
+    }
+
+    function updateUpgradeUI() {
+        const upgrades = [
+            { id: 'clickpower-btn', key: 'clickPower', name: 'Click Power' },
+            { id: 'autoclicker-btn', key: 'autoClickerPower', name: 'Auto-Clicker' }
+        ];
+
+        upgrades.forEach(upgrade => {
+            const btn = document.getElementById(upgrade.id);
+            if (!btn) return;
+            const level = gameState[upgrade.key];
+            const cost = Math.floor(10 * Math.pow(5, level));
+
+            btn.innerHTML = `${upgrade.name} (lvl. ${level})<br><small>(Cost: ${cost})</small>`;
+
+            if (gameState.totalPoints < cost) {
+                btn.disabled = true;
+                btn.classList.replace('btn-outline-success', 'btn-outline-secondary');
+            } else {
+                btn.disabled = false;
+                btn.classList.replace('btn-outline-secondary', 'btn-outline-success');
+            }
+        })
+    }
+
+    // auto-clicker functionality
+    setInterval(() => {
+        if (gameState.autoClickerPower > 0) {
+            const autoDamage = gameState.autoClickerPower === 1 ? 1 : (gameState.autoClickerPower * 2);
+            handleEggClick(autoDamage);
+        }
+    }, 1000);
+
     // Event Listeners/Triggers:
-    document.getElementById('egg-btn').addEventListener('click', handleEggClick);
+    document.getElementById('egg-btn').addEventListener('click', () => handleEggClick());
+    document.getElementById('clickpower-btn').addEventListener('click', () => buyUpgrade('clickPower'));
+    document.getElementById('autoclicker-btn').addEventListener('click', () => buyUpgrade('autoClickerPower'));
 
     window.addEventListener('load', () => { // only displays game content on the html once all assets are loaded
         document.getElementById('loading-overlay').style.display = 'none';

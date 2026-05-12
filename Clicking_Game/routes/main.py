@@ -2,6 +2,7 @@
 from flask import Blueprint, render_template, g, request, jsonify
 from Clicking_Game.models import users, database
 from Clicking_Game.game_logic import EGG_CONFIG
+from Clicking_Game.utils.auth import login_required # for game sync routes
 
 bp = Blueprint("main", __name__)
 
@@ -68,12 +69,9 @@ def game():
     return render_template("player/game.html", state=initial_state, config=EGG_CONFIG)
 
 @bp.route("/api/sync", methods=["POST"])
+@login_required(role="player")
 def sync_game():
-    if not g.user:
-        return jsonify({"error": "login required to save progress."})
-    
     db_session = database.get_session()
-
     try:
         # "Merge" existing game state into session so it can be saved
         gs = db_session.merge(g.user.game_state)
@@ -119,9 +117,8 @@ def sync_game():
         db_session.close()
 
 @bp.route("/api/navigate", methods=["POST"])
+@login_required(role="player")
 def navigate_egg():
-    if not g.user:
-        return jsonify({"status": "guest"})
     data = request.get_json()
     target_type = data.get("type")
 
@@ -147,5 +144,47 @@ def navigate_egg():
     except Exception as e:
         db_session.rollback()
         return jsonify({"error": str(e)})
+    finally:
+        db_session.close()
+
+@bp.route("/api/buy_upgrade", methods=["POST"])
+@login_required(role="player")
+def buy_upgrade():
+    data = request.get_json()
+    frontend_id = data.get("upgrade_type")
+
+    # Key: JavaScript name, Value = DB column name
+    upgrade_map = {
+        "clickPower": "click_power_lvl",
+        "autoClickerPower": "autoclicker_lvl"
+    }
+
+    if frontend_id not in upgrade_map:
+        return jsonify({"status": "error", "message": "invalid upgrade type"}), 400
+    
+    db_column = upgrade_map[frontend_id]
+
+    db_session = database.get_session()
+    try:
+        gs = db_session.merge(g.user.game_state)
+
+        current_level = getattr(gs, db_column)
+        cost = int(10 * (5 ** current_level))
+
+        if gs.points >= cost:
+            gs.points -= cost
+            setattr(gs, db_column, current_level + 1)
+
+            db_session.commit()
+            return jsonify({
+                "status": "success",
+                "new_level": current_level + 1,
+                "new_points": gs.points
+            })
+        else:
+            return jsonify({"status": "error", "message": "insufficient points"}), 400
+    except Exception as e:
+        db_session.rollback()
+        return jsonify({"error": str(e)}), 500
     finally:
         db_session.close()
