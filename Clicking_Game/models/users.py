@@ -58,6 +58,17 @@ class User(Base):
         index=True,
         nullable=False,
     )
+    is_deleted: Mapped[bool] = mapped_column(
+        Boolean,
+        default=False,
+        server_default="0",
+        index=True,
+        nullable=False,
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
     points: Mapped[int] = mapped_column(
         Integer,
         default=0,
@@ -246,13 +257,16 @@ def authenticate(email, password):
 
     if not user.check_password(password):
         return None
-    
+
+    if user.is_deleted:
+        return None
+
     if not user.is_active:
         return None
 
     if not user.email_verified:
         return None
-    
+
     return user
 
 # Lists users for admin pages
@@ -293,7 +307,11 @@ def list_leaderboard(limit=10):
     session = get_session()
     stmt = (
         select(User)
-        .where(User.role == "player", User.is_active.is_(True))
+        .where(
+            User.role == "player",
+            User.is_active.is_(True),
+            User.is_deleted.is_(False),
+        )
         .order_by(User.points.desc(), User.current_infinity_level.desc(), User.id.asc())
         .limit(limit)
     )
@@ -303,7 +321,7 @@ def list_leaderboard(limit=10):
 
 def list_player_progress(search=None, limit=None, sort_by="points"):
     session = get_session()
-    stmt = select(User).where(User.role == "player")
+    stmt = select(User).where(User.role == "player", User.is_deleted.is_(False))
 
     if search:
         term = f"%{search.strip()}%"
@@ -335,6 +353,9 @@ def update_user_role(user_id, new_role):
     if user is None:
         return False
 
+    if user.is_deleted:
+        return False
+
     user.role = new_role
     session.commit()
     return True
@@ -347,7 +368,23 @@ def set_user_active(user_id, is_active):
     if user is None:
         return False
 
+    if user.is_deleted:
+        return False
+
     user.is_active = bool(is_active)
+    session.commit()
+    return True
+
+
+def soft_delete_user(user):
+    session = get_session()
+
+    if user is None or user.is_deleted:
+        return False
+
+    user.is_deleted = True
+    user.deleted_at = datetime.utcnow()
+    user.is_active = False
     session.commit()
     return True
 

@@ -192,6 +192,44 @@
           </div>
         </form>
       </section>
+
+      <section class="dashboard-panel border border-danger-subtle">
+        <div class="dashboard-panel-header">
+          <p class="section-label text-danger mb-1">Danger zone</p>
+          <h2>Delete your account</h2>
+        </div>
+
+        <p class="mb-3">
+          Deleting your account will immediately disable your login. Admins
+          will still be able to see that this account was deleted.
+        </p>
+
+        <form
+          method="POST"
+          action="{{ url_for('auth.delete_account') }}"
+          onsubmit="return confirm('Delete your account permanently? This will log you out immediately.');"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+          <div class="mb-3">
+            <label for="delete_password" class="auth-label">
+              Confirm with current password
+            </label>
+            <input
+              type="password"
+              class="form-control auth-input"
+              id="delete_password"
+              name="delete_password"
+              placeholder="Enter current password"
+              required
+            />
+          </div>
+
+          <button type="submit" class="btn btn-danger">
+            Delete Account
+          </button>
+        </form>
+      </section>
     </main>
 
     <!-- Bootstrap JavaScript -->
