@@ -164,6 +164,12 @@ if (playBtns.length > 0) {
             console.log("Egg locked or doesn't exist");
             return;
         }
+        if (gameState.clicksRemaining < EGG_CONFIG[gameState.currentType].base_clicks && gameState.clicksRemaining > 0) {
+            const confirmed = confirm("Are you sure? Progress on this egg will be reset!");
+            if (!confirmed) {
+                return;
+            }
+        }
 
         gameState.currentType = eggKeys[nextIndex];
         gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].base_clicks;
