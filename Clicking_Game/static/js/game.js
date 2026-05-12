@@ -11,13 +11,13 @@ if (playBtns.length > 0) {
 (function() {
     // Egg Order:
     const EGG_ORDER = ['standard', 'water', 'gold']
-    // Game State (default/guest):
+    // Game State:
     let gameState = {
         totalPoints: INITIAL_STATE.points,
-        currentLevel: INITIAL_STATE.current_level,
+        currentInfinityLevel: INITIAL_STATE.current_infinity_level,
         currentType: INITIAL_STATE.current_type,
         highestType: INITIAL_STATE.highest_type,
-        clicksRemaning: INITIAL_STATE.clicks_remaining ?? EGG_CONFIG[INITIAL_STATE.current_type].base_clicks,
+        clicksRemaining: INITIAL_STATE.clicks_remaining ?? EGG_CONFIG[INITIAL_STATE.current_type].base_clicks,
         progressPercent: INITIAL_STATE.progress_percent,
         isGuest: INITIAL_STATE.is_guest
     };
@@ -31,10 +31,10 @@ if (playBtns.length > 0) {
     function handleEggClick() {
         if (isAnimating) return;
 
-        gameState.clicksRemaning--;
+        gameState.clicksRemaining--;
         updateProgressUI()
 
-        if (gameState.clicksRemaning <= 0) {
+        if (gameState.clicksRemaining <= 0) {
             const earned = calculateReward();
             gameState.totalPoints += earned;
 
@@ -53,7 +53,7 @@ if (playBtns.length > 0) {
             
             console.log('next egg key:', gameState.currentType);
             console.log('available keys:', EGG_ORDER);
-            gameState.clicksRemaning = EGG_CONFIG[gameState.currentType].base_clicks;
+            gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].base_clicks;
 
             if (!gameState.isGuest) {
                 fetch("/api/sync", {
@@ -70,7 +70,7 @@ if (playBtns.length > 0) {
                         gameState.totalPoints = data.new_points;
                         gameState.currentType = data.current_type;
                         gameState.highestType = data.highest_type;
-                        gameState.clicksRemaning = data.clicks_remaining;
+                        gameState.clicksRemaining = data.clicks_remaining;
 
                         console.log("Progress synced with server");
                         updatePointsUI();
@@ -98,11 +98,11 @@ if (playBtns.length > 0) {
 
     function updateProgressUI() {
         const requiredClicks = EGG_CONFIG[gameState.currentType].base_clicks
-        const percentage = ((requiredClicks - gameState.clicksRemaning) / requiredClicks) * 100;
+        const percentage = ((requiredClicks - gameState.clicksRemaining) / requiredClicks) * 100;
         const barWidth = Math.min(Math.max(percentage, 0), 100);
 
         document.getElementById('progress-bar').style.width = `${barWidth}%`;
-        document.getElementById('click-count').innerText = `${gameState.clicksRemaning}/${requiredClicks} left`;
+        document.getElementById('click-count').innerText = `${gameState.clicksRemaining}/${requiredClicks} left`;
     }
 
     function updateEggImage() {
@@ -166,7 +166,7 @@ if (playBtns.length > 0) {
         }
 
         gameState.currentType = eggKeys[nextIndex];
-        gameState.clicksRemaning = EGG_CONFIG[gameState.currentType].base_clicks;
+        gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].base_clicks;
 
         updateEggImage();
         updateProgressUI();
