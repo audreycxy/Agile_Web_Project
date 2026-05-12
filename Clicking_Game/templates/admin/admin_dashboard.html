@@ -1,215 +1,201 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <!-- Page metadata and external style resources -->
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Dashboard | Egg Clicker</title>
 
-    <!-- Bootstrap, Google Fonts, and custom CSS file -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
+<head>
+  <!-- Page metadata and external style resources -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | Egg Clicker</title>
 
-  <body class="dashboard-page">
-    <nav class="game-navbar">
-      <a href="{{ url_for('auth.admin_dashboard') }}" class="game-logo">
-        🥚 Egg Clicker
+  <!-- Bootstrap, Google Fonts, and custom CSS file -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+
+<body class="dashboard-page">
+  <nav class="game-navbar">
+    <a href="{{ url_for('auth.admin_dashboard') }}" class="game-logo">
+      🥚 Egg Clicker
+    </a>
+
+    <div class="game-nav-links">
+      <a href="{{ url_for('auth.admin_dashboard') }}"
+        class="{% if request.endpoint == 'auth.admin_dashboard' %}active{% endif %}">
+        Dashboard
       </a>
 
-      <div class="game-nav-links">
-        <a href="{{ url_for('auth.admin_accounts', search=search) }}"
-          >Accounts</a
-        >
-        <a href="{{ url_for('auth.admin_player_results', search=search) }}"
-          >Results</a
-        >
-        <a href="{{ url_for('auth.logout') }}" class="nav-signup">Logout</a>
+      <a href="{{ url_for('auth.admin_player_results', search=search) }}"
+        class="{% if request.endpoint == 'auth.admin_player_results' %}active{% endif %}">
+        Results
+      </a>
+
+      <a href="{{ url_for('auth.admin_accounts') }}"
+        class="{% if request.endpoint == 'auth.admin_accounts' %}active{% endif %}">
+        Accounts
+      </a>
+
+      <a href="{{ url_for('auth.logout') }}" class="nav-signup">
+        Logout
+      </a>
+    </div>
+  </nav>
+
+  <main class="dashboard-layout">
+    <section class="dashboard-hero">
+      <p class="hero-badge">Admin Dashboard</p>
+
+      <h1>Welcome, {{ name }}.</h1>
+
+      <p>
+        Monitor player accounts, review saved game results, and search player
+        activity from one admin workspace.
+      </p>
+    </section>
+
+    <section class="dashboard-panel">
+      <div class="dashboard-panel-header">
+        <p class="section-label">System overview</p>
+        <h2>Current platform summary</h2>
       </div>
-    </nav>
 
-    <main class="dashboard-layout">
-      <section class="dashboard-hero">
-        <p class="hero-badge">Admin Dashboard</p>
+      <div class="admin-stat-grid">
+        <article class="dashboard-stat-card">
+          <span class="stat-label">Total Accounts</span>
+          <h3>{{ total_users }}</h3>
+          <p>All registered user accounts in the system.</p>
+        </article>
 
-        <h1>Welcome, {{ name }}.</h1>
+        <article class="dashboard-stat-card">
+          <span class="stat-label">Players</span>
+          <h3>{{ player_count }}</h3>
+          <p>Accounts currently using the player role.</p>
+        </article>
 
-        <p>
-          Monitor player accounts, review saved game results, and search player
-          activity from one admin workspace.
-        </p>
-      </section>
+        <article class="dashboard-stat-card">
+          <span class="stat-label">Results Saved</span>
+          <h3>{{ total_results }}</h3>
+          <p>Total saved game result records.</p>
+        </article>
 
-      <section class="dashboard-panel">
+        <article class="dashboard-stat-card">
+          <span class="stat-label">Highest Score</span>
+          <h3>{{ highest_score }}</h3>
+          <p>The highest saved player score.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="admin-dashboard-grid">
+      <article class="dashboard-panel admin-search-panel">
         <div class="dashboard-panel-header">
-          <p class="section-label">System overview</p>
-          <h2>Current platform summary</h2>
+          <p class="section-label">Player search</p>
+          <h2>Find a player</h2>
         </div>
 
-        <div class="admin-stat-grid">
-          <article class="dashboard-stat-card">
-            <span class="stat-label">Total Accounts</span>
-            <h3>{{ total_users }}</h3>
-            <p>All registered user accounts in the system.</p>
-          </article>
+        <p class="admin-panel-description">
+          Search by player name or email, then open matching account records
+          or saved game results.
+        </p>
 
-          <article class="dashboard-stat-card">
-            <span class="stat-label">Players</span>
-            <h3>{{ player_count }}</h3>
-            <p>Accounts currently using the player role.</p>
-          </article>
-
-          <article class="dashboard-stat-card">
-            <span class="stat-label">Results Saved</span>
-            <h3>{{ total_results }}</h3>
-            <p>Total saved game result records.</p>
-          </article>
-
-          <article class="dashboard-stat-card">
-            <span class="stat-label">Highest Score</span>
-            <h3>{{ highest_score }}</h3>
-            <p>The highest saved player score.</p>
-          </article>
-        </div>
-      </section>
-
-      <section class="admin-dashboard-grid">
-        <article class="dashboard-panel admin-search-panel">
-          <div class="dashboard-panel-header">
-            <p class="section-label">Player search</p>
-            <h2>Find a player</h2>
-          </div>
-
-          <p class="admin-panel-description">
-            Search by player name or email, then open matching account records
-            or saved game results.
-          </p>
-
-          <form
-            method="get"
-            action="{{ url_for('auth.admin_dashboard') }}"
-            class="admin-search-form"
-          >
-            <div>
-              <label for="search" class="auth-label">Player search</label>
-              <input
-                type="text"
-                class="form-control auth-input"
-                id="search"
-                name="search"
-                value="{{ search }}"
-                placeholder="Search name or email"
-              />
-            </div>
-
-            <button
-              type="submit"
-              class="btn auth-primary-btn dashboard-action-btn"
-            >
-              Search
-            </button>
-          </form>
-
-          <div class="admin-quick-actions">
-            <a
-              href="{{ url_for('auth.admin_accounts', search=search) }}"
-              class="btn auth-secondary-btn dashboard-action-btn"
-            >
-              View Player Accounts
-            </a>
-
-            <a
-              href="{{ url_for('auth.admin_player_results', search=search) }}"
-              class="btn auth-secondary-btn dashboard-action-btn"
-            >
-              View Player Results
-            </a>
-          </div>
-        </article>
-
-        <article class="dashboard-panel admin-access-panel">
-          <div class="dashboard-panel-header">
-            <p class="section-label">Access overview</p>
-            <h2>Role permissions</h2>
-          </div>
-
-          <ul class="admin-access-list">
-            <li>Admins can open player account records.</li>
-            <li>Admins can view saved player results.</li>
-            <li>Players cannot access admin pages.</li>
-            <li>Guests do not have permanent player history.</li>
-          </ul>
-        </article>
-      </section>
-
-      <section class="dashboard-panel">
-        <div class="dashboard-panel-header admin-table-header">
+        <form method="get" action="{{ url_for('auth.admin_dashboard') }}" class="admin-search-form">
           <div>
-            <p class="section-label">Recent activity</p>
-            <h2>Recent player results</h2>
-            <p class="admin-panel-description mb-0">
-              Latest saved activity{% if search %} matching "{{ search }}"{%
-              endif %}.
-            </p>
+            <label for="search" class="auth-label">Player search</label>
+            <input type="text" class="form-control auth-input" id="search" name="search" value="{{ search }}"
+              placeholder="Search name or email" />
           </div>
 
-          <a
-            href="{{ url_for('auth.admin_player_results', search=search) }}"
-            class="btn auth-secondary-btn dashboard-action-btn"
-          >
-            Open Full Results
+          <button type="submit" class="btn auth-primary-btn dashboard-action-btn">
+            Search
+          </button>
+        </form>
+
+        <div class="admin-quick-actions">
+          <a href="{{ url_for('auth.admin_accounts', search=search) }}"
+            class="btn auth-secondary-btn dashboard-action-btn">
+            View Player Accounts
+          </a>
+
+          <a href="{{ url_for('auth.admin_player_results', search=search) }}"
+            class="btn auth-secondary-btn dashboard-action-btn">
+            View Player Results
           </a>
         </div>
+      </article>
 
-        <div class="history-table-wrap">
-          <table class="history-table">
-            <thead>
-              <tr>
-                <th>Player</th>
-                <th>Email</th>
-                <th>Score</th>
-                <th>Played</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {% if recent_results %} {% for result in recent_results %}
-              <tr>
-                <td>
-                  {{ result.user.name if result.user else 'Unknown player' }}
-                </td>
-                <td>{{ result.user.email if result.user else 'No email' }}</td>
-                <td>{{ result.score }}</td>
-                <td>
-                  {{ result.created_at.strftime('%d %b %Y %H:%M') if
-                  result.created_at else '-' }}
-                </td>
-              </tr>
-              {% endfor %} {% else %}
-              <tr>
-                <td colspan="4" class="history-empty">
-                  No player results found yet.
-                </td>
-              </tr>
-              {% endif %}
-            </tbody>
-          </table>
+      <article class="dashboard-panel admin-access-panel">
+        <div class="dashboard-panel-header">
+          <p class="section-label">Access overview</p>
+          <h2>Role permissions</h2>
         </div>
-      </section>
-    </main>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+        <ul class="admin-access-list">
+          <li>Admins can open player account records.</li>
+          <li>Admins can view saved player results.</li>
+          <li>Players cannot access admin pages.</li>
+          <li>Guests do not have permanent player history.</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="dashboard-panel">
+      <div class="dashboard-panel-header admin-table-header">
+        <div>
+          <p class="section-label">Recent activity</p>
+          <h2>Recent player results</h2>
+          <p class="admin-panel-description mb-0">
+            Latest saved activity{% if search %} matching "{{ search }}"{%
+            endif %}.
+          </p>
+        </div>
+
+        <a href="{{ url_for('auth.admin_player_results', search=search) }}"
+          class="btn auth-secondary-btn dashboard-action-btn">
+          Open Full Results
+        </a>
+      </div>
+
+      <div class="history-table-wrap">
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>Player</th>
+              <th>Email</th>
+              <th>Score</th>
+              <th>Played</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {% if recent_results %} {% for result in recent_results %}
+            <tr>
+              <td>
+                {{ result.user.name if result.user else 'Unknown player' }}
+              </td>
+              <td>{{ result.user.email if result.user else 'No email' }}</td>
+              <td>{{ result.score }}</td>
+              <td>
+                {{ result.created_at.strftime('%d %b %Y %H:%M') if
+                result.created_at else '-' }}
+              </td>
+            </tr>
+            {% endfor %} {% else %}
+            <tr>
+              <td colspan="4" class="history-empty">
+                No player results found yet.
+              </td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
 </html>
