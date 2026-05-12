@@ -73,13 +73,13 @@ if (playBtns.length > 0) {
                         gameState.clicksRemaning = data.clicks_remaining;
 
                         console.log("Progress synced with server");
+                        updatePointsUI();
                     }
                 })
             } else {
                 console.log("Guest progress updated locally.");
+                updatePointsUI();
             }
-
-            updatePointsUI();
             updateProgressUI();
             triggerEggBreak();
         }
