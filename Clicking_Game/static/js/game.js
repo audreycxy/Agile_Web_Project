@@ -121,7 +121,7 @@
         eggImage.forEach(eggImage => {
             eggImage.style.backgroundImage = `url('${EGG_CONFIG[gameState.currentType].image}')`
         })
-        document.getElementById('egg-type-display').innerText = gameState.currentType;
+        document.getElementById('egg-type-display').innerText = EGG_CONFIG[gameState.currentType].name;
     }
 
     function triggerEggBreak() {
