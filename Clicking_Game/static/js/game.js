@@ -1,13 +1,3 @@
-// Looks for the play buttons on both the guest page and player dashboard (and elsewhere) and redirects to game page on click.
-const playBtns = document.querySelectorAll(".btn-play");
-if (playBtns.length > 0) {
-    Array.from(playBtns).forEach(btn => {
-        button.addEventListener('click', () => {
-            window.location.href = "/game";
-        });
-    });
-}
-
 (function() {
     // Egg Order:
     const EGG_ORDER = ['standard', 'water', 'gold']
