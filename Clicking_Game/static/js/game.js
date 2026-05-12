@@ -1,7 +1,12 @@
 (function() {
     // INITIALISATION
     // Egg Order:
-    const EGG_ORDER = ['standard', 'water', 'gold'];
+    const EGG_ORDER = ['standard', 'water', 'fire', 'grass', 'steel',
+        'standard-bronze', 'water-bronze', 'fire-bronze', 'grass-bronze', 'steel-bronze',
+        'standard-silver', 'water-silver', 'fire-silver', 'grass-silver', 'steel-silver',
+        'standard-gold', 'water-gold', 'fire-gold', 'grass-gold', 'steel-gold',
+        'gold' // infinite tier
+    ];
     // Game State:
     let gameState = {
         totalPoints: INITIAL_STATE.points,
