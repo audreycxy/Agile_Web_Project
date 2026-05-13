@@ -521,6 +521,38 @@ a:hover {
   box-shadow: 0 0 0 0.2rem rgba(241, 183, 55, 0.24);
 }
 
+.password-toggle-wrap {
+  position: relative;
+}
+
+.password-toggle-wrap .auth-input {
+  padding-right: 72px;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  padding: 0;
+  color: var(--egg-muted-brown);
+  background: transparent;
+  border: none;
+  font-size: 0.9rem;
+  font-weight: 800;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.password-toggle-btn:hover {
+  color: var(--egg-text-dark);
+}
+
+.password-toggle-btn:focus-visible {
+  outline: 2px solid rgba(241, 183, 55, 0.75);
+  outline-offset: 4px;
+  border-radius: 6px;
+}
+
 .auth-primary-btn {
   min-height: 52px;
   margin-top: 4px;
