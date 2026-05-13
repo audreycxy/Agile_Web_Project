@@ -29,9 +29,24 @@
       <a href="{{ url_for('main.home') }}" class="game-logo">🥚 Egg Clicker</a>
 
       <div class="game-nav-links">
-        <a href="{{ url_for('auth.history') }}">History</a>
-        <a href="{{ url_for('auth.profile') }}">Profile</a>
-        <a href="{{ url_for('auth.logout') }}" class="nav-signup">Logout</a>
+        <a href="{{ url_for('auth.player_dashboard') }}"
+        class="{% if request.endpoint == 'auth.player_dashboard' %}active{% endif %}">
+        Dashboard
+      </a>
+
+      <a href="{{ url_for('auth.history', search=search) }}"
+        class="{% if request.endpoint == 'auth.history' %}active{% endif %}">
+        Results
+      </a>
+
+      <a href="{{ url_for('auth.profile') }}"
+        class="{% if request.endpoint == 'auth.profile' %}active{% endif %}">
+        Profile
+      </a>
+
+      <a href="{{ url_for('auth.logout') }}" class="nav-signup">
+        Logout
+      </a>
       </div>
     </nav>
 

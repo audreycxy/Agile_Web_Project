@@ -43,12 +43,17 @@ def seed_users():
         for user_data in DEFAULT_USERS:
             existing_user = users.get_by_email(user_data["email"])
 
-            # If the default user already exists, make sure it is verified for local testing
+            # If the default user already exists, restore the expected seed state so
+            # the documented credentials keep working across local resets and schema changes.
             if existing_user is not None:
+                existing_user.name = user_data["name"]
+                existing_user.role = user_data["role"]
+                existing_user.is_active = True
+                existing_user.set_password(user_data["password"])
                 existing_user.email_verified = True
                 existing_user.email_verification_token = None
                 updated += 1
-                print(f"Updated existing user as verified: {existing_user.email}")
+                print(f"Updated existing seeded user: {existing_user.email}")
                 continue
 
             user = users.create_user(**user_data)

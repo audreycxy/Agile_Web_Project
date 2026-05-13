@@ -24,9 +24,17 @@ def dashboard_url_for(user):
 @bp.route("/login", methods=("GET", "POST"))
 def login():
     if g.user is not None:
-        return redirect(dashboard_url_for(g.user))
+        if g.user.is_deleted or not g.user.is_active:
+            session.clear()
+        else:
+            return redirect(dashboard_url_for(g.user))
 
     error = None
+    success = (
+        "Your account has been deleted."
+        if request.args.get("account_deleted") == "1"
+        else None
+    )
 
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
@@ -43,6 +51,8 @@ def login():
 
             if user is None or not user.check_password(password):
                 error = "Invalid email or password."
+            elif user.is_deleted:
+                error = "This account has been deleted."
             elif not user.is_active:
                 error = "This account has been deactivated."
             elif not user.email_verified:
@@ -56,14 +66,17 @@ def login():
 
                 return redirect(dashboard_url_for(user))
 
-    return render_template("public/login.html", error=error)
+    return render_template("public/login.html", error=error, success=success)
 
 # Route for user signup
 # New users are created with the "player" role by default
 @bp.route("/signup", methods=("GET", "POST"))
 def signup():
     if g.user is not None:
-        return redirect(dashboard_url_for(g.user))
+        if g.user.is_deleted or not g.user.is_active:
+            session.clear()
+        else:
+            return redirect(dashboard_url_for(g.user))
 
     error = None
 
@@ -125,7 +138,10 @@ def verify_email(token):
 def admin_dashboard():
     search = request.args.get("search", "").strip()
     all_users = users.list_users(search=search)
+    player_progress = users.list_player_progress(search=search)
     all_results = users.list_results(search=search)
+    recent_results = users.list_results(search=search, limit=10)
+    recent_player_progress = users.list_player_progress(search=search, limit=10, sort_by="updated")
 
     return render_template(
         "admin/admin_dashboard.html",
@@ -134,8 +150,10 @@ def admin_dashboard():
         total_users=len(all_users),
         player_count=len([user for user in all_users if user.role == "player"]),
         total_results=len(all_results),
-        highest_score=max((result.score for result in all_results), default=0),
-        recent_results=all_results[:10],
+        tracked_players=len([user for user in player_progress if user.points > 0]),
+        highest_score=max((user.points for user in player_progress), default=0),
+        recent_results=recent_results,
+        recent_players=recent_player_progress,
     )
 
 # Admin accounts page allows searching and filtering users by role
@@ -159,6 +177,29 @@ def admin_accounts():
         selected_role=selected_role,
     )
 
+@bp.route("/admin_accounts/<int:user_id>/role", methods=("POST",))
+@login_required(role="admin")
+def update_account_role(user_id):
+    new_role = request.form.get("role")
+
+    if user_id == g.user.id:
+        return redirect(url_for("auth.admin_accounts"))
+
+    users.update_user_role(user_id, new_role)
+    return redirect(url_for("auth.admin_accounts"))
+
+
+@bp.route("/admin_accounts/<int:user_id>/status", methods=("POST",))
+@login_required(role="admin")
+def update_account_status(user_id):
+    new_status = request.form.get("is_active")
+
+    if user_id == g.user.id:
+        return redirect(url_for("auth.admin_accounts"))
+
+    users.set_user_active(user_id, new_status == "true")
+    return redirect(url_for("auth.admin_accounts"))
+
 # Admin results page shows saved scores across all players
 @bp.route("/admin_player_results")
 @login_required(role="admin")
@@ -171,9 +212,10 @@ def admin_player_results():
         if result.user_id is None:
             continue
 
-        current_high = highest_scores.get(result.user_id, 0)
-        if result.score > current_high:
-            highest_scores[result.user_id] = result.score
+        highest_scores[result.user_id] = max(
+            highest_scores.get(result.user_id, result.score),
+            result.score,
+        )
 
     return render_template(
         "admin/admin_player_results.html",
@@ -187,7 +229,15 @@ def admin_player_results():
 @bp.route("/player_dashboard")
 @login_required(role="player")
 def player_dashboard():
-    return render_template("player/player_dashboard.html", name=g.user.name)
+    results = users.list_results(user_id=g.user.id)
+    scores = [result.score for result in results]
+
+    return render_template(
+        "player/player_dashboard.html",
+        name=g.user.name,
+        highest_score=max(scores) if scores else 0,
+        latest_result=results[0].score if results else 0,
+    )
 
 # Player history page shows past game scores and stats
 @bp.route("/history")
@@ -328,8 +378,60 @@ def profile():
         success=success,
     )
 
+
+@bp.route("/profile/delete", methods=["POST"])
+@login_required(role="player")
+def delete_account():
+    current_password = request.form.get("delete_password", "")
+
+    if not current_password:
+        return render_template(
+            "player/profile.html",
+            username=g.user.name,
+            email=g.user.email,
+            error="Current password is required to delete your account.",
+            success=None,
+        )
+
+    if not g.user.check_password(current_password):
+        return render_template(
+            "player/profile.html",
+            username=g.user.name,
+            email=g.user.email,
+            error="Current password is incorrect.",
+            success=None,
+        )
+
+    users.soft_delete_user(g.user)
+    session.clear()
+    return redirect(url_for("auth.login", account_deleted="1"))
+
 # Route for user logout
 @bp.route("/logout")
 def logout():
     session.clear()
     return redirect(url_for("main.home"))
+
+@bp.route("/save_game_state", methods=["POST"])
+@login_required(role="player")
+def save_game_state():
+    data = request.get_json() or {}
+
+    users.update_user_game_state(
+        user_id=g.user.id,
+        points=int(data.get("points", 0)),
+        current_infinity_level=int(data.get("current_infinity_level", 0)),
+        current_type=data.get("current_type", "standard"),
+        highest_type=data.get("highest_type", "standard"),
+        clicks_remaining=data.get("clicks_remaining"),
+        progress_percent=int(data.get("progress_percent", 0)),
+    )
+
+    return jsonify({"success": True})
+
+
+@bp.route("/restart_game", methods=["POST"])
+@login_required(role="player")
+def restart_game():
+    users.reset_user_game_state(g.user.id)
+    return jsonify({"success": True})

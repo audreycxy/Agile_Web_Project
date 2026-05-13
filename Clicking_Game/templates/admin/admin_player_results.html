@@ -33,10 +33,25 @@
       </a>
 
       <div class="game-nav-links">
-        <a href="{{ url_for('auth.admin_dashboard') }}">Dashboard</a>
-        <a href="{{ url_for('auth.admin_accounts') }}">Accounts</a>
-        <a href="{{ url_for('auth.logout') }}" class="nav-signup">Logout</a>
-      </div>
+      <a href="{{ url_for('auth.admin_dashboard') }}"
+        class="{% if request.endpoint == 'auth.admin_dashboard' %}active{% endif %}">
+        Dashboard
+      </a>
+
+      <a href="{{ url_for('auth.admin_player_results', search=search) }}"
+        class="{% if request.endpoint == 'auth.admin_player_results' %}active{% endif %}">
+        Results
+      </a>
+
+      <a href="{{ url_for('auth.admin_accounts') }}"
+        class="{% if request.endpoint == 'auth.admin_accounts' %}active{% endif %}">
+        Accounts
+      </a>
+
+      <a href="{{ url_for('auth.logout') }}" class="nav-signup">
+        Logout
+      </a>
+    </div>
     </nav>
 
     <main class="dashboard-layout">
@@ -109,7 +124,9 @@
               {% for result in results %}
               <tr>
                 <td>
-                  {% if result.user %} {{ result.user.name }} {% else %}
+                  {% if result.user %}
+                  {{ result.user.name }}{% if result.user.is_deleted %} (Deleted){% endif %}
+                  {% else %}
                   Guest/Deleted User {% endif %}
                 </td>
 
