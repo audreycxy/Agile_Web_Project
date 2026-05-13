@@ -159,6 +159,18 @@ Open:
 http://localhost:5000
 ```
 
+## Automated Tests
+
+Run the integration-style test suite:
+
+```bash
+python -m unittest discover -s tests -v
+```
+
+The tests boot the real Flask app against a temporary SQLite database and cover
+public pages, signup/login/verification, role-based access control, profile
+updates, account deletion, leaderboard responses, and game-state persistence.
+
 ## Alembic Migrations
 
 Apply migrations manually:
@@ -212,7 +224,7 @@ Copy `.env.example` if you want a local reference for required variables. The ap
 
 The app is split into app factory, routes, models, utilities, migrations, and scripts so later changes can be added without putting everything in one file. Good next steps are:
 
-1. Add tests for signup, login, role redirects, and score saving.
+1. Expand the automated tests to cover admin account updates, AI feedback success paths, and client-side browser interactions.
 2. Add score submission routes that write through the `GameResult` SQLAlchemy model.
 3. Replace starter credentials before any real deployment.
 4. Add CSRF protection before accepting sensitive form submissions in production.
