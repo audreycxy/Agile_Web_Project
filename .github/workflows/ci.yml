@@ -35,9 +35,3 @@ jobs:
 
       - name: Run all tests
         run: pytest tests/ -v
-
-      - name: Run unit_tests
-        run: pytest tests/test_users.py tests/test_auth.py tests/test_api.py -v
-
-      - name: Run selenium_tests (headless Chrome)
-        run: pytest tests/selenium/ -v
