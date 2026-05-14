@@ -116,9 +116,9 @@
       <div class="container-fluid">
         <a
           class="navbar-brand nav-click-anim"
-          href="{{ url_for('main.home') }}"
+          href="{{ url_for('auth.player_dashboard') if g.user else url_for('main.home') }}"
         >
-          Home
+          🥚 Egg Clicker
         </a>
         <div class="navbar-nav ms-auto">
           {% if state is defined and state.is_guest %}
@@ -129,44 +129,44 @@
             Log In
           </a>
           {% elif state is defined and not state.is_guest %}
-          <div class="nav-item dropdown">
-            <a
-              class="btn btn-outline-light btn-sm dropdown-toggle nav-click-anim"
-              href="#"
-              data-bs-toggle="dropdown"
-              aria-expanded="false"
-            >
-              {{ g.user.name if g.user else 'Account' }}
-            </a>
-            <ul
-              class="dropdown-menu dropdown-menu-end dropdown-menu-dark position-absolute shadow"
-            >
-              <li>
-                <a class="dropdown-item" href="{{ url_for('auth.profile') }}"
-                  >Manage Account</a
-                >
-              </li>
-              <li>
-                <a
-                  class="dropdown-item"
-                  href="{{ url_for('auth.player_dashboard') }}"
-                  >Dashboard</a
-                >
-              </li>
-              <li>
-                <a class="dropdown-item" href="{{ url_for('auth.history') }}"
-                  >History</a
-                >
-              </li>
-              <li><hr class="dropdown-divider" /></li>
-              <li>
-                <a
-                  class="dropdown-item text-danger"
-                  href="{{ url_for('auth.logout') }}"
-                  >Log Out</a
-                >
-              </li>
-            </ul>
+          <div class="game-account-area">
+            <span class="logged-in-label">
+              Logged in as {{ g.user.name if g.user else 'Player' }}
+            </span>
+
+            <div class="nav-item dropdown">
+              <a
+                class="btn btn-outline-light btn-sm dropdown-toggle nav-click-anim"
+                href="#"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+              >
+                Settings
+              </a>
+              <ul
+                class="dropdown-menu dropdown-menu-end dropdown-menu-dark position-absolute shadow"
+              >
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('auth.profile') }}"
+                    >Manage Account</a
+                  >
+                </li>
+
+                <li>
+                  <a class="dropdown-item" href="{{ url_for('auth.history') }}"
+                    >History</a
+                  >
+                </li>
+                <li><hr class="dropdown-divider" /></li>
+                <li>
+                  <a
+                    class="dropdown-item text-danger"
+                    href="{{ url_for('auth.logout') }}"
+                    >Log Out</a
+                  >
+                </li>
+              </ul>
+            </div>
           </div>
           {% endif %}
         </div>
