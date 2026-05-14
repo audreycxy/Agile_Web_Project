@@ -890,6 +890,32 @@ a:hover {
   box-shadow: 0 16px 44px rgba(85, 52, 15, 0.1);
 }
 
+.chart-card {
+  width: 100%;
+  min-height: 360px;
+  padding: 24px;
+  background: #ffffff;
+  border: 1px solid rgba(43, 23, 7, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 16px 44px rgba(85, 52, 15, 0.1);
+  overflow-x: auto;
+}
+
+.chart-scroll-inner {
+  min-width: 760px;
+  height: 320px;
+}
+
+.chart-card canvas {
+  width: 100% !important;
+  height: 320px !important;
+}
+
+.results-scroll-area {
+  max-height: 420px;
+  overflow-y: auto;
+}
+
 .history-table {
   width: 100%;
   min-width: 640px;
