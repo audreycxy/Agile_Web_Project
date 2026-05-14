@@ -1151,3 +1151,424 @@ a:hover {
   border-radius: 999px;
   padding: 0.45rem 0.9rem;
 }
+
+/* PLAY GAME PAGE */
+
+/* Page background */
+.game-play-page {
+  min-height: 100vh;
+  margin: 0;
+  font-family: "Poppins", sans-serif;
+  background:
+    radial-gradient(
+      circle at top left,
+      rgba(255, 220, 112, 0.38),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(255, 255, 255, 0.18),
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      var(--egg-dark) 0%,
+      var(--egg-brown) 45%,
+      var(--egg-deep) 100%
+    );
+  color: #ffffff;
+  overflow-x: hidden;
+}
+
+/* Navbar: keep Bootstrap structure, only override appearance */
+.game-play-page .game-page-navbar {
+  padding: 18px 7vw;
+  background: var(--egg-navbar) !important;
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.game-play-page .navbar-brand {
+  color: #fff4cf !important;
+  font-size: 1.35rem;
+  font-weight: 800;
+}
+
+.game-play-page .navbar-brand:hover {
+  color: var(--egg-gold) !important;
+}
+
+.game-play-page .btn-outline-light {
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+.game-play-page .btn-outline-light:hover {
+  color: var(--egg-text-dark);
+  background: var(--egg-cream-soft);
+  border-color: var(--egg-cream-soft);
+}
+
+/* Account dropdown */
+.game-play-page .dropdown-menu {
+  padding: 10px;
+  background: rgba(255, 248, 222, 0.98) !important;
+  border: 1px solid rgba(43, 23, 7, 0.12);
+  border-radius: 22px;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.game-play-page .dropdown-item {
+  padding: 12px 18px;
+  color: var(--egg-text-dark) !important;
+  border-radius: 14px;
+  font-weight: 800;
+}
+
+.game-play-page .dropdown-item:hover,
+.game-play-page .dropdown-item:focus {
+  color: var(--egg-text-dark) !important;
+  background: var(--egg-cream-soft) !important;
+}
+
+.game-play-page .dropdown-divider {
+  margin: 8px 0;
+  border-top: 1px solid rgba(43, 23, 7, 0.12);
+}
+
+.game-play-page .dropdown-item.text-danger {
+  color: #9b3a28 !important;
+}
+
+.game-play-page .dropdown-item.text-danger:hover,
+.game-play-page .dropdown-item.text-danger:focus {
+  color: #7f2d1f !important;
+  background: #ffe3d8 !important;
+}
+
+.game-play-page .dropdown-toggle.btn-outline-light {
+  color: var(--egg-text-dark) !important;
+  background: var(--egg-cream-soft) !important;
+  border-color: rgba(255, 255, 255, 0.72) !important;
+}
+
+.game-play-page .dropdown-toggle.btn-outline-light:hover,
+.game-play-page .dropdown-toggle.btn-outline-light:focus {
+  color: var(--egg-text-dark) !important;
+  background: var(--egg-gold) !important;
+}
+
+/* Game screen layout */
+.game-screen-themed {
+  min-height: calc(100vh - 78px);
+  padding: 36px 5vw 64px !important;
+}
+
+.game-screen-themed > .row {
+  display: grid !important;
+  grid-template-columns: 300px minmax(520px, 680px) 300px;
+  justify-content: center;
+  align-items: start;
+  gap: 28px;
+  width: 100%;
+  max-width: 1360px;
+  min-height: auto !important;
+  margin: 0 auto !important;
+  overflow: visible !important;
+  flex-wrap: unset !important;
+}
+
+/* Stop Bootstrap column widths from forcing overflow */
+.game-screen-themed .col-12.col-md-3,
+.game-screen-themed .col-12.col-lg-6,
+.game-screen-themed .col-12.col-lg-3 {
+  width: auto !important;
+  max-width: none !important;
+  flex: none !important;
+  min-width: 0 !important;
+  background: rgba(255, 248, 222, 0.96) !important;
+  color: var(--egg-text-dark);
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  border-radius: 30px !important;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.24);
+  overflow: hidden;
+}
+
+/* Panel heights */
+.game-screen-themed .col-12.col-md-3,
+.game-screen-themed .col-12.col-lg-3 {
+  min-height: 460px !important;
+}
+
+.game-screen-themed .col-12.col-lg-6 {
+  min-height: 640px !important;
+}
+
+/* Remove Bootstrap default backgrounds and borders */
+.game-screen-themed .bg-white,
+.game-screen-themed .bg-light {
+  background: transparent !important;
+}
+
+.game-screen-themed .border-end {
+  border-right: none !important;
+}
+
+/* Bootstrap card cleanup */
+.game-screen-themed .card {
+  height: 100%;
+  margin: 0 !important;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 30px !important;
+  box-shadow: none !important;
+}
+
+.game-screen-themed .card-header,
+.game-screen-themed .p-3.border-bottom {
+  padding: 20px 24px !important;
+  color: var(--egg-text-dark) !important;
+  background: linear-gradient(135deg, #fff1a8, #fff7cf) !important;
+  border-bottom: 1px solid rgba(43, 23, 7, 0.1) !important;
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.game-screen-themed .card-header.bg-dark {
+  color: var(--egg-text-dark) !important;
+  background: linear-gradient(135deg, #fff1a8, #fff7cf) !important;
+}
+
+.game-screen-themed .card-body {
+  padding: 28px 24px !important;
+}
+
+/* Upgrade buttons */
+.game-screen-themed #clickpower-btn,
+.game-screen-themed #autoclicker-btn {
+  min-height: 74px !important;
+  margin-bottom: 16px !important;
+  padding: 14px 16px !important;
+  color: var(--egg-text-dark) !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(43, 23, 7, 0.1) !important;
+  border-radius: 20px !important;
+  font-size: 0.98rem !important;
+  font-weight: 800 !important;
+  box-shadow: 0 12px 26px rgba(85, 52, 15, 0.08);
+}
+
+.game-screen-themed #clickpower-btn:hover:not(:disabled),
+.game-screen-themed #autoclicker-btn:hover:not(:disabled) {
+  background: var(--egg-cream-soft) !important;
+  transform: translateY(-1px);
+}
+
+.game-screen-themed #clickpower-btn:disabled,
+.game-screen-themed #autoclicker-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* Leaderboard */
+.game-screen-themed .list-group {
+  padding: 24px !important;
+  background: transparent !important;
+}
+
+.game-screen-themed .list-group-flush {
+  border-radius: 0 !important;
+}
+
+.game-screen-themed .list-group-item {
+  margin-bottom: 14px !important;
+  padding: 15px 16px !important;
+  color: var(--egg-text-dark) !important;
+  background: #ffffff !important;
+  border: 1px solid rgba(43, 23, 7, 0.08) !important;
+  border-radius: 18px !important;
+  font-size: 0.95rem !important;
+  font-weight: 800;
+  box-shadow: 0 12px 26px rgba(85, 52, 15, 0.08);
+}
+
+.game-screen-themed .list-group-item:last-child {
+  margin-bottom: 0 !important;
+}
+
+.game-screen-themed .badge {
+  color: var(--egg-text-dark) !important;
+  background: var(--egg-gold) !important;
+  border-radius: 999px;
+  font-weight: 800;
+}
+
+/* Main game area */
+.game-screen-themed .col-12.col-lg-6 > div {
+  padding: 42px 36px 36px !important;
+}
+
+.game-screen-themed #progress-container {
+  width: 70% !important;
+  max-width: 380px !important;
+  height: 18px !important;
+  background: #ead8b8 !important;
+  border: 1px solid rgba(43, 23, 7, 0.12) !important;
+  border-radius: 999px !important;
+}
+
+.game-screen-themed #progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #f3b63f, var(--egg-gold)) !important;
+  border-radius: 999px;
+  transition: width 0.2s ease;
+}
+
+.game-screen-themed #click-count,
+.game-screen-themed .text-muted {
+  color: var(--egg-muted-brown) !important;
+  font-weight: 700;
+}
+
+.game-screen-themed #egg-points {
+  color: var(--egg-text-dark);
+  font-size: clamp(4rem, 6vw, 5.4rem) !important;
+  line-height: 1 !important;
+  font-weight: 800;
+}
+
+.game-screen-themed #egg-btn {
+  width: 230px !important;
+  height: 230px !important;
+  margin-top: 22px !important;
+  margin-bottom: 34px !important;
+  filter: drop-shadow(0px 18px 22px rgba(43, 23, 7, 0.26)) !important;
+}
+
+.game-screen-themed #egg-btn:hover {
+  transform: scale(1.05);
+}
+
+.game-screen-themed #egg-btn:active {
+  transform: scale(0.95);
+}
+
+.game-screen-themed #prev-egg,
+.game-screen-themed #next-egg-btn {
+  width: 44px !important;
+  height: 44px !important;
+  color: var(--egg-text-dark) !important;
+  background: #ffffff !important;
+  border: 2px solid rgba(43, 23, 7, 0.18) !important;
+  box-shadow: 0 8px 18px rgba(85, 52, 15, 0.08);
+}
+
+.game-screen-themed #prev-egg:hover,
+.game-screen-themed #next-egg-btn:hover {
+  background: var(--egg-cream-soft) !important;
+}
+
+.game-screen-themed #egg-type-display {
+  color: var(--egg-text-dark);
+  font-size: 1.05rem !important;
+  font-weight: 800;
+}
+
+/* Egg crack animation */
+.egg-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: var(--egg-image-url);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  image-rendering: pixelated;
+  transition:
+    transform 0.5s ease-out,
+    opacity 0.5s;
+}
+
+.shell-top {
+  clip-path: polygon(
+    0% 0%,
+    100% 0%,
+    100% 50%,
+    80% 45%,
+    60% 55%,
+    40% 45%,
+    20% 55%,
+    0% 50%
+  );
+  z-index: 3;
+}
+
+.shell-bottom {
+  clip-path: polygon(
+    0% 50%,
+    20% 55%,
+    40% 45%,
+    60% 55%,
+    80% 45%,
+    100% 50%,
+    100% 100%,
+    0% 100%
+  );
+  z-index: 2;
+}
+
+.new-egg {
+  transform: scale(0.5);
+  opacity: 0;
+  z-index: 1;
+}
+
+.cracked-top {
+  transform: translateY(-100px) rotate(-15deg);
+  opacity: 0;
+}
+
+.cracked-bottom {
+  transform: translateY(100px) rotate(15deg);
+  opacity: 0;
+}
+
+.reveal-egg {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Loading overlay */
+#loading-overlay {
+  min-height: calc(100vh - 78px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--egg-gold);
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+/* Responsive game layout */
+@media (max-width: 1180px) {
+  .game-screen-themed > .row {
+    grid-template-columns: 1fr;
+    max-width: 720px;
+  }
+
+  .game-screen-themed .col-12.col-md-3,
+  .game-screen-themed .col-12.col-lg-6,
+  .game-screen-themed .col-12.col-lg-3 {
+    min-height: auto !important;
+  }
+
+  .game-screen-themed #egg-btn {
+    width: 220px !important;
+    height: 220px !important;
+  }
+}
