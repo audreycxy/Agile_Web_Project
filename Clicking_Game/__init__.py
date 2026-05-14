@@ -5,6 +5,7 @@ from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 from .models import database
 from .routes import auth, main
+from .extensions import mail
 
 csrf = CSRFProtect()
 
@@ -40,6 +41,16 @@ def create_app(test_config=None):
         DATABASE=os.environ.get("DATABASE", str(default_database)),
         SQLALCHEMY_DATABASE_URI=os.environ.get("DATABASE_URL"),
         AUTO_MIGRATE=_bool_env("AUTO_MIGRATE", True),
+
+        MAIL_SERVER=os.environ.get("MAIL_SERVER", "smtp.gmail.com"),
+        MAIL_PORT=int(os.environ.get("MAIL_PORT", 587)),
+        MAIL_USE_TLS=_bool_env("MAIL_USE_TLS", True),
+        MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),
+        MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),
+        MAIL_DEFAULT_SENDER=os.environ.get(
+            "MAIL_DEFAULT_SENDER",
+            os.environ.get("MAIL_USERNAME")
+        ),
     )
     app.config.from_prefixed_env()
 
@@ -54,9 +65,10 @@ def create_app(test_config=None):
     if not app.config.get("SQLALCHEMY_DATABASE_URI"):
         app.config["SQLALCHEMY_DATABASE_URI"] = _sqlite_uri(app.config["DATABASE"])
 
-    # Initializes database connection, CSRF protection, and registers route files
+    # Initializes database connection, CSRF protection, mail service, and registers route files
     database.init_app(app)
     csrf.init_app(app)
+    mail.init_app(app)
     app.register_blueprint(main.bp)
     app.register_blueprint(auth.bp)
 
@@ -66,3 +78,4 @@ def create_app(test_config=None):
             database.upgrade_db()
 
     return app
+
