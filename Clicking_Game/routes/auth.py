@@ -232,11 +232,19 @@ def player_dashboard():
     results = users.list_results(user_id=g.user.id)
     scores = [result.score for result in results]
 
+    highest_type = "standard"
+
+    if g.user.game_state and g.user.game_state.highest_type:
+        highest_type = g.user.game_state.highest_type
+
+    highest_type_display = highest_type.replace("-", " ").title()
+
     return render_template(
         "player/player_dashboard.html",
         name=g.user.name,
         highest_score=max(scores) if scores else 0,
         latest_result=results[0].score if results else 0,
+        highest_type=highest_type_display,
     )
 
 # Player history page shows past game scores and stats
