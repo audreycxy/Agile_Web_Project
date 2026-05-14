@@ -101,6 +101,70 @@ document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("searchInput");
   const sortSelect = document.getElementById("sortSelect");
 
+  const adminChartScroll = document.getElementById("adminChartScroll");
+
+  if (adminChartScroll && labels.length > 0) {
+    adminChartScroll.style.minWidth = `${Math.max(760, labels.length * 90)}px`;
+  }
+
+  // Create a bar chart for admin player results
+  const adminChartCanvas = document.getElementById("adminResultsChart");
+
+  if (
+    adminChartCanvas &&
+    window.adminResults &&
+    window.adminResults.length > 0
+  ) {
+    // Group results by player and keep each player's highest score
+    const playerHighestScores = {};
+
+    window.adminResults.forEach((result) => {
+      const playerName = result.player || "Unknown Player";
+      const highestScore = Number(result.highest || result.score || 0);
+
+      if (
+        !playerHighestScores[playerName] ||
+        highestScore > playerHighestScores[playerName]
+      ) {
+        playerHighestScores[playerName] = highestScore;
+      }
+    });
+
+    // Convert grouped data into an array and show the top 10 players
+    const topPlayers = Object.entries(playerHighestScores)
+      .map(([player, score]) => ({
+        player,
+        score,
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10);
+
+    const labels = topPlayers.map((item) => item.player);
+    const scores = topPlayers.map((item) => item.score);
+
+    new Chart(adminChartCanvas, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: "Highest Score",
+            data: scores,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true,
+          },
+        },
+      },
+    });
+  }
+
   /*
     Connect the search input to the searchTable function.
   */
