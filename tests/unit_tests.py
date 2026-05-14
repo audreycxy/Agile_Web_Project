@@ -7,6 +7,21 @@ from Clicking_Game.models import database, users
 
 
 class BasicTests(unittest.TestCase):
+    def test_password_hashing(self):
+        plain_password = "Password123"
+
+        user = users.create_user(
+            name="Hash Test User",
+            email="hash@example.com",
+            password=plain_password,
+            role="player",
+        )
+
+        self.assertIsNotNone(user)
+        self.assertNotEqual(user.password_hash, plain_password)
+        self.assertTrue(user.check_password(plain_password))
+        self.assertFalse(user.check_password("WrongPassword"))
+
     def setUp(self):
         self.testApp = create_app(
             {
