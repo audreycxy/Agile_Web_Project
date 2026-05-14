@@ -1303,6 +1303,31 @@ a:hover {
   background: var(--egg-gold) !important;
 }
 
+.game-play-page .game-account-area {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.game-play-page .logged-in-label {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.95rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  .game-play-page .game-account-area {
+    align-items: flex-end;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .game-play-page .logged-in-label {
+    font-size: 0.85rem;
+  }
+}
+
 /* Game screen layout */
 .game-screen-themed {
   min-height: calc(100vh - 78px);
