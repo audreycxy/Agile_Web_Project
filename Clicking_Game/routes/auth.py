@@ -5,6 +5,8 @@ from google.genai import errors as genai_errors
 from flask import Blueprint, g, jsonify, redirect, render_template, request, session, url_for
 from Clicking_Game.models import users
 from Clicking_Game.utils.auth import login_required
+from flask_mail import Message
+from Clicking_Game.extensions import mail
 
 bp = Blueprint("auth", __name__)
 
@@ -19,6 +21,27 @@ def dashboard_url_for(user):
     if user.role == "admin":
         return url_for("auth.admin_dashboard")
     return url_for("auth.player_dashboard")
+
+def send_verification_email(user):
+    verification_url = url_for(
+        "auth.verify_email",
+        token=user.email_verification_token,
+        _external=True,
+    )
+
+    msg = Message(
+        subject="Verify your Clicking Game account",
+        recipients=[user.email],
+        body=(
+            f"Hi {user.name},\n\n"
+            "Thank you for signing up for Clicking Game.\n\n"
+            "Please click the link below to verify your email address:\n\n"
+            f"{verification_url}\n\n"
+            "If you did not create this account, you can ignore this email."
+        ),
+    )
+
+    mail.send(msg)
 
 # Route for user login
 @bp.route("/login", methods=("GET", "POST"))
@@ -98,16 +121,11 @@ def signup():
             if user is None:
                 error = "Account already exists."
             else:
-                verification_url = url_for(
-                    "auth.verify_email",
-                    token=user.email_verification_token,
-                    _external=True,
-                )
+                send_verification_email(user)
 
                 return render_template(
                     "public/signup.html",
-                    success="Account created. Please verify your email before logging in.",
-                    verification_url=verification_url,
+                    success="Account created. Please check your email to verify your account before logging in.",
                     error=None,
                 )
 
