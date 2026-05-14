@@ -29,24 +29,28 @@
       <a href="{{ url_for('main.home') }}" class="game-logo">🥚 Egg Clicker</a>
 
       <div class="game-nav-links">
-        <a href="{{ url_for('auth.player_dashboard') }}"
-        class="{% if request.endpoint == 'auth.player_dashboard' %}active{% endif %}">
-        Dashboard
-      </a>
+        <a
+          href="{{ url_for('auth.player_dashboard') }}"
+          class="{% if request.endpoint == 'auth.player_dashboard' %}active{% endif %}"
+        >
+          Dashboard
+        </a>
 
-      <a href="{{ url_for('auth.history', search=search) }}"
-        class="{% if request.endpoint == 'auth.history' %}active{% endif %}">
-        Results
-      </a>
+        <a
+          href="{{ url_for('auth.history', search=search) }}"
+          class="{% if request.endpoint == 'auth.history' %}active{% endif %}"
+        >
+          Results
+        </a>
 
-      <a href="{{ url_for('auth.profile') }}"
-        class="{% if request.endpoint == 'auth.profile' %}active{% endif %}">
-        Profile
-      </a>
+        <a
+          href="{{ url_for('auth.profile') }}"
+          class="{% if request.endpoint == 'auth.profile' %}active{% endif %}"
+        >
+          Profile
+        </a>
 
-      <a href="{{ url_for('auth.logout') }}" class="nav-signup">
-        Logout
-      </a>
+        <a href="{{ url_for('auth.logout') }}" class="nav-signup"> Logout </a>
       </div>
     </nav>
 
@@ -93,7 +97,7 @@
           <h2>Your current game summary</h2>
         </div>
 
-        <div class="dashboard-stat-grid">
+        <div class="dashboard-stat-grid dashboard-stat-grid-four">
           <article class="dashboard-stat-card">
             <span class="stat-label">Profile</span>
             <h3 id="profileText">{{ name }}</h3>
@@ -110,6 +114,12 @@
             <span class="stat-label">Latest Result</span>
             <h3 id="latestResult">{{ latest_result }}</h3>
             <p>Your most recent saved game result.</p>
+          </article>
+
+          <article class="dashboard-stat-card">
+            <span class="stat-label">Highest Egg</span>
+            <h3 id="highestEgg">{{ highest_type }}</h3>
+            <p>Your highest unlocked egg type.</p>
           </article>
         </div>
       </section>

@@ -656,6 +656,22 @@ a:hover {
   gap: 22px;
 }
 
+.dashboard-stat-grid-four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+@media (max-width: 1200px) {
+  .dashboard-stat-grid-four {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .dashboard-stat-grid-four {
+    grid-template-columns: 1fr;
+  }
+}
+
 .dashboard-stat-card {
   min-height: 210px;
   padding: 28px;
