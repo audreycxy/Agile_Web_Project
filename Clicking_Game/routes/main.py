@@ -66,7 +66,14 @@ def game():
             "autoclicker_lvl": gs.autoclicker_lvl
         })
     
-    return render_template("player/game.html", state=initial_state, config=EGG_CONFIG)
+    leaderboard = users.list_leaderboard(limit=10)
+
+    return render_template(
+        "player/game.html",
+        state=initial_state,
+        config=EGG_CONFIG,
+        leaderboard=leaderboard,
+    )
 
 @bp.route("/api/sync", methods=["POST"])
 @login_required(role="player")
