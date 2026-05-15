@@ -2,6 +2,15 @@
 
 A Flask clicking-game web app with role-based login, SQLAlchemy ORM models, Alembic migrations, SQLite persistence, and Docker support.
 
+## Group Members
+
+| UWA ID   | Name                   | GitHub Username    |
+|----------|------------------------|--------------------|
+| 24365316 | Audrey Chio            | audreycxy          |
+| 24244417 | Sitong Liu             | Sitong888          |
+| 24315125 | James Osmond           | James-909          |
+| 24080064 | Handuo Cui             | cuihanduo1417595655|
+
 ## Current Structure
 
 ```text
@@ -14,7 +23,7 @@ A Flask clicking-game web app with role-based login, SQLAlchemy ORM models, Alem
 |   |   `-- users.py             # User and game-result ORM models
 |   |-- routes/
 |   |   |-- auth.py              # Login, signup, logout, dashboards
-|   |   `-- main.py              # Home and guest pages
+|   |   `-- main.py              # Home, guest page, game page, and game API routes
 |   |-- static/
 |   `-- templates/
 |-- migrations/
@@ -23,11 +32,16 @@ A Flask clicking-game web app with role-based login, SQLAlchemy ORM models, Alem
 |   `-- versions/
 |       `-- 0001_create_initial_tables.py
 |-- scripts/
-|   |-- add_user.py              # Add one user to app.db
-|   `-- seed_users.py            # Add starter users to app.db
+|   |-- add_user.py              # Add one local user to app.db
+|   |-- create_admin.py          # Create a secure admin account for deployment
+|   `-- seed_users.py            # Add local testing users to app.db
+|-- tests/
+|   |-- unit_tests.py            # Unit tests for routes, authentication, CSRF, and score saving
+|   `-- selenium_tests.py        # Selenium WebDriver system tests
 |-- alembic.ini
 |-- docker-compose.yml
 |-- Dockerfile
+|-- pytest.ini
 |-- requirements.txt
 `-- wsgi.py                      # WSGI server entry point
 ```
@@ -50,36 +64,69 @@ Default Docker database path inside the container:
 
 The schema is defined by Alembic revisions in `migrations/versions/`. The Flask app applies migrations on startup by default through `AUTO_MIGRATE=1`, so a missing `app.db` is created and upgraded automatically. Set `AUTO_MIGRATE=0` if you want to run migrations manually.
 
-## User Scripts
+## User and Account Setup
 
-Seed the starter users:
+### Local development and testing
+
+The project includes helper scripts for creating local development accounts.
+
+Use the seed script only for local development or automated testing:
 
 ```bash
 python scripts/seed_users.py
 ```
 
-Starter users inserted by the seed script:
+Seeded starter accounts are intended only for local testing. They should not be used for production or public deployment.
 
-| Role | Email | Password |
-| --- | --- | --- |
-| Admin | `admin@example.com` | `admin123` |
-| Player | `player@example.com` | `player123` |
-
-Add a custom user:
+You can also create a custom local user:
 
 ```bash
-python scripts/add_user.py --name "Admin User" --email admin@example.com --password admin123 --role admin
-python scripts/add_user.py --name "Player User" --email player@example.com --password player123 --role player
+python scripts/add_user.py --name "Local Player" --email local.player@example.com --password "replace-this-local-password" --role player
 ```
+
+Do not document or commit real production credentials in README files, issues, screenshots, or `.env` files.
+
+### Deployment account setup
+
+Before deployment, create a real administrator account with a unique and secure password:
+
+```bash
+python scripts/create_admin.py
+```
+
+The admin creation script asks for the admin name, email, and password. It can also read values from environment variables.
+
+For Git Bash or Linux/macOS terminal:
+
+```bash
+ADMIN_NAME="Site Admin" ADMIN_EMAIL="admin@example.com" ADMIN_PASSWORD="use-a-secure-password" python scripts/create_admin.py
+```
+
+For Windows PowerShell:
+
+```powershell
+$env:ADMIN_NAME="Site Admin"
+$env:ADMIN_EMAIL="admin@example.com"
+$env:ADMIN_PASSWORD="use-a-secure-password"
+python scripts/create_admin.py
+```
+
+Inside Docker, run the same account setup script through the container:
+
+```bash
+docker compose exec web python scripts/create_admin.py
+```
+
+For production:
+
+- Do not run `scripts/seed_users.py`.
+- Do not use default local development credentials.
+- Use a strong `SECRET_KEY`.
+- Keep production credentials out of the repository.
+- Create player accounts through the normal sign-up flow.
+- Create administrator accounts through `scripts/create_admin.py`.
 
 Passwords are stored as Werkzeug password hashes, not plain text.
-
-Inside Docker, run the same scripts through the container:
-
-```bash
-docker compose exec web python scripts/seed_users.py
-docker compose exec web python scripts/add_user.py --name "New Player" --email new@example.com --password player123 --role player
-```
 
 ## Run With Docker
 
@@ -93,10 +140,16 @@ Start the app:
 docker compose up --build
 ```
 
-Seed starter users in another terminal after the container is running:
+For local development only, you may create test users in another terminal:
 
 ```bash
 docker compose exec web python scripts/seed_users.py
+```
+
+For deployment, do not seed starter users. Create a secure administrator account instead:
+
+```bash
+docker compose exec web python scripts/create_admin.py
 ```
 
 Open:
@@ -118,7 +171,18 @@ Reset the Docker database if you need a clean state:
 ```bash
 docker compose down -v
 docker compose up --build
+```
+
+For local development, you may optionally seed test users again:
+
+```bash
 docker compose exec web python scripts/seed_users.py
+```
+
+For deployment, create a secure administrator account instead:
+
+```bash
+docker compose exec web python scripts/create_admin.py
 ```
 
 ## Run Locally Without Docker
@@ -140,10 +204,16 @@ Install dependencies:
 pip install -r requirements.txt
 ```
 
-Create starter users:
+For local development only, you may create test users:
 
 ```bash
 python scripts/seed_users.py
+```
+
+For deployment or a production-like setup, create a secure administrator account instead:
+
+```bash
+python scripts/create_admin.py
 ```
 
 Run the development server:
@@ -218,11 +288,29 @@ Environment variables:
 | `PORT` | `5000` | Local `app.py` bind port. |
 | `FLASK_DEBUG` | `0` | Set to `1` for local debug mode. |
 
+Optional admin setup variables used by `scripts/create_admin.py`:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `ADMIN_NAME` | unset | Optional admin display name for the admin creation script. |
+| `ADMIN_EMAIL` | unset | Optional admin email for the admin creation script. |
+| `ADMIN_PASSWORD` | unset | Optional admin password for the admin creation script. Do not commit real passwords. |
+
 Copy `.env.example` if you want a local reference for required variables. The app reads normal environment variables directly.
+
+## Deployment Notes
+
+Before deploying the application:
+
+1. Set a strong `SECRET_KEY`.
+2. Do not use seeded local testing accounts.
+3. Create a secure administrator account with `scripts/create_admin.py`.
+4. Keep real credentials and production `.env` files out of version control.
+5. Confirm automated tests pass with `python -m pytest`.
 
 ## Development Direction
 
-The app is split into app factory, routes, models, utilities, migrations, and scripts so later changes can be added without putting everything in one file. Good next steps are:
+The app is split into app factory, routes, models, utilities, migrations, scripts, and tests so later changes can be added without putting everything in one file. Good next steps are:
 
 1. Expand the automated tests to cover admin account updates, AI feedback success paths, and client-side browser interactions.
 2. Add score submission routes that write through the `GameResult` SQLAlchemy model.

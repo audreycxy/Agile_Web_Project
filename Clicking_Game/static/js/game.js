@@ -1,243 +1,385 @@
-// Looks for the play buttons on both the guest page and player dashboard (and elsewhere) and redirects to game page on click.
-const playBtns = document.querySelectorAll(".btn-play");
-if (playBtns.length > 0) {
-    Array.from(playBtns).forEach(btn => {
-        btn.addEventListener('click', () => {
-            window.location.href = "/game";
-        });
-    });
-}
-
 (function () {
-    if (typeof INITIAL_STATE === "undefined") {
-        return;
-    }
+  // INITIALISATION
 
-    // Egg Data:
-    const EGG_CONFIG = {
-        standard: { name: "Standard", baseClicks: 10, basePoints: 1, image: "static/images/defaultegg_nobackground.png" },
-        water: { name: "Water", baseClicks: 20, basePoints: 5, image: "static/images/wateregg.png" }, // example additonal type
-        gold: { name: "Golden", baseClicks: 1, basePoints: 1, image: "static/images/defaultegg_nobackground.png" }
-    };
+  // Egg Order
+  const EGG_ORDER = [
+    "standard",
+    "water",
+    "fire",
+    "grass",
+    "steel",
+    "standard-bronze",
+    "water-bronze",
+    "fire-bronze",
+    "grass-bronze",
+    "steel-bronze",
+    "standard-silver",
+    "water-silver",
+    "fire-silver",
+    "grass-silver",
+    "steel-silver",
+    "standard-gold",
+    "water-gold",
+    "fire-gold",
+    "grass-gold",
+    "steel-gold",
+    "gold",
+  ];
 
-    // Game State (default/guest):
-    let gameState = {
-        totalPoints: INITIAL_STATE.points,
-        // currentLevel: INITIAL_STATE.current_level,
-        currentLevel: INITIAL_STATE.current_infinity_level,
-        currentType: INITIAL_STATE.current_type,
-        highestType: INITIAL_STATE.highest_type ?? INITIAL_STATE.current_type,
-        clicksRemaining: INITIAL_STATE.clicks_remaining ?? EGG_CONFIG[INITIAL_STATE.current_type].baseClicks,
-        progressPercent: INITIAL_STATE.progress_percent ?? 0,
-        isGuest: INITIAL_STATE.is_guest
-    };
+  // Game State
+  let gameState = {
+    totalPoints: INITIAL_STATE.points,
+    currentInfinityLevel: INITIAL_STATE.current_infinity_level,
+    currentType: INITIAL_STATE.current_type,
+    highestType: INITIAL_STATE.highest_type,
+    clicksRemaining:
+      INITIAL_STATE.clicks_remaining ??
+      EGG_CONFIG[INITIAL_STATE.current_type].base_clicks,
+    progressPercent: INITIAL_STATE.progress_percent,
+    isGuest: INITIAL_STATE.is_guest,
+    clickPower: INITIAL_STATE.click_power_lvl,
+    autoClickerPower: INITIAL_STATE.autoclicker_lvl,
+  };
 
-    function jsonPostOptions(payload) {
-        return {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": CSRF_TOKEN,
-            },
-            body: JSON.stringify(payload),
-        };
-    }
+  updateProgressUI();
+  updateUpgradeUI();
 
-    function saveGameState() {
-        if (gameState.isGuest) {
-            return Promise.resolve();
-        }
+  let isAnimating = false;
+  let isSyncing = false;
 
-        return fetch("/save_game_state", jsonPostOptions({
-            points: gameState.totalPoints,
-            current_infinity_level: gameState.currentLevel,
-            current_type: gameState.currentType,
-            highest_type: gameState.highestType,
-            clicks_remaining: gameState.clicksRemaining,
-            progress_percent: gameState.progressPercent,
-        }));
-    }
+  function handleEggClick(damageAmount = null) {
+    if (isAnimating || isSyncing) return;
+
+    const damage = damageAmount !== null ? damageAmount : gameState.clickPower;
+    gameState.clicksRemaining -= damage;
+
+    console.log("click power", gameState.clickPower);
+    console.log("damage:", damage);
 
     updateProgressUI();
 
-    let isAnimating = false;
-    let isRestarting = false;
+    if (gameState.clicksRemaining <= 0) {
+      gameState.clicksRemaining = 0;
+      isSyncing = true;
 
-    function handleEggClick() {
-        if (isAnimating) return;
+      const earned = calculateReward();
+      gameState.totalPoints += earned;
 
-        gameState.clicksRemaining--;
-        updateProgressUI()
+      const eggKeys = EGG_ORDER;
+      const nextIndex = eggKeys.indexOf(gameState.currentType) + 1;
 
-        if (gameState.clicksRemaining <= 0) {
-            console.log("zero clicks left"); // no clicks left print
-            const earned = calculateReward();
-            gameState.totalPoints += earned;
-            updatePointsUI();
-
-            // need to add a check for out of bounds
-            const eggKeys = Object.keys(EGG_CONFIG);
-            const nextIndex =  eggKeys.indexOf(gameState.currentType) + 1;
-            gameState.currentType = eggKeys[nextIndex];
-
-            gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].baseClicks;
-            updateProgressUI()
-            
-            triggerEggBreak();
-        }
-    }
-
-    function calculateReward() { // add level as a parameter once added
-        const level = 1 // placeholder for level (should probably be renamed to power to not be confused with levels as in stages)
-
-        const egg = EGG_CONFIG[gameState.currentType];
-        return Math.floor(egg.basePoints * level);
-    }
-
-    function updatePointsUI() {
-        document.getElementById('egg-points').innerText = gameState.totalPoints;
-    }
-
-    function updateProgressUI() {
-        const requiredClicks = EGG_CONFIG[gameState.currentType].baseClicks
-        const percentage = ((requiredClicks - gameState.clicksRemaining) / requiredClicks) * 100;
-        const barWidth = Math.min(Math.max(percentage, 0), 100);
-
-        gameState.progressPercent = barWidth;
-        document.getElementById('progress-bar').style.width = `${barWidth}%`;
-        document.getElementById('click-count').innerText = `${gameState.clicksRemaining}/${requiredClicks} left`;
-    }
-
-    function updateHighestType(eggKeys) {
-        const currentHighestIndex = eggKeys.indexOf(gameState.highestType);
-        const currentTypeIndex = eggKeys.indexOf(gameState.currentType);
-
-        if (currentTypeIndex > currentHighestIndex) {
-            gameState.highestType = gameState.currentType;
-        }
-    }
-
-    function formatScore(points) {
-        return Number(points || 0).toLocaleString();
-    }
-
-    function renderLeaderboard(players, currentUserId) {
-        const leaderboardList = document.getElementById("leaderboard-list");
-
-        if (!leaderboardList) {
-            return;
+      if (gameState.currentType == eggKeys[eggKeys.length - 1]) {
+        console.log("Final egg reached!");
+      } else {
+        if (gameState.highestType == gameState.currentType) {
+          gameState.highestType = eggKeys[nextIndex];
         }
 
-        if (!players.length) {
-            const emptyItem = document.createElement("li");
-            emptyItem.className = "list-group-item text-muted";
-            emptyItem.textContent = "No scores yet.";
-            leaderboardList.replaceChildren(emptyItem);
-            return;
-        }
+        gameState.currentType = eggKeys[nextIndex];
+      }
 
-        const items = players.map((player, index) => {
-            const isCurrentUser = currentUserId === player.id;
-            const listItem = document.createElement("li");
-            const nameSpan = document.createElement("span");
-            const scoreBadge = document.createElement("span");
-            const displayName = isCurrentUser ? `${player.name} (You)` : player.name;
+      console.log("next egg key:", gameState.currentType);
+      console.log("available keys:", EGG_ORDER);
 
-            listItem.className = isCurrentUser
-                ? "list-group-item list-group-item-warning d-flex justify-content-between align-items-center"
-                : "list-group-item d-flex justify-content-between align-items-center";
-            nameSpan.textContent = `${index + 1}. ${displayName}`;
-            scoreBadge.className = "badge bg-dark rounded-pill";
-            scoreBadge.textContent = formatScore(player.points);
+      gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].base_clicks;
 
-            listItem.append(nameSpan, scoreBadge);
-            return listItem;
-        });
-
-        leaderboardList.replaceChildren(...items);
-    }
-
-    function fetchLeaderboard() {
-        return fetch(LEADERBOARD_API_URL)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Leaderboard request failed with status ${response.status}`);
-                }
-
-                return response.json();
-            })
-            .then(data => {
-                renderLeaderboard(data.players ?? [], data.current_user_id ?? null);
-            })
-            .catch(error => {
-                console.error("Failed to load leaderboard", error);
-
-                const leaderboardList = document.getElementById("leaderboard-list");
-                if (leaderboardList) {
-                    const errorItem = document.createElement("li");
-                    errorItem.className = "list-group-item text-danger";
-                    errorItem.textContent = "Unable to load leaderboard.";
-                    leaderboardList.replaceChildren(errorItem);
-                }
-            });
-    }
-
-    function updateEggImage() {
-        const eggImage = document.querySelectorAll('.egg-image');
-        eggImage.forEach(eggImage => {
-            eggImage.style.backgroundImage = `url('${EGG_CONFIG[gameState.currentType].image}')`
+      if (!gameState.isGuest) {
+        fetch("/api/sync", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": document.querySelector('meta[name="csrf-token"]')
+              .content,
+          },
+          body: JSON.stringify({}),
         })
-        document.getElementById('egg-type-display').innerText = gameState.currentType;
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.status === "success") {
+              gameState.totalPoints = data.new_points;
+              gameState.currentType = data.current_type;
+              gameState.highestType = data.highest_type;
+              gameState.clicksRemaining = data.clicks_remaining;
+
+              console.log("Progress synced with server");
+
+              isSyncing = false;
+
+              updatePointsUI();
+              updateProgressUI();
+              updateUpgradeUI();
+            } else {
+              isSyncing = false;
+              console.error("Sync failed:", data.error);
+            }
+          })
+          .catch((err) => {
+            isSyncing = false;
+            console.error("Sync failed:", err);
+          });
+      } else {
+        console.log("Guest progress updated locally.");
+
+        isSyncing = false;
+
+        updatePointsUI();
+        updateProgressUI();
+        updateUpgradeUI();
+      }
+
+      updateProgressUI();
+      triggerEggBreak();
+    }
+  }
+
+  function calculateReward() {
+    const level = 1;
+    const egg = EGG_CONFIG[gameState.currentType];
+
+    return Math.floor(egg.base_points * level);
+  }
+
+  function updatePointsUI() {
+    document.getElementById("egg-points").innerText = gameState.totalPoints;
+  }
+
+  function updateProgressUI() {
+    const requiredClicks = EGG_CONFIG[gameState.currentType].base_clicks;
+    const percentage =
+      ((requiredClicks - gameState.clicksRemaining) / requiredClicks) * 100;
+    const barWidth = Math.min(Math.max(percentage, 0), 100);
+
+    document.getElementById("progress-bar").style.width = `${barWidth}%`;
+    document.getElementById("click-count").innerText =
+      `${gameState.clicksRemaining}/${requiredClicks} left`;
+  }
+
+  function updateEggImage() {
+    const eggImages = document.querySelectorAll(".egg-image");
+
+    eggImages.forEach((eggImage) => {
+      eggImage.style.backgroundImage = `url('${EGG_CONFIG[gameState.currentType].image}')`;
+    });
+
+    document.getElementById("egg-type-display").innerText =
+      EGG_CONFIG[gameState.currentType].name;
+  }
+
+  function triggerEggBreak() {
+    isAnimating = true;
+
+    const main = document.getElementById("main-egg");
+    const top = document.getElementById("top-half");
+    const bottom = document.getElementById("bottom-half");
+    const next = document.getElementById("next-egg");
+
+    next.style.backgroundImage = `url('${EGG_CONFIG[gameState.currentType].image}')`;
+
+    const setBreakingMode = (isBreaking) => {
+      const displayState = isBreaking ? "block" : "none";
+
+      main.style.display = isBreaking ? "none" : "block";
+      top.style.display = displayState;
+      bottom.style.display = displayState;
+      next.style.display = displayState;
+    };
+
+    setBreakingMode(true);
+
+    void top.offsetHeight;
+
+    top.classList.add("cracked-top");
+    bottom.classList.add("cracked-bottom");
+    next.classList.add("reveal-egg");
+
+    setTimeout(() => {
+      setBreakingMode(false);
+
+      top.classList.remove("cracked-top");
+      bottom.classList.remove("cracked-bottom");
+      next.classList.remove("reveal-egg");
+
+      isAnimating = false;
+      updateEggImage();
+    }, 600);
+
+    console.log("broke and replaced the egg");
+  }
+
+  function changeEgg(direction) {
+    const eggKeys = EGG_ORDER;
+    const nextIndex = eggKeys.indexOf(gameState.currentType) + direction;
+    const highestIndex = eggKeys.indexOf(gameState.highestType);
+
+    if (nextIndex < 0 || nextIndex > highestIndex) {
+      console.log("Egg locked or doesn't exist");
+      return;
     }
 
-    function triggerEggBreak() {
-        isAnimating = true; // animation lock engaged
+    if (
+      gameState.clicksRemaining <
+        EGG_CONFIG[gameState.currentType].base_clicks &&
+      gameState.clicksRemaining > 0
+    ) {
+      const confirmed = confirm(
+        "Are you sure? Progress on this egg will be reset!",
+      );
 
-        const main = document.getElementById('main-egg');
-        const top = document.getElementById('top-half');
-        const bottom = document.getElementById('bottom-half');
-        const next = document.getElementById('next-egg');
-
-        next.style.backgroundImage = `url('${EGG_CONFIG[gameState.currentType].image}')`;
-
-        // local helper for swapping visibility
-        const setBreakingMode = (isBreaking) => {
-            const displayState = isBreaking ? 'block' : 'none';
-            main.style.display = isBreaking ? 'none' : 'block';
-            top.style.display = displayState;
-            bottom.style.display = displayState;
-            next.style.display = displayState;
-        }
-
-        setBreakingMode(true);
-
-        void top.offsetHeight;
-
-        // start animations
-        top.classList.add('cracked-top');
-        bottom.classList.add('cracked-bottom');
-        next.classList.add('reveal-egg');
-
-        setTimeout(() => {
-            setBreakingMode(false);
-
-            top.classList.remove('cracked-top');
-            bottom.classList.remove('cracked-bottom');
-            next.classList.remove('reveal-egg');
-
-            isAnimating = false; // animation lock released
-            updateEggImage()
-        }, 600)
-
-        console.log('broke and replaced the egg')
+      if (!confirmed) {
+        return;
+      }
     }
 
-    // Event Listeners/Triggers:
-    document.getElementById('egg-btn').addEventListener('click', handleEggClick);
+    gameState.currentType = eggKeys[nextIndex];
+    gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].base_clicks;
 
-    window.addEventListener('load', () => { // only displays game content on the html once all assets are loaded
-        document.getElementById('loading-overlay').style.display = 'none';
-        document.getElementById('game-screen').style.display = '';
-        fetchLeaderboard();
-    })
+    updateEggImage();
+    updateProgressUI();
+
+    if (!gameState.isGuest) {
+      fetch("/api/navigate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector('meta[name="csrf-token"]')
+            .content,
+        },
+        body: JSON.stringify({
+          type: gameState.currentType,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status !== "success") {
+            console.error("Navigation sync failed:", data.error);
+          }
+        })
+        .catch((err) => console.error("Network error during sync:", err));
+    }
+  }
+
+  function buyUpgrade(type) {
+    const currentLevel = gameState[type];
+
+    const cost = Math.floor(10 * Math.pow(5, currentLevel));
+
+    if (gameState.totalPoints < cost) {
+      return;
+    }
+
+    const oldPoints = gameState.totalPoints;
+    const oldLevel = gameState[type];
+
+    gameState.totalPoints -= cost;
+    gameState[type] += 1;
+
+    updatePointsUI();
+    updateUpgradeUI();
+
+    if (!gameState.isGuest) {
+      fetch("/api/buy_upgrade", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": document.querySelector('meta[name="csrf-token"]')
+            .content,
+        },
+        body: JSON.stringify({
+          upgrade_type: type,
+          new_level: gameState[type],
+          new_points: gameState.totalPoints,
+        }),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          if (data.status === "success") {
+            gameState.totalPoints = data.new_points;
+            gameState[type] = data.new_level;
+
+            updatePointsUI();
+            updateUpgradeUI();
+          } else {
+            gameState.totalPoints = oldPoints;
+            gameState[type] = oldLevel;
+
+            updatePointsUI();
+            updateUpgradeUI();
+
+            console.error("Sync failed:", data.error);
+          }
+        })
+        .catch((err) => {
+          gameState.totalPoints = oldPoints;
+          gameState[type] = oldLevel;
+
+          updatePointsUI();
+          updateUpgradeUI();
+
+          console.error("Sync failed:", err);
+        });
+    } else {
+      console.log("Guest purchase done locally.");
+    }
+  }
+
+  function updateUpgradeUI() {
+    const upgrades = [
+      {
+        id: "clickpower-btn",
+        key: "clickPower",
+        name: "Click Power",
+      },
+      {
+        id: "autoclicker-btn",
+        key: "autoClickerPower",
+        name: "Auto-Clicker",
+      },
+    ];
+
+    upgrades.forEach((upgrade) => {
+      const btn = document.getElementById(upgrade.id);
+
+      if (!btn) return;
+
+      const level = gameState[upgrade.key];
+      const cost = Math.floor(10 * Math.pow(5, level));
+
+      btn.innerHTML = `${upgrade.name} (lvl. ${level})<br><small>(Cost: ${cost})</small>`;
+
+      if (gameState.totalPoints < cost) {
+        btn.disabled = true;
+        btn.classList.add("is-disabled");
+      } else {
+        btn.disabled = false;
+        btn.classList.remove("is-disabled");
+      }
+    });
+  }
+
+  setInterval(() => {
+    if (gameState.autoClickerPower > 0) {
+      const autoDamage =
+        gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 2;
+
+      handleEggClick(autoDamage);
+    }
+  }, 1000);
+
+  document
+    .getElementById("egg-btn")
+    .addEventListener("click", () => handleEggClick());
+  document
+    .getElementById("clickpower-btn")
+    .addEventListener("click", () => buyUpgrade("clickPower"));
+  document
+    .getElementById("autoclicker-btn")
+    .addEventListener("click", () => buyUpgrade("autoClickerPower"));
+
+  window.addEventListener("load", () => {
+    document.getElementById("loading-overlay").style.display = "none";
+    document.getElementById("game-screen").style.display = "";
+    updateEggImage();
+  });
+
+  window.changeEgg = changeEgg;
 })();

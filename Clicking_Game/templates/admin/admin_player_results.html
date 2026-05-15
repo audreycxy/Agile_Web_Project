@@ -33,25 +33,29 @@
       </a>
 
       <div class="game-nav-links">
-      <a href="{{ url_for('auth.admin_dashboard') }}"
-        class="{% if request.endpoint == 'auth.admin_dashboard' %}active{% endif %}">
-        Dashboard
-      </a>
+        <a
+          href="{{ url_for('auth.admin_dashboard') }}"
+          class="{% if request.endpoint == 'auth.admin_dashboard' %}active{% endif %}"
+        >
+          Dashboard
+        </a>
 
-      <a href="{{ url_for('auth.admin_player_results', search=search) }}"
-        class="{% if request.endpoint == 'auth.admin_player_results' %}active{% endif %}">
-        Results
-      </a>
+        <a
+          href="{{ url_for('auth.admin_player_results', search=search) }}"
+          class="{% if request.endpoint == 'auth.admin_player_results' %}active{% endif %}"
+        >
+          Results
+        </a>
 
-      <a href="{{ url_for('auth.admin_accounts') }}"
-        class="{% if request.endpoint == 'auth.admin_accounts' %}active{% endif %}">
-        Accounts
-      </a>
+        <a
+          href="{{ url_for('auth.admin_accounts') }}"
+          class="{% if request.endpoint == 'auth.admin_accounts' %}active{% endif %}"
+        >
+          Accounts
+        </a>
 
-      <a href="{{ url_for('auth.logout') }}" class="nav-signup">
-        Logout
-      </a>
-    </div>
+        <a href="{{ url_for('auth.logout') }}" class="nav-signup"> Logout </a>
+      </div>
     </nav>
 
     <main class="dashboard-layout">
@@ -96,6 +100,20 @@
         </div>
       </section>
 
+      <!-- Result visualisation chart -->
+      <section class="dashboard-panel">
+        <div class="dashboard-panel-header">
+          <p class="section-label">Result visualisation</p>
+          <h2>Player score comparison</h2>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-scroll-inner" id="adminChartScroll">
+            <canvas id="adminResultsChart"></canvas>
+          </div>
+        </div>
+      </section>
+
       <!-- Player results table -->
       <section class="dashboard-panel">
         <div class="dashboard-panel-header admin-table-header">
@@ -109,7 +127,7 @@
           </div>
         </div>
 
-        <div class="history-table-wrap">
+        <div class="history-table-wrap results-scroll-area">
           <table class="history-table admin-results-table" id="resultsTable">
             <thead>
               <tr>
@@ -124,9 +142,8 @@
               {% for result in results %}
               <tr>
                 <td>
-                  {% if result.user %}
-                  {{ result.user.name }}{% if result.user.is_deleted %} (Deleted){% endif %}
-                  {% else %}
+                  {% if result.user %} {{ result.user.name }}{% if
+                  result.user.is_deleted %} (Deleted){% endif %} {% else %}
                   Guest/Deleted User {% endif %}
                 </td>
 
@@ -157,7 +174,21 @@
     <!-- Bootstrap JavaScript bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- External JavaScript file for search and sorting -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+      window.adminResults = [
+        {% for result in results %}
+        {
+          player: {{ (result.user.name if result.user else 'Guest/Deleted User') | tojson }},
+          score: {{ result.score }},
+          highest: {{ highest_scores.get(result.user_id, result.score) }}
+        }{% if not loop.last %},{% endif %}
+        {% endfor %}
+      ];
+    </script>
+
+    <!-- External JavaScript file for search, sorting, and chart -->
     <script src="{{ url_for('static', filename='js/admin_player_results.js') }}"></script>
   </body>
 </html>
