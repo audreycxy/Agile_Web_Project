@@ -102,14 +102,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const sortSelect = document.getElementById("sortSelect");
 
   const adminChartScroll = document.getElementById("adminChartScroll");
-
-  if (adminChartScroll && labels.length > 0) {
-    adminChartScroll.style.minWidth = `${Math.max(760, labels.length * 90)}px`;
-  }
-
-  // Create a bar chart for admin player results
   const adminChartCanvas = document.getElementById("adminResultsChart");
 
+  // Create a bar chart for admin player results
   if (
     adminChartCanvas &&
     window.adminResults &&
@@ -141,6 +136,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const labels = topPlayers.map((item) => item.player);
     const scores = topPlayers.map((item) => item.score);
+
+    /*
+      Stretch the scrolling chart container so wider bar charts can scroll
+      horizontally on narrow screens. Uses `labels` which is in scope here.
+    */
+    if (adminChartScroll && labels.length > 0) {
+      adminChartScroll.style.minWidth = `${Math.max(760, labels.length * 90)}px`;
+    }
 
     new Chart(adminChartCanvas, {
       type: "bar",
