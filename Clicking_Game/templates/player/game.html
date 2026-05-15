@@ -97,6 +97,13 @@
     text-overflow: ellipsis;
     display: block;
   }
+
+  /* highlights the current player's own row in the leaderboard */
+  .leaderboard-self {
+    background-color: #fff3cd !important;
+    border-left: 4px solid #ffc107 !important;
+    font-weight: 600;
+  }
 </style>
 {% endblock %}
 
@@ -314,10 +321,16 @@
         <ul class="list-group list-group-flush">
           {% if leaderboard %}
           {% for player in leaderboard %}
+          {% set is_self = g.user and player.id == g.user.id %}
           <li
-            class="list-group-item d-flex justify-content-between align-items-center{% if g.user and player.id == g.user.id %} active{% endif %}"
+            class="list-group-item d-flex justify-content-between align-items-center{% if is_self %} leaderboard-self{% endif %}"
           >
-            <span>{{ loop.index }}. {{ player.name }}</span>
+            <span>
+              {{ loop.index }}. {{ player.name }}
+              {% if is_self %}
+              <span class="badge bg-warning text-dark ms-1">You</span>
+              {% endif %}
+            </span>
 
             <span class="badge bg-primary rounded-pill">
               {{ player.game_state.points }}
