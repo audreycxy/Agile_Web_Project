@@ -41,9 +41,6 @@
     autoClickerPower: INITIAL_STATE.autoclicker_lvl,
   };
 
-  updateProgressUI();
-  updateUpgradeUI();
-
   let isAnimating = false;
   let isSyncing = false;
 
@@ -52,9 +49,6 @@
 
     const damage = damageAmount !== null ? damageAmount : gameState.clickPower;
     gameState.clicksRemaining -= damage;
-
-    console.log("click power", gameState.clickPower);
-    console.log("damage:", damage);
 
     updateProgressUI();
 
@@ -140,7 +134,7 @@
   }
 
   function updatePointsUI() {
-    document.getElementById("egg-points").innerText = gameState.totalPoints;
+    document.getElementById("egg-points").innerText = formatPoints(gameState.totalPoints);
   }
 
   function updateProgressUI() {
@@ -344,7 +338,7 @@
       const level = gameState[upgrade.key];
       const cost = Math.floor(10 * Math.pow(5, level));
 
-      btn.innerHTML = `${upgrade.name} (lvl. ${level})<br><small>(Cost: ${cost})</small>`;
+      btn.innerHTML = `${upgrade.name} (lvl. ${level})<br><small>(Cost: ${formatPoints(cost)})</small>`;
 
       if (gameState.totalPoints < cost) {
         btn.disabled = true;
@@ -353,6 +347,14 @@
         btn.disabled = false;
         btn.classList.remove("is-disabled");
       }
+    });
+  }
+
+  function formatPoints(points) {
+    return Number(points || 0).toLocaleString('en-AU', {
+      notation: 'compact',
+      compactDisplay: 'short',
+      maximumFractionDigits: 2
     });
   }
 
@@ -376,6 +378,10 @@
     .addEventListener("click", () => buyUpgrade("autoClickerPower"));
 
   window.addEventListener("load", () => {
+    updateProgressUI();
+    updateUpgradeUI();
+    updatePointsUI();
+    
     document.getElementById("loading-overlay").style.display = "none";
     document.getElementById("game-screen").style.display = "";
     updateEggImage();
