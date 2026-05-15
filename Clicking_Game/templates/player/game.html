@@ -10,18 +10,6 @@
 
 {% block extra_head %}
 <style>
-  /* Disable double-tap-to-zoom across the whole game page. Targeting only
-     #egg-btn was not enough on iOS Safari: when a player taps rapidly,
-     their second tap often lands a few pixels outside the egg (on the
-     surrounding padding, the points display, or a panel background), and
-     Safari fires the zoom gesture against that ancestor. touch-action on
-     the body covers every descendant that doesn't override it. Pinch-zoom
-     still works because manipulation only disables the double-tap
-     gesture, not pinch. */
-  body.game-play-page {
-    touch-action: manipulation;
-  }
-
   /* egg click animations */
   #egg-btn {
     transition: transform 0.1s;
