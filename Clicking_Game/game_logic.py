@@ -132,3 +132,24 @@ EGG_CONFIG = {
         "image": "/static/images/gold-gold.png"
     }
 }
+
+def format_points(value):
+    try:
+        value = int(value)
+    except (ValueError, TypeError):
+        return value
+    
+    # Billions:
+    if value >= 1_000_000_000:
+        formatted_value = value / 1_000_000_000
+        return f"{int(formatted_value)}B" if formatted_value.is_integer else f"{formatted_value:.2f}B"
+    # Millions:
+    if value >= 1_000_000:
+        formatted_value = value / 1_000_000
+        return f"{int(formatted_value)}M" if formatted_value.is_integer() else f"{formatted_value:.2f}M"
+    # Thousands:
+    if value >= 1_000:
+        formatted_value = value / 1_000
+        return f"{int(formatted_value)}K" if formatted_value.is_integer() else f"{formatted_value:.2f}K"
+    
+    return str(value)

@@ -201,14 +201,14 @@
               class="btn btn-outline-success w-100 mb-2 py-3"
             >
               Click Power (lvl. {{ state.click_power_lvl }})<br />
-              <small>(Cost: {{ (10 * (5**state.click_power_lvl)) }})</small>
+              <small>(Cost: {{ format_points(10 * (5**state.click_power_lvl)) }})</small>
             </button>
             <button
               id="autoclicker-btn"
               class="btn btn-outline-success w-100 mb-2 py-3"
             >
               Auto-Clicker (lvl. {{ state.autoclicker_lvl }})<br />
-              <small>(Cost: {{ (10 * (5**state.autoclicker_lvl)) }})</small>
+              <small>(Cost: {{ format_points(10 * (5**state.autoclicker_lvl)) }})</small>
             </button>
           </div>
         </div>
@@ -249,7 +249,7 @@
         <div class="mt-auto mb-auto w-100 px-2">
           <!-- Points Display -->
           <h1 class="display-2 fw-bold" id="egg-points">
-            {{ state.points }}
+            {{ format_points(state.points) }}
           </h1>
           <p class="text-muted">Points</p>
 
@@ -338,7 +338,7 @@
             </span>
 
             <span class="badge bg-primary rounded-pill">
-              {{ player.game_state.points }}
+              {{ format_points(player.game_state.points) }}
             </span>
           </li>
           {% endfor %}

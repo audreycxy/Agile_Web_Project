@@ -47,7 +47,7 @@
   function handleEggClick(damageAmount = null) {
     if (isAnimating || isSyncing) return;
 
-    const damage = damageAmount !== null ? damageAmount : (gameState.clickPower * 2);
+    const damage = damageAmount !== null ? damageAmount : (gameState.clickPower * 3);
     gameState.clicksRemaining -= damage;
 
     updateProgressUI();
@@ -358,7 +358,7 @@
   setInterval(() => {
     if (gameState.autoClickerPower > 0) {
       const autoDamage =
-        gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 1.5;
+        gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 2;
 
       handleEggClick(autoDamage);
     }
@@ -377,7 +377,6 @@
   window.addEventListener("load", () => {
     updateProgressUI();
     updateUpgradeUI();
-    updatePointsUI();
     
     document.getElementById("loading-overlay").style.display = "none";
     document.getElementById("game-screen").style.display = "";
