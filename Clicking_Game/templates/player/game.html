@@ -13,6 +13,12 @@
   /* egg click animations */
   #egg-btn {
     transition: transform 0.1s;
+    /* On mobile, double-tap-to-zoom kicks in when the player taps the egg
+       quickly, which zooms the whole page mid-game. touch-action:
+       manipulation disables that gesture on this element only (pinch-zoom
+       elsewhere on the page still works) and also removes the 300ms tap
+       delay iOS Safari adds while waiting for a possible second tap. */
+    touch-action: manipulation;
   }
 
   #egg-btn:hover {
@@ -21,6 +27,16 @@
 
   #egg-btn:active {
     transform: scale(0.95);
+  }
+
+  /* Same treatment for the other rapidly-tapped game-page buttons so
+     mashing Upgrade / Auto-Clicker / egg-switcher arrows during gameplay
+     never accidentally zooms the page. */
+  #clickpower-btn,
+  #autoclicker-btn,
+  #prev-egg,
+  #next-egg-btn {
+    touch-action: manipulation;
   }
 
   /* egg crack animation */
