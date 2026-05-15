@@ -16,7 +16,6 @@ account creation into a 500 error page.
 from __future__ import annotations
 
 import json
-import logging
 import urllib.error
 import urllib.request
 
@@ -25,8 +24,6 @@ from flask_mail import Message
 
 from Clicking_Game.extensions import mail
 
-
-logger = logging.getLogger(__name__)
 
 RESEND_API_URL = "https://api.resend.com/emails"
 RESEND_DEFAULT_SENDER = "onboarding@resend.dev"
@@ -79,19 +76,19 @@ def _send_via_resend(api_key, subject, recipients, body):
             response.read()
     except urllib.error.HTTPError as error:
         # Resend returns useful JSON error bodies (e.g. invalid sender,
-        # unverified domain, rate-limit hit). Log them so the operator can
-        # diagnose without enabling Flask debug mode.
+        # unverified domain, rate-limit hit). Bake the body into the raised
+        # exception so it ends up in the caller's traceback log. Without
+        # this, only "HTTP Error 403: Forbidden" shows up, which doesn't
+        # explain WHY.
         error_body = error.read().decode("utf-8", errors="replace")
-        logger.error(
-            "Resend API returned %s for %s: %s",
-            error.code,
-            recipients,
-            error_body,
-        )
-        raise
+        raise RuntimeError(
+            f"Resend API returned HTTP {error.code} for sender={sender!r} "
+            f"recipients={list(recipients)!r}: {error_body}"
+        ) from error
     except urllib.error.URLError as error:
-        logger.error("Resend API request failed for %s: %s", recipients, error)
-        raise
+        raise RuntimeError(
+            f"Resend API request failed for {list(recipients)!r}: {error}"
+        ) from error
 
 
 def _send_via_smtp(subject, recipients, body):
