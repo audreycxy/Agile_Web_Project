@@ -46,9 +46,30 @@
 
   let lastManualClickTime = 0;
   const CLICK_DEBOUNCE = 50; // 50ms human limit threshold
+  const AUTO_CLICKER_IDLE_TIMEOUT = 30000;
+
+  let isWindowFocused = document.hasFocus();
+  let lastPlayerActivityTime = Date.now();
+
+  function markPlayerActive() {
+    lastPlayerActivityTime = Date.now();
+  }
+
+  function isAutoClickerAllowed() {
+    return (
+      gameState.autoClickerPower > 0 &&
+      !document.hidden &&
+      isWindowFocused &&
+      Date.now() - lastPlayerActivityTime <= AUTO_CLICKER_IDLE_TIMEOUT
+    );
+  }
 
   function handleEggClick(damageAmount = null) {
     if (isAnimating || isSyncing) return;
+
+    if (damageAmount !== null && !isAutoClickerAllowed()) {
+      return;
+    }
 
     // Rejects sub-50ms manual clicks to prevent external macro exploitation:
     if (damageAmount === null) {
@@ -56,6 +77,9 @@
       if (currentTime - lastManualClickTime < CLICK_DEBOUNCE) {
         return;
       }
+
+      lastManualClickTime = currentTime;
+      markPlayerActive();
     }
 
     // Injected clicks via handleEggClick(X) using a browser breakpoint will be treated as (standard) auto-clicks:
@@ -361,8 +385,28 @@
     });
   }
 
+  ["pointerdown", "keydown", "touchstart", "scroll"].forEach((eventName) => {
+    window.addEventListener(eventName, markPlayerActive, { passive: true });
+  });
+
+  window.addEventListener("focus", () => {
+    isWindowFocused = true;
+    markPlayerActive();
+  });
+
+  window.addEventListener("blur", () => {
+    isWindowFocused = false;
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      isWindowFocused = document.hasFocus();
+      markPlayerActive();
+    }
+  });
+
   setInterval(() => {
-    if (gameState.autoClickerPower > 0) {
+    if (isAutoClickerAllowed()) {
       const autoDamage =
         gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 2;
 
