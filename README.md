@@ -229,17 +229,15 @@ Open:
 http://localhost:5000
 ```
 
-## Automated Tests
+## Testing
 
-Run the integration-style test suite:
+Run all automated tests:
 
 ```bash
-python -m unittest discover -s tests -v
+python -m pytest
 ```
 
-The tests boot the real Flask app against a temporary SQLite database and cover
-public pages, signup/login/verification, role-based access control, profile
-updates, account deletion, leaderboard responses, and game-state persistence.
+The test suite includes unit tests for authentication, role-based redirects, score saving, CSRF protection, and password hashing. It also includes Selenium WebDriver tests for browser-based user flows.
 
 ## Alembic Migrations
 
@@ -312,7 +310,7 @@ Before deploying the application:
 
 The app is split into app factory, routes, models, utilities, migrations, scripts, and tests so later changes can be added without putting everything in one file. Good next steps are:
 
-1. Expand the automated tests to cover admin account updates, AI feedback success paths, and client-side browser interactions.
-2. Add score submission routes that write through the `GameResult` SQLAlchemy model.
-3. Replace starter credentials before any real deployment.
-4. Add CSRF protection before accepting sensitive form submissions in production.
+1. Continue expanding automated tests for game logic, profile updates, and admin workflows.
+2. Improve deployment documentation for production hosting.
+3. Add monitoring and error logging for production use.
+4. Review UI accessibility and responsive behaviour across devices.
