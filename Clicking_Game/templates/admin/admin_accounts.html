@@ -100,6 +100,17 @@ endblock %} {% block body_class %}dashboard-page{% endblock %} {% block navbar
           </option>
         </select>
       </div>
+
+      <button type="submit" class="btn auth-primary-btn dashboard-action-btn">
+        Search
+      </button>
+
+      <a
+        href="{{ url_for('auth.admin_accounts') }}"
+        class="btn auth-secondary-btn dashboard-action-btn"
+      >
+        Reset
+      </a>
     </form>
   </section>
 

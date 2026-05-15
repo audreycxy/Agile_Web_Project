@@ -166,7 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /*
-    Connect the search input to the searchTable function.
+    Connect the search input to the searchTable function so the table filters
+    live as the admin types.
   */
   if (searchInput) {
     searchInput.addEventListener("keyup", searchTable);
@@ -177,6 +178,30 @@ document.addEventListener("DOMContentLoaded", () => {
   */
   if (sortSelect) {
     sortSelect.addEventListener("change", sortTable);
+  }
+
+  /*
+    Connect the explicit Search button so admins who prefer clicking a button
+    over typing get the same filtering behaviour.
+  */
+  const searchBtn = document.getElementById("searchBtn");
+
+  if (searchBtn) {
+    searchBtn.addEventListener("click", searchTable);
+  }
+
+  /*
+    Connect the Reset button to clear the search input and re-show every row.
+  */
+  const resetBtn = document.getElementById("resetBtn");
+
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      if (searchInput) {
+        searchInput.value = "";
+      }
+      searchTable();
+    });
   }
 
   /*
