@@ -47,7 +47,7 @@
   function handleEggClick(damageAmount = null) {
     if (isAnimating || isSyncing) return;
 
-    const damage = damageAmount !== null ? damageAmount : gameState.clickPower;
+    const damage = damageAmount !== null ? damageAmount : (gameState.clickPower * 2);
     gameState.clicksRemaining -= damage;
 
     updateProgressUI();
@@ -71,9 +71,6 @@
 
         gameState.currentType = eggKeys[nextIndex];
       }
-
-      console.log("next egg key:", gameState.currentType);
-      console.log("available keys:", EGG_ORDER);
 
       gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].base_clicks;
 
@@ -361,7 +358,7 @@
   setInterval(() => {
     if (gameState.autoClickerPower > 0) {
       const autoDamage =
-        gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 2;
+        gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 1.5;
 
       handleEggClick(autoDamage);
     }
