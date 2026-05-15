@@ -1,3 +1,7 @@
+# Selenium WebDriver tests for browser-based user flows.
+# These tests automatically start a temporary Flask server, open the app in a real
+# browser through Selenium, and check important user-facing pages and navigation flows.
+
 import threading
 import time
 import unittest
@@ -11,6 +15,7 @@ from Clicking_Game import create_app
 from Clicking_Game.models import database, users
 
 
+# Selenium is optional. If it is not installed, this test file will be skipped.
 try:
     from selenium import webdriver
     from selenium.common.exceptions import WebDriverException
@@ -23,8 +28,15 @@ except ImportError:
 
 
 class SeleniumTests(unittest.TestCase):
+    # Browser-based system tests.
+    # These tests interact with the app like a real user: opening pages,
+    # filling forms, clicking buttons, and checking redirects.
+
     @classmethod
     def setUpClass(cls):
+        # Create a temporary Flask app, temporary database, verified test player,
+        # and start the Flask server in a background thread.
+        # This avoids using the real database or manually starting the server.
         if webdriver is None:
             raise unittest.SkipTest("Selenium is not installed.")
 
@@ -49,6 +61,7 @@ class SeleniumTests(unittest.TestCase):
             bind=cls.testApp.extensions["sqlalchemy_engine"]
         )
 
+        # Create a verified player account used by browser login tests.
         cls.player_email = "selenium.player@example.com"
         cls.player_password = "Password123"
 
@@ -62,6 +75,7 @@ class SeleniumTests(unittest.TestCase):
         player.email_verified = True
         database.get_session().commit()
 
+        # Start the Flask server on a random available local port.
         cls.server = make_server("127.0.0.1", 0, cls.testApp)
         cls.port = cls.server.server_port
         cls.base_url = f"http://127.0.0.1:{cls.port}"
@@ -74,6 +88,7 @@ class SeleniumTests(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        # Stop the test server and clean up the temporary database.
         cls.server.shutdown()
         cls.server_thread.join(timeout=5)
 
@@ -88,6 +103,7 @@ class SeleniumTests(unittest.TestCase):
         cls.temp_dir.cleanup()
 
     def setUp(self):
+        # Start a headless Chrome browser before each Selenium test.
         options = Options()
         options.add_argument("--headless=new")
         options.add_argument("--window-size=1200,900")
@@ -102,9 +118,11 @@ class SeleniumTests(unittest.TestCase):
         self.wait = WebDriverWait(self.driver, 10)
 
     def tearDown(self):
+        # Close the browser after each Selenium test.
         self.driver.quit()
 
     def login_as_player(self):
+        # Helper method used by multiple tests to log in as the verified test player.
         self.driver.get(f"{self.base_url}/login")
 
         email_input = self.wait.until(
@@ -121,12 +139,14 @@ class SeleniumTests(unittest.TestCase):
         self.wait.until(EC.url_contains("/player_dashboard"))
 
     def test_home_page_loads(self):
+        # Check that the home page loads and contains the main Egg Clicker branding.
         self.driver.get(self.base_url)
 
         self.assertIn("Egg Clicker", self.driver.title)
         self.assertIn("Build your egg empire", self.driver.page_source)
 
     def test_login_page_loads(self):
+        # Check that the login page loads and displays the required login fields.
         self.driver.get(f"{self.base_url}/login")
 
         self.assertIn("Login", self.driver.title)
@@ -138,6 +158,7 @@ class SeleniumTests(unittest.TestCase):
         self.assertTrue(password_input.is_displayed())
 
     def test_signup_page_loads_with_required_fields(self):
+        # Check that the signup page loads and displays all required signup fields.
         self.driver.get(f"{self.base_url}/signup")
 
         self.assertIn("Sign Up", self.driver.title)
@@ -150,6 +171,8 @@ class SeleniumTests(unittest.TestCase):
         )
 
     def test_signup_flow_displays_account_created_message(self):
+        # Fill in the signup form in the browser and confirm that the success
+        # message appears after submission.
         unique_email = f"selenium.signup.{uuid4().hex}@example.com"
 
         self.driver.get(f"{self.base_url}/signup")
@@ -171,6 +194,7 @@ class SeleniumTests(unittest.TestCase):
         self.assertIn("Account created", self.driver.page_source)
 
     def test_valid_login_redirects_to_player_dashboard(self):
+        # Log in through the browser and check that the player reaches the dashboard.
         self.login_as_player()
 
         self.assertIn("/player_dashboard", self.driver.current_url)
@@ -178,6 +202,7 @@ class SeleniumTests(unittest.TestCase):
         self.assertIn("Selenium Player", self.driver.page_source)
 
     def test_start_game_button_redirects_to_game_page(self):
+        # Check that clicking Start Game on the dashboard redirects to the game page.
         self.login_as_player()
 
         start_button = self.wait.until(

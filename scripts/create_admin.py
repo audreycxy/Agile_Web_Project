@@ -1,3 +1,8 @@
+# Command-line helper for creating a secure admin account.
+# This script is intended for deployment or production-like setup.
+# It avoids hard-coded admin credentials by asking for account details
+# interactively or reading them from environment variables.
+
 import os
 import sys
 from getpass import getpass
@@ -7,6 +12,9 @@ from Clicking_Game.models import database, users
 
 
 def get_value(env_name, prompt_text, secret=False):
+    # Read a value from an environment variable or prompt the user.
+    # Password values can be entered with getpass so they are not displayed
+    # in the terminal while being typed.
     value = os.environ.get(env_name)
 
     if value:
@@ -19,6 +27,9 @@ def get_value(env_name, prompt_text, secret=False):
 
 
 def main():
+    # Create a verified admin account using secure user-provided credentials.
+    # The script refuses to overwrite an existing account with the same email,
+    # which prevents accidental password replacement or unsafe credential reuse.
     app = create_app()
 
     with app.app_context():
@@ -48,6 +59,7 @@ def main():
             print("Admin account could not be created.")
             sys.exit(1)
 
+        # Deployment-created admin accounts should be immediately usable.
         admin_user.email_verified = True
         admin_user.email_verification_token = None
 
