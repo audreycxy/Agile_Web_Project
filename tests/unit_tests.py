@@ -307,6 +307,63 @@ class BasicTests(unittest.TestCase):
         self.assertIn(b"Highest Egg", response.data)
         self.assertIn(b"Standard", response.data)
 
+    def test_game_page_leaderboard_ranks_players_by_points(self):
+        """Top players appear on the /game leaderboard in descending point order."""
+        db_session = database.get_session()
+
+        for name, email, points in [
+            ("Alice", "alice@example.com", 500),
+            ("Bob", "bob@example.com", 1000),
+            ("Carol", "carol@example.com", 250),
+        ]:
+            player = self.create_verified_user(
+                name=name,
+                email=email,
+                password="Password123",
+                role="player",
+            )
+            db_session.add(
+                users.GameState(
+                    user_id=player.id,
+                    points=points,
+                    current_infinity_level=0,
+                    current_type="standard",
+                    highest_type="standard",
+                    clicks_remaining=10,
+                    click_power_lvl=1,
+                    autoclicker_lvl=0,
+                )
+            )
+
+        db_session.commit()
+
+        # /game is public, so a guest request still gets the leaderboard
+        response = self.client.get("/game")
+        self.assertEqual(response.status_code, 200)
+
+        body = response.data.decode("utf-8")
+
+        # Pull out just the leaderboard <ul> so we don't accidentally match
+        # player names that appear elsewhere on the page
+        leaderboard_match = re.search(
+            r'<ul class="list-group list-group-flush">(.*?)</ul>',
+            body,
+            re.DOTALL,
+        )
+
+        self.assertIsNotNone(leaderboard_match, "Leaderboard <ul> not found in /game response")
+
+        leaderboard_html = leaderboard_match.group(1)
+
+        # Extract names in the order they appear: "1. Bob", "2. Alice", ...
+        names_in_order = re.findall(r"\d+\.\s*([A-Za-z]+)", leaderboard_html)
+
+        self.assertEqual(
+            names_in_order[:3],
+            ["Bob", "Alice", "Carol"],
+            "Leaderboard should be sorted by GameState.points descending",
+        )
+
 
 class CSRFTests(unittest.TestCase):
     # Unit tests for CSRF protection.

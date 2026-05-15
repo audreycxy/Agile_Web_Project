@@ -216,6 +216,104 @@ class SeleniumTests(unittest.TestCase):
         self.assertIn("/game", self.driver.current_url)
         self.assertIn("Clicker Game", self.driver.page_source)
 
+    def _seed_leaderboard_player(self, name, email, points):
+        """Helper: create a verified player with a GameState row carrying a score."""
+        db_session = database.get_session()
+
+        player = users.create_user(
+            name=name,
+            email=email,
+            password="Password123",
+            role="player",
+        )
+
+        if player is None:
+            # Already created by an earlier test in the same class run
+            player = users.get_by_email(email)
+
+        player.email_verified = True
+
+        existing_state = (
+            db_session.query(users.GameState).filter_by(user_id=player.id).first()
+        )
+
+        if existing_state:
+            existing_state.points = points
+        else:
+            db_session.add(
+                users.GameState(
+                    user_id=player.id,
+                    points=points,
+                    current_infinity_level=0,
+                    current_type="standard",
+                    highest_type="standard",
+                    clicks_remaining=10,
+                    click_power_lvl=1,
+                    autoclicker_lvl=0,
+                )
+            )
+
+        db_session.commit()
+
+        return player
+
+    def test_leaderboard_displays_player_rows_on_game_page(self):
+        """Leaderboard panel renders with seeded players on /game."""
+        self._seed_leaderboard_player(
+            "Selenium Alice", "selenium.alice@example.com", 800
+        )
+        self._seed_leaderboard_player(
+            "Selenium Bob", "selenium.bob@example.com", 400
+        )
+
+        self.driver.get(f"{self.base_url}/game")
+
+        # Leaderboard panel header is visible
+        self.wait.until(
+            EC.presence_of_element_located(
+                (
+                    By.XPATH,
+                    "//div[contains(@class, 'card-header') "
+                    "and normalize-space(text())='Leaderboard']",
+                )
+            )
+        )
+
+        rows = self.driver.find_elements(
+            By.CSS_SELECTOR, "ul.list-group .list-group-item"
+        )
+
+        self.assertGreaterEqual(
+            len(rows),
+            2,
+            "Leaderboard should show at least the two seeded players",
+        )
+
+        page = self.driver.page_source
+
+        self.assertIn("Selenium Alice", page)
+        self.assertIn("Selenium Bob", page)
+
+    def test_leaderboard_highlights_current_user_row(self):
+        """Logged-in user's leaderboard row gets the leaderboard-self class and a 'You' badge."""
+        # Give the seeded selenium player a high score so they appear at the top
+        seeded_player = users.get_by_email(self.player_email)
+        self._seed_leaderboard_player(
+            seeded_player.name, self.player_email, 5000
+        )
+
+        self.login_as_player()
+        self.driver.get(f"{self.base_url}/game")
+
+        self_row = self.wait.until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "li.leaderboard-self")
+            )
+        )
+
+        self.assertIn(seeded_player.name, self_row.text)
+        self.assertIn("You", self_row.text)
+
 
 if __name__ == "__main__":
     unittest.main()

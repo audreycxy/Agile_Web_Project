@@ -1,6 +1,21 @@
 # Agile Web Project - Clicking Game
 
-A Flask clicking-game web app with role-based login, SQLAlchemy ORM models, Alembic migrations, SQLite persistence, and Docker support.
+A Flask-based clicking game ("Egg Clicker") where players click an egg to
+earn points, progress through egg tiers, and compete on a shared leaderboard.
+The project includes:
+
+- Role-based authentication (player and admin) with email verification.
+- Persistent player progress (points, upgrades, current and highest egg
+  tier) stored in SQLite through SQLAlchemy ORM models.
+- A shared in-game leaderboard so players can see other users' scores
+  alongside their own.
+- Player history with an AI-powered performance feedback button backed by
+  Google Gemini.
+- An admin dashboard with searchable account management and aggregated game
+  results.
+- Alembic migrations, CSRF protection on every form, Werkzeug-hashed
+  passwords, Docker support, a Render deployment configuration, and a CI
+  workflow that runs `pytest` on every push.
 
 ## Group Members
 
@@ -18,32 +33,41 @@ A Flask clicking-game web app with role-based login, SQLAlchemy ORM models, Alem
 |-- Clicking_Game/
 |   |-- __init__.py              # Flask app factory and configuration
 |   |-- app.py                   # Local development entry point
+|   |-- extensions.py            # Shared Flask extensions (Flask-Mail)
+|   |-- game_logic.py            # EGG_CONFIG and clicking-game logic
 |   |-- models/
 |   |   |-- database.py          # SQLAlchemy engine/session and Alembic commands
-|   |   `-- users.py             # User and game-result ORM models
+|   |   `-- users.py             # User, GameResult, and GameState ORM models
 |   |-- routes/
-|   |   |-- auth.py              # Login, signup, logout, dashboards
-|   |   `-- main.py              # Home, guest page, game page, and game API routes
-|   |-- static/
-|   `-- templates/
+|   |   |-- auth.py              # Login, signup, email verification, dashboards, AI feedback
+|   |   `-- main.py              # Home, guest, game page, leaderboard, and game API routes
+|   |-- utils/
+|   |   `-- auth.py              # login_required decorator and role checks
+|   |-- static/                  # CSS, JavaScript, images
+|   `-- templates/               # Jinja templates (base.html + page templates)
 |-- migrations/
 |   |-- env.py                   # Alembic migration environment
 |   |-- script.py.mako           # Alembic revision template
-|   `-- versions/
-|       `-- 0001_create_initial_tables.py
+|   `-- versions/                # Multiple Alembic revisions for schema changes
 |-- scripts/
 |   |-- add_user.py              # Add one local user to app.db
 |   |-- create_admin.py          # Create a secure admin account for deployment
 |   `-- seed_users.py            # Add local testing users to app.db
 |-- tests/
-|   |-- unit_tests.py            # Unit tests for routes, authentication, CSRF, and score saving
-|   `-- selenium_tests.py        # Selenium WebDriver system tests
+|   |-- unit_tests.py            # Flask test-client unit and CSRF tests
+|   |-- selenium_tests.py        # Selenium WebDriver browser tests
+|   `-- test_system.py           # End-to-end system tests against a real SQLite DB
+|-- .github/
+|   `-- workflows/
+|       `-- ci.yml               # GitHub Actions CI: runs pytest on every push/PR
+|-- .env.example                 # Reference template for required environment variables
 |-- alembic.ini
 |-- docker-compose.yml
 |-- Dockerfile
 |-- pytest.ini
+|-- render.yaml                  # Render deployment configuration
 |-- requirements.txt
-`-- wsgi.py                      # WSGI server entry point
+`-- wsgi.py                      # WSGI server entry point (used by waitress/Render)
 ```
 
 ## Database
@@ -191,11 +215,22 @@ Prerequisites:
 
 - Python 3.11 or newer.
 
-Create and activate a virtual environment:
+Create a virtual environment:
 
 ```bash
 python -m venv .venv
-.venv\Scripts\activate
+```
+
+Activate it. The command depends on your shell:
+
+```powershell
+# Windows PowerShell
+.venv\Scripts\Activate.ps1
+```
+
+```bash
+# Git Bash, Linux, or macOS
+source .venv/bin/activate
 ```
 
 Install dependencies:
@@ -216,11 +251,17 @@ For deployment or a production-like setup, create a secure administrator account
 python scripts/create_admin.py
 ```
 
-Run the development server:
+Run the development server. Set `FLASK_DEBUG=1` to enable debug mode:
 
-```bash
+```powershell
+# Windows PowerShell
 $env:FLASK_DEBUG = "1"
 python -m Clicking_Game.app
+```
+
+```bash
+# Git Bash, Linux, or macOS
+FLASK_DEBUG=1 python -m Clicking_Game.app
 ```
 
 Open:
@@ -231,13 +272,38 @@ http://localhost:5000
 
 ## Testing
 
-Run all automated tests:
+All tests live under `tests/` and use a separate test database (an in-memory
+SQLite database for unit tests, a temporary SQLite file for system and
+Selenium tests), so they never touch `instance/app.db`.
+
+Run everything:
 
 ```bash
 python -m pytest
 ```
 
-The test suite includes unit tests for authentication, role-based redirects, score saving, CSRF protection, and password hashing. It also includes Selenium WebDriver tests for browser-based user flows.
+Run a single suite or test:
+
+```bash
+python -m pytest tests/unit_tests.py
+python -m pytest tests/selenium_tests.py::SeleniumTests::test_leaderboard_displays_player_rows_on_game_page
+```
+
+The suite covers password hashing, signup, login, role-based access control,
+CSRF protection on every form, score saving, leaderboard ordering,
+end-to-end signup/verification/login flows, and admin account management.
+Selenium tests drive a headless Chrome browser through the home, login,
+signup, dashboard, and game pages including the leaderboard and current-user
+highlight.
+
+Selenium tests **start their own Flask server automatically** on a free port
+via `werkzeug.serving.make_server`, so you do not need to run the app
+manually before running the tests. They require Chrome and a matching
+`chromedriver` on `PATH`, and skip themselves automatically if either is
+missing.
+
+Every push and pull request against `main` runs the full pytest suite on
+GitHub Actions (`.github/workflows/ci.yml`) using Python 3.11.
 
 ## Alembic Migrations
 
@@ -286,6 +352,20 @@ Environment variables:
 | `PORT` | `5000` | Local `app.py` bind port. |
 | `FLASK_DEBUG` | `0` | Set to `1` for local debug mode. |
 
+Optional integration variables (the app degrades gracefully if these are not
+set — the AI-feedback button shows a "not configured" message and email
+verification falls back to a development log):
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | unset | API key used by the player history page to generate AI performance feedback through Google Gemini. |
+| `MAIL_SERVER` | `smtp.gmail.com` | SMTP server used by Flask-Mail to send the signup verification email. |
+| `MAIL_PORT` | `587` | SMTP port used by Flask-Mail. |
+| `MAIL_USE_TLS` | `True` | Whether Flask-Mail should use STARTTLS. |
+| `MAIL_USERNAME` | unset | SMTP account used to send verification emails. |
+| `MAIL_PASSWORD` | unset | SMTP password or Gmail app password. Do not commit. |
+| `MAIL_DEFAULT_SENDER` | `MAIL_USERNAME` | "From" address on outgoing verification emails. |
+
 Optional admin setup variables used by `scripts/create_admin.py`:
 
 | Variable | Default | Purpose |
@@ -298,19 +378,31 @@ Copy `.env.example` if you want a local reference for required variables. The ap
 
 ## Deployment Notes
 
+The repository ships a `render.yaml` describing a Render web service that
+runs the app under `waitress-serve`. Render will pick this up automatically
+when the repo is connected.
+
 Before deploying the application:
 
-1. Set a strong `SECRET_KEY`.
+1. Set a strong `SECRET_KEY` (the `render.yaml` uses `generateValue: true` so
+   Render produces a random one on first deploy).
 2. Do not use seeded local testing accounts.
 3. Create a secure administrator account with `scripts/create_admin.py`.
 4. Keep real credentials and production `.env` files out of version control.
 5. Confirm automated tests pass with `python -m pytest`.
+6. If using the AI feedback feature in production, set `GEMINI_API_KEY` as a
+   Render secret.
+7. If using real email verification in production, set `MAIL_USERNAME`,
+   `MAIL_PASSWORD`, and `MAIL_DEFAULT_SENDER` as Render secrets.
 
 ## Development Direction
 
-The app is split into app factory, routes, models, utilities, migrations, scripts, and tests so later changes can be added without putting everything in one file. Good next steps are:
+The app is split into app factory, routes, models, utilities, migrations,
+scripts, and tests so later changes can be added without putting everything
+in one file. Good next steps are:
 
-1. Continue expanding automated tests for game logic, profile updates, and admin workflows.
+1. Add more game-logic tests around upgrades, egg progression, and infinity
+   levels.
 2. Improve deployment documentation for production hosting.
 3. Add monitoring and error logging for production use.
 4. Review UI accessibility and responsive behaviour across devices.
