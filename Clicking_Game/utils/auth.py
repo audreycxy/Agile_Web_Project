@@ -26,7 +26,7 @@ def auth_redirect_or_json(message=None, consume_notice=False):
         else:
             message = session.get("auth_notice")
 
-    if is_api_request:
+    if is_api_request and message:
         return jsonify({
             "status": "error",
             "message": message or "Authentication required.",

@@ -88,6 +88,11 @@ def load_logged_in_user():
         g.user = None
         return
 
+    if session_token is None and user.active_session_token is None:
+        session["session_token"] = users.issue_active_session_token(user.id)
+        g.user = user
+        return
+
     if user.active_session_token != session_token:
         set_auth_notice(FORCED_LOGOUT_MESSAGE)
         g.user = None
