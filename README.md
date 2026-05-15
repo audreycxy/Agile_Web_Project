@@ -272,79 +272,38 @@ http://localhost:5000
 
 ## Testing
 
-The project has three test suites that all live under `tests/` and use a
-separate test database (either an in-memory SQLite database for unit tests or
-a temporary SQLite file for system and Selenium tests). No test ever touches
-`instance/app.db`.
+All tests live under `tests/` and use a separate test database (an in-memory
+SQLite database for unit tests, a temporary SQLite file for system and
+Selenium tests), so they never touch `instance/app.db`.
 
-Run every test suite together:
+Run everything:
 
 ```bash
 python -m pytest
 ```
 
-Run a single suite:
+Run a single suite or test:
 
 ```bash
 python -m pytest tests/unit_tests.py
-python -m pytest tests/test_system.py
-python -m pytest tests/selenium_tests.py
+python -m pytest tests/selenium_tests.py::SeleniumTests::test_leaderboard_displays_player_rows_on_game_page
 ```
 
-Run a single test by name:
+The suite covers password hashing, signup, login, role-based access control,
+CSRF protection on every form, score saving, leaderboard ordering,
+end-to-end signup/verification/login flows, and admin account management.
+Selenium tests drive a headless Chrome browser through the home, login,
+signup, dashboard, and game pages including the leaderboard and current-user
+highlight.
 
-```bash
-python -m pytest tests/unit_tests.py::BasicTests::test_game_page_leaderboard_ranks_players_by_points
-```
-
-### `tests/unit_tests.py`
-
-Flask test-client based unit tests covering:
-
-- Password hashing (Werkzeug salted hashes, not plain text).
-- Signup, login, and role-based redirects (player vs. admin dashboard).
-- Access control (players cannot reach admin pages, and vice versa).
-- Score saving via `/api/sync` for authenticated players, and rejection of
-  the same call for guests.
-- Player dashboard rendering, including the highest-egg display.
-- Leaderboard ordering on `/game` (top players sorted by `GameState.points`
-  descending).
-- CSRF protection: login, signup, profile updates, and score submissions are
-  all rejected when the CSRF token is missing, and accepted when it is
-  present (see the dedicated `CSRFTests` class).
-
-### `tests/test_system.py`
-
-End-to-end system tests that exercise the full request/response cycle against
-a temporary on-disk SQLite database. These tests verify higher-level user
-journeys such as full signup -> verification -> login flows, profile updates,
-and admin account management.
-
-### `tests/selenium_tests.py`
-
-Selenium WebDriver tests that drive a real headless Chrome browser. The test
-class **starts its own Flask server automatically** in `setUpClass` using
-`werkzeug.serving.make_server` on a free port, so you do **not** need to run
-the application manually before running these tests. Coverage includes:
-
-- Home, login, and signup pages load with their expected fields.
-- Signup flow shows the "Account created" confirmation.
-- Valid login redirects to the player dashboard.
-- "Start Game" button on the dashboard navigates to the game page.
-- Leaderboard panel renders with player rows on `/game`.
-- The logged-in player's own row on the leaderboard is highlighted
-  (`leaderboard-self` class + "You" badge).
-
-Selenium tests require Google Chrome and a matching `chromedriver` on the
-system `PATH`. They will be skipped automatically if Selenium or Chrome is
-not available, so the rest of the suite still runs.
-
-### Continuous integration
+Selenium tests **start their own Flask server automatically** on a free port
+via `werkzeug.serving.make_server`, so you do not need to run the app
+manually before running the tests. They require Chrome and a matching
+`chromedriver` on `PATH`, and skip themselves automatically if either is
+missing.
 
 Every push and pull request against `main` runs the full pytest suite on
-GitHub Actions (`.github/workflows/ci.yml`) using Python 3.11 on
-`ubuntu-latest`. The workflow installs `requirements.txt`, applies migrations
-into a temporary database, and runs `pytest tests/ -v`.
+GitHub Actions (`.github/workflows/ci.yml`) using Python 3.11.
 
 ## Alembic Migrations
 
