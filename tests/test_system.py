@@ -1,557 +1,463 @@
+# Flask client system tests for wider application workflows.
+# These tests do not open a real browser. They use Flask's test client to simulate
+# requests and verify route-level behaviour across the app.
+
+import os
 import re
-import html
+import tempfile
 import unittest
+from datetime import datetime
+from pathlib import Path
+from unittest.mock import patch
 
 from Clicking_Game import create_app
 from Clicking_Game.models import database, users
 
 
-class BasicTests(unittest.TestCase):
-    def test_password_hashing(self):
-        plain_password = "Password123"
-
-        user = users.create_user(
-            name="Hash Test User",
-            email="hash@example.com",
-            password=plain_password,
-            role="player",
-        )
-
-        self.assertIsNotNone(user)
-        self.assertNotEqual(user.password_hash, plain_password)
-        self.assertTrue(user.check_password(plain_password))
-        self.assertFalse(user.check_password("WrongPassword"))
+class SystemTestCase(unittest.TestCase):
+    # System-style tests using Flask's built-in test client.
+    # A temporary SQLite database is used so these tests do not affect the real app.db.
 
     def setUp(self):
-        self.testApp = create_app(
+        # Create a temporary Flask app and database before each test.
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.database_path = Path(self.temp_dir.name) / "test_app.db"
+
+        self.app = create_app(
             {
                 "TESTING": True,
-                "SECRET_KEY": "test-secret-key",
                 "WTF_CSRF_ENABLED": False,
-                "DATABASE": ":memory:",
-                "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
                 "AUTO_MIGRATE": False,
+                "DATABASE": str(self.database_path),
+                "SECRET_KEY": "test-secret",
             }
         )
 
-        self.client = self.testApp.test_client()
-        self.app_context = self.testApp.app_context()
-        self.app_context.push()
+        with self.app.app_context():
+            database.Base.metadata.create_all(
+                bind=self.app.extensions["sqlalchemy_engine"]
+            )
 
-        database.Base.metadata.create_all(
-            bind=self.testApp.extensions["sqlalchemy_engine"]
-        )
+        self.client = self.app.test_client()
 
     def tearDown(self):
-        engine = self.testApp.extensions["sqlalchemy_engine"]
+        # Remove database sessions and dispose the database engine after each test.
+        with self.app.app_context():
+            database.SessionLocal.remove()
+            self.app.extensions["sqlalchemy_engine"].dispose()
 
-        database.SessionLocal.remove()
-        database.Base.metadata.drop_all(bind=engine)
-        database.SessionLocal.remove()
-        engine.dispose()
+        self.temp_dir.cleanup()
 
-        self.app_context.pop()
-
-        self.client = None
-        self.testApp = None
-
-    def create_verified_user(
+    def create_user(
         self,
-        name="Test Player",
+        *,
+        name="Player One",
         email="player@example.com",
-        password="Password123",
+        password="password123",
         role="player",
+        email_verified=True,
+        is_active=True,
+        is_deleted=False,
+        points=0,
+        current_infinity_level=0,
+        current_type="standard",
+        highest_type="standard",
+        clicks_remaining=None,
+        progress_percent=0,
     ):
-        user = users.create_user(
-            name=name,
-            email=email,
-            password=password,
-            role=role,
-        )
+        # Helper for creating users with different roles, verification status,
+        # account status, and game progress.
+        with self.app.app_context():
+            user = users.create_user(name, email, password, role=role)
+            self.assertIsNotNone(user)
 
-        user.email_verified = True
-        database.get_session().commit()
-
-        return user
-
-    def login(self, email="player@example.com", password="Password123"):
-        return self.client.post(
-            "/login",
-            data={
-                "email": email,
-                "password": password,
-            },
-            follow_redirects=False,
-        )
-
-    def test_signup_with_valid_user_details(self):
-        response = self.client.post(
-            "/signup",
-            data={
-                "username": "New Player",
-                "email": "newplayer@example.com",
-                "password": "Password123",
-                "confirm_password": "Password123",
-            },
-            follow_redirects=False,
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Account created", response.data)
-
-        created_user = users.get_by_email("newplayer@example.com")
-
-        self.assertIsNotNone(created_user)
-        self.assertEqual(created_user.name, "New Player")
-        self.assertEqual(created_user.role, "player")
-
-    def test_login_with_valid_account_details_redirects_player(self):
-        self.create_verified_user(
-            name="Player User",
-            email="player@example.com",
-            password="Password123",
-            role="player",
-        )
-
-        response = self.login(
-            email="player@example.com",
-            password="Password123",
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/player_dashboard", response.headers["Location"])
-
-    def test_login_with_invalid_account_details(self):
-        response = self.login(
-            email="wrong@example.com",
-            password="WrongPassword",
-        )
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Invalid email or password", response.data)
-
-    def test_player_role_redirects_to_player_dashboard(self):
-        self.create_verified_user(
-            name="Player User",
-            email="player@example.com",
-            password="Password123",
-            role="player",
-        )
-
-        response = self.login(
-            email="player@example.com",
-            password="Password123",
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/player_dashboard", response.headers["Location"])
-
-    def test_admin_role_redirects_to_admin_dashboard(self):
-        self.create_verified_user(
-            name="Admin User",
-            email="admin@example.com",
-            password="Password123",
-            role="admin",
-        )
-
-        response = self.login(
-            email="admin@example.com",
-            password="Password123",
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/admin_dashboard", response.headers["Location"])
-
-    def test_player_cannot_access_admin_dashboard(self):
-        self.create_verified_user(
-            name="Player User",
-            email="player@example.com",
-            password="Password123",
-            role="player",
-        )
-
-        self.login(
-            email="player@example.com",
-            password="Password123",
-        )
-
-        response = self.client.get(
-            "/admin_dashboard",
-            follow_redirects=False,
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/login", response.headers["Location"])
-
-    def test_admin_cannot_access_player_dashboard(self):
-        self.create_verified_user(
-            name="Admin User",
-            email="admin@example.com",
-            password="Password123",
-            role="admin",
-        )
-
-        self.login(
-            email="admin@example.com",
-            password="Password123",
-        )
-
-        response = self.client.get(
-            "/player_dashboard",
-            follow_redirects=False,
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/login", response.headers["Location"])
-
-    def test_logged_in_player_can_save_score(self):
-        player = self.create_verified_user(
-            name="Score Player",
-            email="scoreplayer@example.com",
-            password="Password123",
-            role="player",
-        )
-
-        self.login(
-            email="scoreplayer@example.com",
-            password="Password123",
-        )
-
-        db_session = database.get_session()
-
-        game_state = users.GameState(
-            user_id=player.id,
-            points=0,
-            current_infinity_level=0,
-            current_type="standard",
-            highest_type="standard",
-            clicks_remaining=10,
-            click_power_lvl=1,
-            autoclicker_lvl=0,
-        )
-
-        db_session.add(game_state)
-        db_session.commit()
-
-        response = self.client.post(
-            "/api/sync",
-            json={},
-            follow_redirects=False,
-        )
-
-        self.assertEqual(response.status_code, 200)
-
-        data = response.get_json()
-
-        self.assertEqual(data["status"], "success")
-        self.assertGreaterEqual(data["new_points"], 1)
-
-        saved_results = users.list_results(user_id=player.id)
-
-        self.assertEqual(len(saved_results), 1)
-        self.assertEqual(saved_results[0].score, data["new_points"])
-
-    def test_guest_user_cannot_save_score(self):
-        response = self.client.post(
-            "/api/sync",
-            json={},
-            follow_redirects=False,
-        )
-
-        self.assertEqual(response.status_code, 302)
-        self.assertIn("/login", response.headers["Location"])
-
-        saved_results = users.list_results()
-
-        self.assertEqual(saved_results, [])
-
-    def test_player_dashboard_displays_highest_egg(self):
-        self.create_verified_user(
-            name="Dashboard Player",
-            email="dashboard@example.com",
-            password="Password123",
-            role="player",
-        )
-
-        self.login(
-            email="dashboard@example.com",
-            password="Password123",
-        )
-
-        response = self.client.get("/player_dashboard")
-
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Highest Egg", response.data)
-        self.assertIn(b"Standard", response.data)
-
-    def test_game_page_leaderboard_ranks_players_by_points(self):
-        """Top players appear on the /game leaderboard in descending point order."""
-        db_session = database.get_session()
-
-        for name, email, points in [
-            ("Alice", "alice@example.com", 500),
-            ("Bob", "bob@example.com", 1000),
-            ("Carol", "carol@example.com", 250),
-        ]:
-            player = self.create_verified_user(
-                name=name,
-                email=email,
-                password="Password123",
-                role="player",
+            stored_user = users.get_by_id(user.id)
+            stored_user.email_verified = email_verified
+            stored_user.email_verification_token = (
+                None if email_verified else stored_user.email_verification_token
             )
-            db_session.add(
-                users.GameState(
-                    user_id=player.id,
-                    points=points,
-                    current_infinity_level=0,
-                    current_type="standard",
-                    highest_type="standard",
-                    clicks_remaining=10,
-                    click_power_lvl=1,
-                    autoclicker_lvl=0,
-                )
-            )
+            stored_user.is_active = is_active
+            stored_user.is_deleted = is_deleted
+            stored_user.deleted_at = datetime.utcnow() if is_deleted else None
+            stored_user.points = points
+            stored_user.current_infinity_level = current_infinity_level
+            stored_user.current_type = current_type
+            stored_user.highest_type = highest_type
+            stored_user.clicks_remaining = clicks_remaining
+            stored_user.progress_percent = progress_percent
 
-        db_session.commit()
+            database.get_session().commit()
 
-        # /game is public, so a guest request still gets the leaderboard
+            return stored_user.id
+
+    def create_result(self, user_id, score, duration_seconds=None):
+        # Helper for creating a saved game result for a user.
+        with self.app.app_context():
+            return users.create_game_result(user_id, score, duration_seconds)
+
+    def login_session(self, user_id):
+        # Helper for manually setting session values so the test user is logged in.
+        with self.app.app_context():
+            user = users.get_by_id(user_id)
+
+        with self.client.session_transaction() as session:
+            session["user_id"] = user.id
+            session["email"] = user.email
+            session["name"] = user.name
+            session["role"] = user.role
+
+    def get_user(self, user_id):
+        # Helper for retrieving a user from the temporary test database.
+        with self.app.app_context():
+            return users.get_by_id(user_id)
+
+    def test_public_pages_load(self):
+        # Check that public pages can be loaded successfully.
+        for path in ("/", "/login", "/signup", "/guest", "/game"):
+            response = self.client.get(path)
+            self.assertEqual(response.status_code, 200, path)
+
+    def test_guest_game_page_uses_guest_initial_state(self):
+        # Check that the game page shows guest initial state for anonymous users.
         response = self.client.get("/game")
-        self.assertEqual(response.status_code, 200)
+        page = response.get_data(as_text=True)
 
-        body = response.data.decode("utf-8")
+        self.assertIn('"is_guest": true', page)
+        self.assertIn('"points": 0', page)
+        self.assertIn("Loading leaderboard...", page)
 
-        # Pull out just the leaderboard <ul> so we don't accidentally match
-        # player names that appear elsewhere on the page
-        leaderboard_match = re.search(
-            r'<ul class="list-group list-group-flush">(.*?)</ul>',
-            body,
-            re.DOTALL,
-        )
-
-        self.assertIsNotNone(leaderboard_match, "Leaderboard <ul> not found in /game response")
-
-        leaderboard_html = leaderboard_match.group(1)
-
-        # Extract names in the order they appear: "1. Bob", "2. Alice", ...
-        names_in_order = re.findall(r"\d+\.\s*([A-Za-z]+)", leaderboard_html)
-
-        self.assertEqual(
-            names_in_order[:3],
-            ["Bob", "Alice", "Carol"],
-            "Leaderboard should be sorted by GameState.points descending",
-        )
-
-
-class CSRFTests(unittest.TestCase):
-    def setUp(self):
-        self.testApp = create_app(
-            {
-                "TESTING": True,
-                "SECRET_KEY": "test-secret-key",
-                "WTF_CSRF_ENABLED": True,
-                "DATABASE": ":memory:",
-                "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
-                "AUTO_MIGRATE": False,
-            }
-        )
-
-        self.client = self.testApp.test_client()
-        self.app_context = self.testApp.app_context()
-        self.app_context.push()
-
-        database.Base.metadata.create_all(
-            bind=self.testApp.extensions["sqlalchemy_engine"]
-        )
-
-    def tearDown(self):
-        engine = self.testApp.extensions["sqlalchemy_engine"]
-
-        database.SessionLocal.remove()
-        database.Base.metadata.drop_all(bind=engine)
-        database.SessionLocal.remove()
-        engine.dispose()
-
-        self.app_context.pop()
-
-        self.client = None
-        self.testApp = None
-
-    def get_csrf_token(self, url):
-        response = self.client.get(url)
-        page = response.data.decode("utf-8")
-
-        input_match = re.search(
-            r'name="csrf_token"[^>]*value="([^"]+)"',
-            page,
-        )
-
-        if input_match:
-            return html.unescape(input_match.group(1))
-
-        meta_match = re.search(
-            r'name="csrf-token"[^>]*content="([^"]+)"',
-            page,
-        )
-
-        if meta_match:
-            return html.unescape(meta_match.group(1))
-
-        return None
-
-    def create_verified_user(
-        self,
-        name="Test Player",
-        email="player@example.com",
-        password="Password123",
-        role="player",
-    ):
-        user = users.create_user(
-            name=name,
-            email=email,
-            password=password,
-            role=role,
-        )
-
-        user.email_verified = True
-        database.get_session().commit()
-
-        return user
-
-    def login_with_csrf(self, email="player@example.com", password="Password123"):
-        csrf_token = self.get_csrf_token("/login")
-
-        return self.client.post(
-            "/login",
-            data={
-                "email": email,
-                "password": password,
-                "csrf_token": csrf_token,
-            },
-            follow_redirects=False,
-        )
-
-    def test_login_rejects_missing_csrf_token(self):
-        response = self.client.post(
-            "/login",
-            data={
-                "email": "player@example.com",
-                "password": "Password123",
-            },
-            follow_redirects=False,
-        )
-
-        self.assertEqual(response.status_code, 400)
-
-    def test_signup_rejects_missing_csrf_token(self):
+    def test_signup_creates_unverified_user_and_shows_verification_link(self):
+        # Check that signup creates an unverified user and shows a development
+        # verification link.
         response = self.client.post(
             "/signup",
             data={
                 "username": "New Player",
                 "email": "newplayer@example.com",
-                "password": "Password123",
-                "confirm_password": "Password123",
+                "password": "password123",
+                "confirm_password": "password123",
             },
-            follow_redirects=False,
         )
 
-        self.assertEqual(response.status_code, 400)
-
-    def test_signup_accepts_valid_csrf_token(self):
-        csrf_token = self.get_csrf_token("/signup")
-
-        response = self.client.post(
-            "/signup",
-            data={
-                "username": "New Player",
-                "email": "newplayer@example.com",
-                "password": "Password123",
-                "confirm_password": "Password123",
-                "csrf_token": csrf_token,
-            },
-            follow_redirects=False,
-        )
+        page = response.get_data(as_text=True)
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Account created", response.data)
+        self.assertIn("Account created. Please verify your email before logging in.", page)
+        self.assertIn("Development verification link:", page)
 
-    def test_profile_update_rejects_missing_csrf_token(self):
-        self.create_verified_user(
-            name="Profile Player",
-            email="profile@example.com",
-            password="Password123",
-            role="player",
+        with self.app.app_context():
+            user = users.get_by_email("newplayer@example.com")
+            self.assertIsNotNone(user)
+            self.assertFalse(user.email_verified)
+            self.assertIsNotNone(user.email_verification_token)
+
+    def test_unverified_user_must_verify_before_login(self):
+        # Check that an unverified user cannot log in until the verification link is used.
+        user_id = self.create_user(
+            email="needsverify@example.com",
+            email_verified=False,
         )
 
-        self.login_with_csrf(
-            email="profile@example.com",
-            password="Password123",
+        user = self.get_user(user_id)
+
+        blocked_login = self.client.post(
+            "/login",
+            data={"email": user.email, "password": "password123"},
         )
+
+        self.assertIn(
+            "Please verify your email before logging in.",
+            blocked_login.get_data(as_text=True),
+        )
+
+        verify_response = self.client.get(f"/verify-email/{user.email_verification_token}")
+
+        self.assertIn(
+            "Email verified successfully. You can now log in.",
+            verify_response.get_data(as_text=True),
+        )
+
+        successful_login = self.client.post(
+            "/login",
+            data={"email": user.email, "password": "password123"},
+            follow_redirects=False,
+        )
+
+        self.assertEqual(successful_login.status_code, 302)
+        self.assertTrue(successful_login.headers["Location"].endswith("/player_dashboard"))
+
+    def test_protected_routes_redirect_anonymous_users_to_login(self):
+        # Check that protected routes redirect anonymous users to the login page.
+        protected_get_routes = (
+            "/player_dashboard",
+            "/history",
+            "/profile",
+            "/admin_dashboard",
+            "/admin_accounts",
+            "/admin_player_results",
+        )
+
+        for path in protected_get_routes:
+            response = self.client.get(path, follow_redirects=False)
+            self.assertEqual(response.status_code, 302, path)
+            self.assertTrue(response.headers["Location"].endswith("/login"))
+
+        post_response = self.client.post(
+            "/save_game_state",
+            json={"points": 25},
+            follow_redirects=False,
+        )
+
+        self.assertEqual(post_response.status_code, 302)
+        self.assertTrue(post_response.headers["Location"].endswith("/login"))
+
+    def test_player_login_redirects_to_dashboard(self):
+        # Check that a verified player logs in and is redirected to the player dashboard.
+        self.create_user(email="playerlogin@example.com")
+
+        response = self.client.post(
+            "/login",
+            data={"email": "playerlogin@example.com", "password": "password123"},
+            follow_redirects=False,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.headers["Location"].endswith("/player_dashboard"))
+
+    def test_admin_login_redirects_to_admin_dashboard(self):
+        # Check that a verified admin logs in and is redirected to the admin dashboard.
+        self.create_user(
+            name="Admin User",
+            email="admin@example.com",
+            role="admin",
+        )
+
+        response = self.client.post(
+            "/login",
+            data={"email": "admin@example.com", "password": "password123"},
+            follow_redirects=False,
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(response.headers["Location"].endswith("/admin_dashboard"))
+
+    def test_player_cannot_access_admin_routes_but_admin_can(self):
+        # Check role-based access control between player and admin routes.
+        player_id = self.create_user(email="regular@example.com")
+        self.login_session(player_id)
+
+        blocked_response = self.client.get("/admin_dashboard", follow_redirects=False)
+
+        self.assertEqual(blocked_response.status_code, 302)
+        self.assertTrue(blocked_response.headers["Location"].endswith("/login"))
+
+        admin_id = self.create_user(
+            name="Admin Two",
+            email="admintwo@example.com",
+            role="admin",
+        )
+
+        self.login_session(admin_id)
+
+        allowed_response = self.client.get("/admin_dashboard")
+
+        self.assertEqual(allowed_response.status_code, 200)
+        self.assertIn("Current platform summary", allowed_response.get_data(as_text=True))
+
+    def test_profile_update_changes_name_email_and_password(self):
+        # Check that the profile form can update name, email, and password.
+        user_id = self.create_user(email="profile@example.com")
+        self.login_session(user_id)
 
         response = self.client.post(
             "/profile",
             data={
                 "username": "Updated Player",
                 "email": "updated@example.com",
+                "current_password": "password123",
+                "new_password": "newpassword456",
+                "confirm_password": "newpassword456",
             },
-            follow_redirects=False,
         )
-
-        self.assertEqual(response.status_code, 400)
-
-    def test_score_submission_rejects_missing_csrf_token(self):
-        player = self.create_verified_user(
-            name="Score Player",
-            email="score@example.com",
-            password="Password123",
-            role="player",
-        )
-
-        self.login_with_csrf(
-            email="score@example.com",
-            password="Password123",
-        )
-
-        db_session = database.get_session()
-
-        game_state = users.GameState(
-            user_id=player.id,
-            points=0,
-            current_infinity_level=0,
-            current_type="standard",
-            highest_type="standard",
-            clicks_remaining=10,
-            click_power_lvl=1,
-            autoclicker_lvl=0,
-        )
-
-        db_session.add(game_state)
-        db_session.commit()
-
-        response = self.client.post(
-            "/api/sync",
-            json={},
-            follow_redirects=False,
-        )
-
-        self.assertEqual(response.status_code, 400)
-
-    def test_game_page_includes_csrf_token_for_score_submission(self):
-        self.create_verified_user(
-            name="Game Player",
-            email="gamecsrf@example.com",
-            password="Password123",
-            role="player",
-        )
-
-        self.login_with_csrf(
-            email="gamecsrf@example.com",
-            password="Password123",
-        )
-
-        response = self.client.get("/game")
 
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'name="csrf-token"', response.data)
+        self.assertIn("Profile updated.", response.get_data(as_text=True))
+
+        updated_user = self.get_user(user_id)
+
+        self.assertEqual(updated_user.name, "Updated Player")
+        self.assertEqual(updated_user.email, "updated@example.com")
+        self.assertTrue(updated_user.check_password("newpassword456"))
+
+    def test_delete_account_soft_deletes_user_and_blocks_future_login(self):
+        # Check that deleting an account soft-deletes the user and blocks future login.
+        user_id = self.create_user(email="delete-me@example.com")
+        self.login_session(user_id)
+
+        response = self.client.post(
+            "/profile/delete",
+            data={"delete_password": "password123"},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("account_deleted=1", response.headers["Location"])
+
+        deleted_user = self.get_user(user_id)
+
+        self.assertTrue(deleted_user.is_deleted)
+        self.assertFalse(deleted_user.is_active)
+
+        login_response = self.client.post(
+            "/login",
+            data={"email": "delete-me@example.com", "password": "password123"},
+        )
+
+        self.assertIn("This account has been deleted.", login_response.get_data(as_text=True))
+
+    def test_save_game_state_and_restart_game_update_persistent_progress(self):
+        # Check that game state saving stores progress and restart resets progress.
+        user_id = self.create_user(email="gamer@example.com")
+        self.login_session(user_id)
+
+        save_response = self.client.post(
+            "/save_game_state",
+            json={
+                "points": 275,
+                "current_infinity_level": 4,
+                "current_type": "water",
+                "highest_type": "gold",
+                "clicks_remaining": 7,
+                "progress_percent": 63,
+            },
+        )
+
+        self.assertEqual(save_response.status_code, 200)
+        self.assertEqual(save_response.get_json(), {"success": True})
+
+        saved_user = self.get_user(user_id)
+
+        self.assertEqual(saved_user.points, 275)
+        self.assertEqual(saved_user.current_infinity_level, 4)
+        self.assertEqual(saved_user.current_type, "water")
+        self.assertEqual(saved_user.highest_type, "gold")
+        self.assertEqual(saved_user.clicks_remaining, 7)
+        self.assertEqual(saved_user.progress_percent, 63)
+
+        game_page = self.client.get("/game").get_data(as_text=True)
+
+        self.assertIn('"is_guest": false', game_page)
+        self.assertIn('"points": 275', game_page)
+        self.assertIn('"current_type": "water"', game_page)
+
+        restart_response = self.client.post("/restart_game")
+
+        self.assertEqual(restart_response.status_code, 200)
+        self.assertEqual(restart_response.get_json(), {"success": True})
+
+        reset_user = self.get_user(user_id)
+
+        self.assertEqual(reset_user.points, 0)
+        self.assertEqual(reset_user.current_infinity_level, 0)
+        self.assertEqual(reset_user.current_type, "standard")
+        self.assertEqual(reset_user.highest_type, "standard")
+        self.assertIsNone(reset_user.clicks_remaining)
+        self.assertEqual(reset_user.progress_percent, 0)
+
+    def test_leaderboard_returns_only_active_non_deleted_players_in_rank_order(self):
+        # Check that leaderboard excludes inactive, deleted, and admin users,
+        # and orders active players by progress.
+        self.create_user(
+            name="Low Score",
+            email="low@example.com",
+            points=10,
+            current_infinity_level=1,
+        )
+
+        high_id = self.create_user(
+            name="High Score",
+            email="high@example.com",
+            points=90,
+            current_infinity_level=1,
+        )
+
+        tie_break_id = self.create_user(
+            name="Tie Break",
+            email="tie@example.com",
+            points=90,
+            current_infinity_level=3,
+        )
+
+        self.create_user(
+            name="Inactive Player",
+            email="inactive@example.com",
+            points=999,
+            is_active=False,
+        )
+
+        self.create_user(
+            name="Deleted Player",
+            email="deleted@example.com",
+            points=1000,
+            is_deleted=True,
+        )
+
+        self.create_user(
+            name="Admin User",
+            email="lb-admin@example.com",
+            role="admin",
+            points=500,
+        )
+
+        self.login_session(high_id)
+
+        response = self.client.get("/leaderboard")
+        payload = response.get_json()
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(payload["current_user_id"], high_id)
+        self.assertEqual(
+            [player["name"] for player in payload["players"]],
+            ["Tie Break", "High Score", "Low Score"],
+        )
+        self.assertNotIn("Inactive Player", str(payload))
+        self.assertNotIn("Deleted Player", str(payload))
+        self.assertNotIn("Admin User", str(payload))
+        self.assertNotEqual(high_id, tie_break_id)
+
+    def test_history_page_shows_saved_result_statistics(self):
+        # Check that the history page displays highest, latest, and average scores.
+        user_id = self.create_user(name="History Player", email="history@example.com")
+
+        self.create_result(user_id, 10)
+        self.create_result(user_id, 20)
+        self.create_result(user_id, 30)
+
+        self.login_session(user_id)
+
+        response = self.client.get("/history")
+        page = response.get_data(as_text=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Your saved results, History Player.", page)
+        self.assertRegex(page, r"Highest Score</span>\s*<h3>30</h3>")
+        self.assertRegex(page, r"Latest Score</span>\s*<h3>30</h3>")
+        self.assertRegex(page, r"Average Score</span>\s*<h3>20\.0</h3>")
+
+    def test_ai_feedback_returns_service_unavailable_without_api_key(self):
+        # Check that AI feedback gives a clear fallback response when no API key is configured.
+        user_id = self.create_user(email="ai@example.com")
+        self.login_session(user_id)
+
+        with patch.dict(os.environ, {"GEMINI_API_KEY": ""}):
+            response = self.client.post("/ai_feedback")
+
+        self.assertEqual(response.status_code, 503)
+        self.assertEqual(
+            response.get_json(),
+            {
+                "feedback": "AI feedback is unavailable because the Gemini API key is not configured."
+            },
+        )
 
 
 if __name__ == "__main__":
