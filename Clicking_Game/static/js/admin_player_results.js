@@ -102,14 +102,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const sortSelect = document.getElementById("sortSelect");
 
   const adminChartScroll = document.getElementById("adminChartScroll");
-
-  if (adminChartScroll && labels.length > 0) {
-    adminChartScroll.style.minWidth = `${Math.max(760, labels.length * 90)}px`;
-  }
-
-  // Create a bar chart for admin player results
   const adminChartCanvas = document.getElementById("adminResultsChart");
 
+  // Create a bar chart for admin player results
   if (
     adminChartCanvas &&
     window.adminResults &&
@@ -142,6 +137,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const labels = topPlayers.map((item) => item.player);
     const scores = topPlayers.map((item) => item.score);
 
+    /*
+      Stretch the scrolling chart container so wider bar charts can scroll
+      horizontally on narrow screens. Uses `labels` which is in scope here.
+    */
+    if (adminChartScroll && labels.length > 0) {
+      adminChartScroll.style.minWidth = `${Math.max(760, labels.length * 90)}px`;
+    }
+
     new Chart(adminChartCanvas, {
       type: "bar",
       data: {
@@ -166,7 +169,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /*
-    Connect the search input to the searchTable function.
+    Connect the search input to the searchTable function so the table filters
+    live as the admin types.
   */
   if (searchInput) {
     searchInput.addEventListener("keyup", searchTable);
@@ -177,6 +181,30 @@ document.addEventListener("DOMContentLoaded", () => {
   */
   if (sortSelect) {
     sortSelect.addEventListener("change", sortTable);
+  }
+
+  /*
+    Connect the explicit Search button so admins who prefer clicking a button
+    over typing get the same filtering behaviour.
+  */
+  const searchBtn = document.getElementById("searchBtn");
+
+  if (searchBtn) {
+    searchBtn.addEventListener("click", searchTable);
+  }
+
+  /*
+    Connect the Reset button to clear the search input and re-show every row.
+  */
+  const resetBtn = document.getElementById("resetBtn");
+
+  if (resetBtn) {
+    resetBtn.addEventListener("click", () => {
+      if (searchInput) {
+        searchInput.value = "";
+      }
+      searchTable();
+    });
   }
 
   /*

@@ -17,14 +17,36 @@ The project includes:
   passwords, Docker support, a Render deployment configuration, and a CI
   workflow that runs `pytest` on every push.
 
+## Live demo
+
+The application is deployed on Render at:
+
+```text
+https://agile-web-project.onrender.com/
+```
+
+The deploy seeds two demo accounts on every container start so graders can
+log in without going through the email-verification flow. Both accounts are
+re-created on each cold start, so they will always be available.
+
+| Role   | Email                | Password    |
+| ------ | -------------------- | ----------- |
+| Admin  | `admin@example.com`  | `admin123`  |
+| Player | `player@example.com` | `player123` |
+
+> **Note**: free-tier Render has an ephemeral filesystem. The SQLite
+> database is recreated on each cold start, so accounts created via the
+> sign-up form will not persist between deploys or restarts. The two
+> seeded accounts above are restored automatically.
+
 ## Group Members
 
-| UWA ID   | Name                   | GitHub Username    |
-|----------|------------------------|--------------------|
-| 24365316 | Audrey Chio            | audreycxy          |
-| 24244417 | Sitong Liu             | Sitong888          |
-| 24315125 | James Osmond           | James-909          |
-| 24080064 | Handuo Cui             | cuihanduo1417595655|
+| UWA ID   | Name         | GitHub Username     |
+| -------- | ------------ | ------------------- |
+| 24365316 | Audrey Chio  | audreycxy           |
+| 24244417 | Sitong Liu   | Sitong888           |
+| 24315125 | James Osmond | James-909           |
+| 24080064 | Handuo Cui   | cuihanduo1417595655 |
 
 ## Current Structure
 
@@ -141,7 +163,9 @@ Inside Docker, run the same account setup script through the container:
 docker compose exec web python scripts/create_admin.py
 ```
 
-For production:
+For a real production deployment with end users (i.e. not the marking
+demo on free Render — see the [Deployment Notes](#deployment-notes) section
+for that):
 
 - Do not run `scripts/seed_users.py`.
 - Do not use default local development credentials.
@@ -342,37 +366,37 @@ docker compose exec web python -m flask --app wsgi db-current
 
 Environment variables:
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `SECRET_KEY` | `dev-secret-change-me` | Flask session signing key. Change this before deployment. |
-| `DATABASE` | `instance/app.db` | SQLite database file path used to build the SQLAlchemy URI. |
-| `DATABASE_URL` | unset | Optional full SQLAlchemy database URI. Overrides `DATABASE` when set. |
-| `AUTO_MIGRATE` | `1` | Set to `0` to stop the app from applying Alembic migrations on startup. |
-| `HOST` | `0.0.0.0` | Local `app.py` bind host. |
-| `PORT` | `5000` | Local `app.py` bind port. |
-| `FLASK_DEBUG` | `0` | Set to `1` for local debug mode. |
+| Variable       | Default                | Purpose                                                                 |
+| -------------- | ---------------------- | ----------------------------------------------------------------------- |
+| `SECRET_KEY`   | `dev-secret-change-me` | Flask session signing key. Change this before deployment.               |
+| `DATABASE`     | `instance/app.db`      | SQLite database file path used to build the SQLAlchemy URI.             |
+| `DATABASE_URL` | unset                  | Optional full SQLAlchemy database URI. Overrides `DATABASE` when set.   |
+| `AUTO_MIGRATE` | `1`                    | Set to `0` to stop the app from applying Alembic migrations on startup. |
+| `HOST`         | `0.0.0.0`              | Local `app.py` bind host.                                               |
+| `PORT`         | `5000`                 | Local `app.py` bind port.                                               |
+| `FLASK_DEBUG`  | `0`                    | Set to `1` for local debug mode.                                        |
 
 Optional integration variables (the app degrades gracefully if these are not
 set — the AI-feedback button shows a "not configured" message and email
 verification falls back to a development log):
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `GEMINI_API_KEY` | unset | API key used by the player history page to generate AI performance feedback through Google Gemini. |
-| `MAIL_SERVER` | `smtp.gmail.com` | SMTP server used by Flask-Mail to send the signup verification email. |
-| `MAIL_PORT` | `587` | SMTP port used by Flask-Mail. |
-| `MAIL_USE_TLS` | `True` | Whether Flask-Mail should use STARTTLS. |
-| `MAIL_USERNAME` | unset | SMTP account used to send verification emails. |
-| `MAIL_PASSWORD` | unset | SMTP password or Gmail app password. Do not commit. |
-| `MAIL_DEFAULT_SENDER` | `MAIL_USERNAME` | "From" address on outgoing verification emails. |
+| Variable              | Default          | Purpose                                                                                            |
+| --------------------- | ---------------- | -------------------------------------------------------------------------------------------------- |
+| `GEMINI_API_KEY`      | unset            | API key used by the player history page to generate AI performance feedback through Google Gemini. |
+| `MAIL_SERVER`         | `smtp.gmail.com` | SMTP server used by Flask-Mail to send the signup verification email.                              |
+| `MAIL_PORT`           | `587`            | SMTP port used by Flask-Mail.                                                                      |
+| `MAIL_USE_TLS`        | `True`           | Whether Flask-Mail should use STARTTLS.                                                            |
+| `MAIL_USERNAME`       | unset            | SMTP account used to send verification emails.                                                     |
+| `MAIL_PASSWORD`       | unset            | SMTP password or Gmail app password. Do not commit.                                                |
+| `MAIL_DEFAULT_SENDER` | `MAIL_USERNAME`  | "From" address on outgoing verification emails.                                                    |
 
 Optional admin setup variables used by `scripts/create_admin.py`:
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `ADMIN_NAME` | unset | Optional admin display name for the admin creation script. |
-| `ADMIN_EMAIL` | unset | Optional admin email for the admin creation script. |
-| `ADMIN_PASSWORD` | unset | Optional admin password for the admin creation script. Do not commit real passwords. |
+| Variable         | Default | Purpose                                                                              |
+| ---------------- | ------- | ------------------------------------------------------------------------------------ |
+| `ADMIN_NAME`     | unset   | Optional admin display name for the admin creation script.                           |
+| `ADMIN_EMAIL`    | unset   | Optional admin email for the admin creation script.                                  |
+| `ADMIN_PASSWORD` | unset   | Optional admin password for the admin creation script. Do not commit real passwords. |
 
 Copy `.env.example` if you want a local reference for required variables. The app reads normal environment variables directly.
 
@@ -382,17 +406,28 @@ The repository ships a `render.yaml` describing a Render web service that
 runs the app under `waitress-serve`. Render will pick this up automatically
 when the repo is connected.
 
-Before deploying the application:
+The Render `startCommand` runs `scripts/seed_users.py` before launching the
+server. On free Render the container filesystem is ephemeral, so this
+guarantees the demo admin and player accounts always exist for graders. The
+seed script is idempotent — it only manages the two well-known seeded
+accounts and leaves any other users created in the current container alone.
+
+For the marking demo, that is the intended configuration. For a real
+production deployment with actual end users, you would want to:
 
 1. Set a strong `SECRET_KEY` (the `render.yaml` uses `generateValue: true` so
    Render produces a random one on first deploy).
-2. Do not use seeded local testing accounts.
-3. Create a secure administrator account with `scripts/create_admin.py`.
-4. Keep real credentials and production `.env` files out of version control.
-5. Confirm automated tests pass with `python -m pytest`.
-6. If using the AI feedback feature in production, set `GEMINI_API_KEY` as a
+2. Remove `scripts/seed_users.py` from the `startCommand` so the demo
+   credentials don't ship with the live site.
+3. Create a secure administrator account with `scripts/create_admin.py`
+   (run it once through the Render shell after the first deploy).
+4. Switch off SQLite for a persistent database (Render Postgres or a
+   persistent disk), so accounts created through sign-up survive restarts.
+5. Keep real credentials and production `.env` files out of version control.
+6. Confirm automated tests pass with `python -m pytest`.
+7. If using the AI feedback feature in production, set `GEMINI_API_KEY` as a
    Render secret.
-7. If using real email verification in production, set `MAIL_USERNAME`,
+8. If using real email verification in production, set `MAIL_USERNAME`,
    `MAIL_PASSWORD`, and `MAIL_DEFAULT_SENDER` as Render secrets.
 
 ## Development Direction

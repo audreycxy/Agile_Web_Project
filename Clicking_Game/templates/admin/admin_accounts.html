@@ -89,44 +89,28 @@ endblock %} {% block body_class %}dashboard-page{% endblock %} {% block navbar
 
       <div>
         <select class="form-select auth-input" id="role" name="role">
-          <option
-            value="all"
-            {%
-            if
-            selected_role=""
-            ="all"
-            %}selected{%
-            endif
-            %}
-          >
+          <option value="all" {% if selected_role == 'all' %}selected{% endif %}>
             All roles
           </option>
-          <option
-            value="admin"
-            {%
-            if
-            selected_role=""
-            ="admin"
-            %}selected{%
-            endif
-            %}
-          >
+          <option value="admin" {% if selected_role == 'admin' %}selected{% endif %}>
             Admin
           </option>
-          <option
-            value="player"
-            {%
-            if
-            selected_role=""
-            ="player"
-            %}selected{%
-            endif
-            %}
-          >
+          <option value="player" {% if selected_role == 'player' %}selected{% endif %}>
             Player
           </option>
         </select>
       </div>
+
+      <button type="submit" class="btn auth-primary-btn dashboard-action-btn">
+        Search
+      </button>
+
+      <a
+        href="{{ url_for('auth.admin_accounts') }}"
+        class="btn auth-secondary-btn dashboard-action-btn"
+      >
+        Reset
+      </a>
     </form>
   </section>
 

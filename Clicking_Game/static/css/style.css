@@ -1067,7 +1067,7 @@ a:hover {
 
 .admin-search-form {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 14px;
   align-items: end;
   margin-top: 22px;
@@ -1195,8 +1195,9 @@ a:hover {
 
 .admin-results-controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: 1.3fr 0.7fr auto auto;
+  gap: 14px;
+  align-items: end;
 }
 
 .admin-results-table th,
