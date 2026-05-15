@@ -34,6 +34,13 @@ body {
   margin: 0;
   font-family: "Poppins", sans-serif;
   background-color: #f8f9fa;
+  /* Disable mobile double-tap-to-zoom site-wide. Players tap rapidly on
+     the main game egg, the home-page demo egg, and the egg-tier switcher;
+     iOS Safari interprets any two close-in-time taps as a double-tap-zoom
+     gesture and flips the page in and out of zoom mid-game. Setting
+     manipulation only blocks the double-tap gesture: pinch-zoom and
+     all other touch gestures (scroll, long-press, etc.) still work. */
+  touch-action: manipulation;
 }
 
 .card {
