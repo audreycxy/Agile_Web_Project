@@ -32,11 +32,12 @@ def game():
         "click_power_lvl": 1,
         "autoclicker_lvl": 0
     }
-    # Check if the player has an account
+    # Check if the player has an account:
     if g.user:
         initial_state.update({
             "is_guest": False
         })
+        # Check if the player has a save, if they don't, create one:
         if not g.user.game_state:
             db_session = database.get_session()
             new_gs = users.GameState(
