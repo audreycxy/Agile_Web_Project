@@ -43,6 +43,7 @@
 
   let isAnimating = false;
   let isSyncing = false;
+  let hasShownForcedLogoutAlert = false;
 
   let lastManualClickTime = 0;
   const CLICK_DEBOUNCE = 50; // 50ms human limit threshold
@@ -53,6 +54,33 @@
 
   function markPlayerActive() {
     lastPlayerActivityTime = Date.now();
+  }
+
+  function forceLogout(message, redirectUrl = "/login") {
+    if (hasShownForcedLogoutAlert) {
+      return;
+    }
+
+    hasShownForcedLogoutAlert = true;
+    alert(message || "Your session has ended. Please log in again.");
+    window.location.assign(redirectUrl);
+  }
+
+  function fetchGameJson(url, options) {
+    return fetch(url, options).then(async (response) => {
+      const data = await response.json().catch(() => null);
+
+      if (response.status === 401) {
+        forceLogout(data?.message, data?.redirect_url);
+        throw new Error(data?.message || "Authentication required.");
+      }
+
+      if (data === null) {
+        throw new Error("Invalid server response.");
+      }
+
+      return data;
+    });
   }
 
   function isAutoClickerAllowed() {
@@ -113,7 +141,7 @@
       gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].base_clicks;
 
       if (!gameState.isGuest) {
-        fetch("/api/sync", {
+        fetchGameJson("/api/sync", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -260,7 +288,7 @@
     updateProgressUI();
 
     if (!gameState.isGuest) {
-      fetch("/api/navigate", {
+      fetchGameJson("/api/navigate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -300,7 +328,7 @@
     updateUpgradeUI();
 
     if (!gameState.isGuest) {
-      fetch("/api/buy_upgrade", {
+      fetchGameJson("/api/buy_upgrade", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

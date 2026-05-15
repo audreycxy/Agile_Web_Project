@@ -20,7 +20,12 @@ from flask import (
 from werkzeug.utils import secure_filename
 from datetime import timezone
 from Clicking_Game.models import users, database
-from Clicking_Game.utils.auth import login_required
+from Clicking_Game.utils.auth import (
+    FORCED_LOGOUT_MESSAGE,
+    login_required,
+    pop_auth_notice,
+    set_auth_notice,
+)
 from Clicking_Game import email_service
 
 
@@ -56,11 +61,39 @@ def _looks_like_image(file_storage):
 
 bp = Blueprint("auth", __name__)
 
+
+def establish_login_session(user):
+    session.clear()
+    session["user_id"] = user.id
+    session["email"] = user.email
+    session["name"] = user.name
+    session["role"] = user.role
+    session["session_token"] = users.issue_active_session_token(user.id)
+
+
 # Load the logged-in user before each request
 @bp.before_app_request
 def load_logged_in_user():
     user_id = session.get("user_id")
-    g.user = users.get_by_id(user_id) if user_id is not None else None
+    session_token = session.get("session_token")
+
+    if user_id is None:
+        g.user = None
+        return
+
+    user = users.get_by_id(user_id)
+
+    if user is None:
+        session.clear()
+        g.user = None
+        return
+
+    if user.active_session_token != session_token:
+        set_auth_notice(FORCED_LOGOUT_MESSAGE)
+        g.user = None
+        return
+
+    g.user = user
 
 # Helper function to determine dashboard URL based on user role
 def dashboard_url_for(user):
@@ -92,6 +125,8 @@ def send_verification_email(user):
 # Route for user login
 @bp.route("/login", methods=("GET", "POST"))
 def login():
+    forced_logout_message = pop_auth_notice()
+
     if g.user is not None:
         if g.user.is_deleted or not g.user.is_active:
             session.clear()
@@ -104,6 +139,8 @@ def login():
         if request.args.get("account_deleted") == "1"
         else None
     )
+    if error is None and success is None and forced_logout_message:
+        error = forced_logout_message
 
     if request.method == "POST":
         email = request.form.get("email", "").strip().lower()
@@ -127,15 +164,15 @@ def login():
             elif not user.email_verified:
                 error = "Please verify your email before logging in."
             else:
-                session.clear()
-                session["user_id"] = user.id
-                session["email"] = user.email
-                session["name"] = user.name
-                session["role"] = user.role
-
+                establish_login_session(user)
                 return redirect(dashboard_url_for(user))
 
-    return render_template("public/login.html", error=error, success=success)
+    return render_template(
+        "public/login.html",
+        error=error,
+        success=success,
+        forced_logout_message=forced_logout_message,
+    )
 
 # Route for user signup
 # New users are created with the "player" role by default
@@ -623,6 +660,7 @@ def serve_avatar(user_id):
 # Route for user logout
 @bp.route("/logout")
 def logout():
+    users.clear_active_session_token(session.get("user_id"))
     session.clear()
     return redirect(url_for("main.home"))
 
