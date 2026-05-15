@@ -325,7 +325,12 @@
           <li
             class="list-group-item d-flex justify-content-between align-items-center{% if is_self %} leaderboard-self{% endif %}"
           >
-            <span>
+            <span class="leaderboard-player">
+              <img
+                src="{{ url_for('auth.serve_avatar', user_id=player.id) }}"
+                alt=""
+                class="leaderboard-avatar"
+              />
               {{ loop.index }}. {{ player.name }}
               {% if is_self %}
               <span class="badge bg-warning text-dark ms-1">You</span>

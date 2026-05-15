@@ -120,6 +120,14 @@ class User(Base):
         nullable=True,
     )
 
+    # avatar_filename = the basename of the user's uploaded avatar image,
+    # stored under instance/uploads/avatars/. None means "no avatar uploaded,
+    # show the default fallback image instead".
+    avatar_filename: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
 
