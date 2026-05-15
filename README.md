@@ -4,11 +4,21 @@ A Flask-based clicking game ("Egg Clicker") where players click an egg to
 earn points, progress through egg tiers, and compete on a shared leaderboard.
 The project includes:
 
+- **User signup with real email verification**, powered by the
+  [Resend](https://resend.com) HTTPS API and a verified custom domain so
+  the verification flow works on the live Render demo even though Render's
+  free tier blocks outbound SMTP. Local development falls back to
+  Flask-Mail + Gmail SMTP automatically when no Resend key is configured.
+- **Profile avatar upload** with file-extension allow-listing, magic-byte
+  validation (so renamed binaries are rejected), a 1 MB size cap, and
+  `secure_filename` sanitisation. Uploaded avatars are displayed on the
+  player dashboard, on the in-game leaderboard, and as a preview on the
+  profile page. A default egg image is served when no avatar is set.
 - Role-based authentication (player and admin) with email verification.
 - Persistent player progress (points, upgrades, current and highest egg
   tier) stored in SQLite through SQLAlchemy ORM models.
 - A shared in-game leaderboard so players can see other users' scores
-  alongside their own.
+  alongside their own, with the current player's row highlighted.
 - Player history with an AI-powered performance feedback button backed by
   Google Gemini.
 - An admin dashboard with searchable account management and aggregated game
@@ -34,10 +44,26 @@ re-created on each cold start, so they will always be available.
 | Admin  | `admin@example.com`  | `admin123`  |
 | Player | `player@example.com` | `player123` |
 
+### Things worth trying on the live demo
+
+- **Sign up with a real email address.** The verification email is sent
+  through Resend's HTTPS API from a verified custom domain, so it actually
+  arrives in your inbox (check the spam folder the first time). Click the
+  verification link, then log in normally.
+- **Upload a profile picture.** From the player dashboard, open **Profile**
+  and use the "Upload an avatar" card. The uploaded image immediately
+  replaces the default egg on the dashboard "Profile" card and on the
+  in-game leaderboard next to your name. Try uploading a `.exe` renamed to
+  `.png` to see the magic-byte check reject it.
+- **Visit the in-game leaderboard.** Both seeded and signed-up players
+  appear, ranked by points. Your own row is highlighted in yellow with a
+  "You" badge.
+
 > **Note**: free-tier Render has an ephemeral filesystem. The SQLite
-> database is recreated on each cold start, so accounts created via the
-> sign-up form will not persist between deploys or restarts. The two
-> seeded accounts above are restored automatically.
+> database (and any uploaded avatars under `instance/uploads/`) is
+> recreated on each cold start, so accounts and avatars created via the
+> live demo will not persist between deploys or restarts. The two seeded
+> accounts above are restored automatically every time.
 
 ## Group Members
 

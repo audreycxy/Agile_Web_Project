@@ -68,6 +68,12 @@ def _send_via_resend(api_key, subject, recipients, body):
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
+            "Accept": "application/json",
+            # Resend's API sits behind Cloudflare. Cloudflare's WAF blocks
+            # requests carrying the default Python-urllib/3.x User-Agent
+            # with error 1010 (treats it as a scraper). Identify ourselves
+            # as a normal application instead.
+            "User-Agent": "ClickingGame/1.0 (+https://agile-web-project.onrender.com)",
         },
     )
 
