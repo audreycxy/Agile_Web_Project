@@ -3,6 +3,7 @@ import os
 from google import genai
 from google.genai import errors as genai_errors
 from flask import Blueprint, g, jsonify, redirect, render_template, request, session, url_for
+from datetime import timezone
 from Clicking_Game.models import users
 from Clicking_Game.utils.auth import login_required
 from flask_mail import Message
@@ -271,14 +272,18 @@ def player_dashboard():
 def history():
     # list_results returns newest first; flip to chronological for the table.
     results = list(reversed(users.list_results(user_id=g.user.id)))
-    game_history = [
-        {
+    game_history = []
+    for result in results:
+        dt = result.created_at
+        # If the DB timestamp is naive, assume it's UTC and convert to local
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        local_dt = dt.astimezone()
+        game_history.append({
             "score": result.score,
-            "date": result.created_at.strftime("%Y-%m-%d"),
-            "time": result.created_at.strftime("%H:%M"),
-        }
-        for result in results
-    ]
+            "date": local_dt.strftime("%Y-%m-%d"),
+            "time": local_dt.strftime("%H:%M"),
+        })
 
     scores = [result.score for result in results]
 
