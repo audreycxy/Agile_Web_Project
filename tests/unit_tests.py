@@ -1,7 +1,9 @@
 # Unit tests for core backend behaviours.
 # This file focuses on authentication redirects, role-based access control,
 # score saving, CSRF protection, password hashing, and leaderboard ordering.
-
+import io
+import shutil
+import tempfile
 import html
 import re
 import unittest
