@@ -307,12 +307,17 @@ def list_leaderboard(limit=10):
     session = get_session()
     stmt = (
         select(User)
+        .join(GameState)
         .where(
             User.role == "player",
             User.is_active.is_(True),
             User.is_deleted.is_(False),
         )
-        .order_by(User.points.desc(), User.current_infinity_level.desc(), User.id.asc())
+        .order_by(
+            GameState.points.desc(),
+            GameState.current_infinity_level.desc(),
+            User.id.asc(),
+        )
         .limit(limit)
     )
 
