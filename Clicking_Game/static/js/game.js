@@ -44,10 +44,26 @@
   let isAnimating = false;
   let isSyncing = false;
 
+  let lastManualClickTime = 0;
+  const CLICK_DEBOUNCE = 50; // 50ms human limit threshold
+
   function handleEggClick(damageAmount = null) {
     if (isAnimating || isSyncing) return;
 
-    const damage = damageAmount !== null ? damageAmount : (gameState.clickPower * 3);
+    // Rejects sub-50ms manual clicks to prevent external macro exploitation:
+    if (damageAmount === null) {
+      const currentTime = Date.now();
+      if (currentTime - lastManualClickTime < CLICK_DEBOUNCE) {
+        return;
+      }
+    }
+
+    // Injected clicks via handleEggClick(X) using a browser breakpoint will be treated as (standard) auto-clicks:
+    const expectedAutoDamage = gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 2;
+
+    const clickDamage = gameState.clickPower === 1 ? 1 : gameState.clickPower * 3;
+    const damage = damageAmount !== null ? expectedAutoDamage : clickDamage;
+
     gameState.clicksRemaining -= damage;
 
     updateProgressUI();
