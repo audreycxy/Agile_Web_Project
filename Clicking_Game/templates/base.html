@@ -50,6 +50,11 @@
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
+    <!-- Prevent unwanted mobile double-tap zoom on rapid-tap game controls. Loaded 
+         here so it covers every page, including the home-page demo egg and the 
+         in-game egg button. See the file for the iOS-specific details. -->
+    <script src="{{ url_for('static', filename='js/prevent_mobile_zoom.js') }}"></script>
+
     <!-- Optional page-specific JavaScript -->
     {% block scripts %}{% endblock %}
   </body>
