@@ -1,141 +1,139 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <!-- Page metadata and external style resources -->
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login | Egg Clicker</title>
 
-    <!-- Bootstrap, Google Fonts, and custom CSS file -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
+<head>
+  <!-- Page metadata and external style resources -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login | Egg Clicker</title>
 
-  <body class="auth-page">
-    <!-- Shared game-style navigation bar -->
-    <nav class="game-navbar">
-      <a href="{{ url_for('main.home') }}" class="game-logo">🥚 Egg Clicker</a>
+  <!-- Bootstrap, Google Fonts, and custom CSS file -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
 
-      <div class="game-nav-links">
-        <a href="{{ url_for('main.home') }}">Home</a>
-        <a href="{{ url_for('auth.signup') }}" class="nav-signup">Sign Up</a>
+<body class="auth-page">
+  <!-- Shared game-style navigation bar -->
+  <nav class="game-navbar">
+    <a href="{{ url_for('main.home') }}" class="game-logo">🥚 Egg Clicker</a>
+
+    <div class="game-nav-links">
+      <a href="{{ url_for('main.home') }}#how-it-works">
+        How it works
+      </a>
+
+      <a href="{{ url_for('main.home') }}#features">
+        Features
+      </a>
+      
+      <a href="{{ url_for('auth.login', search=search) }}"
+        class="{% if request.endpoint == 'auth.login' %}active{% endif %}">
+        Login
+      </a>
+
+      <a href="{{ url_for('auth.signup') }}" class="{% if request.endpoint == 'auth.signup' %}active{% endif %}">
+        Sign Up
+      </a>
+    </div>
+  </nav>
+
+  <!-- Login page layout -->
+  <main class="auth-layout">
+    <!-- Left brand panel -->
+    <section class="auth-intro">
+      <p class="hero-badge">Welcome back</p>
+
+      <h1>Log in and keep building your score.</h1>
+
+      <p>
+        Access your saved game data, continue improving your clicking score,
+        and review your previous results.
+      </p>
+
+      <div class="auth-feature-list">
+        <div>
+          <strong>Save</strong>
+          <span>keep your results between sessions</span>
+        </div>
+        <div>
+          <strong>Track</strong>
+          <span>review your game history</span>
+        </div>
+        <div>
+          <strong>Play</strong>
+          <span>return to the game quickly</span>
+        </div>
       </div>
-    </nav>
+    </section>
 
-    <!-- Login page layout -->
-    <main class="auth-layout">
-      <!-- Left brand panel -->
-      <section class="auth-intro">
-        <p class="hero-badge">Welcome back</p>
+    <!-- Login form card -->
+    <section class="auth-card">
+      <h2>Login</h2>
+      <p class="auth-subtitle">
+        Enter your account details to continue playing.
+      </p>
 
-        <h1>Log in and keep building your score.</h1>
+      <!-- Display error message if login fails -->
+      {% if error %}
+      <div class="alert alert-danger">{{ error }}</div>
+      {% endif %}
 
-        <p>
-          Access your saved game data, continue improving your clicking score,
-          and review your previous results.
-        </p>
+      <!-- Display success message after email verification -->
+      {% if success %}
+      <div class="alert alert-success">{{ success }}</div>
+      {% endif %}
 
-        <div class="auth-feature-list">
-          <div>
-            <strong>Save</strong>
-            <span>keep your results between sessions</span>
-          </div>
-          <div>
-            <strong>Track</strong>
-            <span>review your game history</span>
-          </div>
-          <div>
-            <strong>Play</strong>
-            <span>return to the game quickly</span>
+      <!-- Login form submitted to the Flask login route -->
+      <form id="loginForm" method="POST" action="{{ url_for('auth.login') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+        <!-- Email input field -->
+        <div class="mb-3">
+          <label for="email" class="auth-label">Email</label>
+          <input id="email" type="email" name="email" class="form-control auth-input" placeholder="Enter your email"
+            required />
+        </div>
+
+        <!-- Password input field -->
+        <div class="mb-3">
+          <label for="password" class="auth-label">Password</label>
+          <div class="password-toggle-wrap">
+            <input id="password" type="password" name="password" class="form-control auth-input"
+              placeholder="Enter your password" required />
+            <button type="button" class="password-toggle-btn" data-target="password" aria-pressed="false">
+              Show
+            </button>
           </div>
         </div>
-      </section>
 
-      <!-- Login form card -->
-      <section class="auth-card">
-        <h2>Login</h2>
-        <p class="auth-subtitle">
-          Enter your account details to continue playing.
-        </p>
+        <!-- Message area used by JavaScript for form validation feedback -->
+        <p id="message" class="text-danger mb-3"></p>
 
-        <!-- Display error message if login fails -->
-        {% if error %}
-        <div class="alert alert-danger">{{ error }}</div>
-        {% endif %}
+        <button type="submit" class="btn auth-primary-btn w-100">
+          Login
+        </button>
+      </form>
 
-        <!-- Display success message after email verification -->
-        {% if success %}
-        <div class="alert alert-success">{{ success }}</div>
-        {% endif %}
+      <!-- Link to the sign-up page for new users -->
+      <p class="auth-switch-link">
+        Don't have an account?
+        <a href="{{ url_for('auth.signup') }}">Sign up here</a>
+      </p>
 
-        <!-- Login form submitted to the Flask login route -->
-        <form id="loginForm" method="POST" action="{{ url_for('auth.login') }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <!-- Guest access button for users who do not want to log in -->
+      <a href="{{ url_for('main.guest') }}" class="btn auth-secondary-btn w-100">
+        Continue as Guest Player
+      </a>
+    </section>
+  </main>
 
-          <!-- Email input field -->
-          <div class="mb-3">
-            <label for="email" class="auth-label">Email</label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              class="form-control auth-input"
-              placeholder="Enter your email"
-              required
-            />
-          </div>
+  <!-- Bootstrap JavaScript and custom login form script -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+</body>
 
-          <!-- Password input field -->
-          <div class="mb-3">
-            <label for="password" class="auth-label">Password</label>
-            <input
-              id="password"
-              type="password"
-              name="password"
-              class="form-control auth-input"
-              placeholder="Enter your password"
-              required
-            />
-          </div>
-
-          <!-- Message area used by JavaScript for form validation feedback -->
-          <p id="message" class="text-danger mb-3"></p>
-
-          <button type="submit" class="btn auth-primary-btn w-100">
-            Login
-          </button>
-        </form>
-
-        <!-- Link to the sign-up page for new users -->
-        <p class="auth-switch-link">
-          Don't have an account?
-          <a href="{{ url_for('auth.signup') }}">Sign up here</a>
-        </p>
-
-        <!-- Guest access button for users who do not want to log in -->
-        <a
-          href="{{ url_for('main.guest') }}"
-          class="btn auth-secondary-btn w-100"
-        >
-          Continue as Guest Player
-        </a>
-      </section>
-    </main>
-
-    <!-- Bootstrap JavaScript and custom login form script -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/login.js') }}"></script>
-  </body>
 </html>
