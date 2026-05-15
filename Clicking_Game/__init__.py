@@ -61,6 +61,12 @@ def create_app(test_config=None):
             "MAIL_DEFAULT_SENDER",
             os.environ.get("MAIL_USERNAME")
         ),
+
+        # When set, signup uses the Resend HTTPS API to send the verification
+        # email. This is required on hosts like Render free that block
+        # outbound SMTP (ports 25 / 465 / 587). When unset, the app falls
+        # back to Flask-Mail SMTP, which is the simpler path locally.
+        RESEND_API_KEY=os.environ.get("RESEND_API_KEY"),
     )
     app.config.from_prefixed_env()
 

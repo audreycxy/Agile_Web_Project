@@ -20,8 +20,7 @@ from flask import (
 from werkzeug.utils import secure_filename
 from Clicking_Game.models import users, database
 from Clicking_Game.utils.auth import login_required
-from flask_mail import Message
-from Clicking_Game.extensions import mail
+from Clicking_Game import email_service
 
 
 # Magic-byte prefixes for the file types we accept as avatar uploads.
@@ -75,19 +74,19 @@ def send_verification_email(user):
         _external=True,
     )
 
-    msg = Message(
-        subject="Verify your Clicking Game account",
-        recipients=[user.email],
-        body=(
-            f"Hi {user.name},\n\n"
-            "Thank you for signing up for Clicking Game.\n\n"
-            "Please click the link below to verify your email address:\n\n"
-            f"{verification_url}\n\n"
-            "If you did not create this account, you can ignore this email."
-        ),
+    body = (
+        f"Hi {user.name},\n\n"
+        "Thank you for signing up for Clicking Game.\n\n"
+        "Please click the link below to verify your email address:\n\n"
+        f"{verification_url}\n\n"
+        "If you did not create this account, you can ignore this email."
     )
 
-    mail.send(msg)
+    email_service.send_email(
+        subject="Verify your Clicking Game account",
+        recipients=[user.email],
+        body=body,
+    )
 
 # Route for user login
 @bp.route("/login", methods=("GET", "POST"))
@@ -167,7 +166,30 @@ def signup():
             if user is None:
                 error = "Account already exists."
             else:
-                send_verification_email(user)
+                # The account row has already been committed. If the email
+                # backend fails (e.g. SMTP blocked on the host, Resend API
+                # rejected the recipient), log it and tell the user to ask
+                # an admin for help rather than crashing on a 500.
+                try:
+                    send_verification_email(user)
+                except Exception:
+                    from flask import current_app
+
+                    current_app.logger.exception(
+                        "Failed to send verification email to %s", user.email
+                    )
+
+                    return render_template(
+                        "public/signup.html",
+                        success=None,
+                        error=(
+                            "Account created, but we could not send the "
+                            "verification email. Please contact an "
+                            "administrator to verify your account, or use "
+                            "the seeded demo credentials documented in the "
+                            "README."
+                        ),
+                    )
 
                 return render_template(
                     "public/signup.html",
