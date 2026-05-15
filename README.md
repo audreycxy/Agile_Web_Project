@@ -383,12 +383,13 @@ verification falls back to a development log):
 | Variable              | Default          | Purpose                                                                                            |
 | --------------------- | ---------------- | -------------------------------------------------------------------------------------------------- |
 | `GEMINI_API_KEY`      | unset            | API key used by the player history page to generate AI performance feedback through Google Gemini. |
-| `MAIL_SERVER`         | `smtp.gmail.com` | SMTP server used by Flask-Mail to send the signup verification email.                              |
+| `RESEND_API_KEY`      | unset            | When set, signup verification emails go through Resend's HTTPS API. Required on hosts that block outbound SMTP (Render free, Heroku free). Get a key from <https://resend.com>. |
+| `MAIL_SERVER`         | `smtp.gmail.com` | SMTP server used by Flask-Mail when `RESEND_API_KEY` is not set.                                  |
 | `MAIL_PORT`           | `587`            | SMTP port used by Flask-Mail.                                                                      |
 | `MAIL_USE_TLS`        | `True`           | Whether Flask-Mail should use STARTTLS.                                                            |
 | `MAIL_USERNAME`       | unset            | SMTP account used to send verification emails.                                                     |
 | `MAIL_PASSWORD`       | unset            | SMTP password or Gmail app password. Do not commit.                                                |
-| `MAIL_DEFAULT_SENDER` | `MAIL_USERNAME`  | "From" address on outgoing verification emails.                                                    |
+| `MAIL_DEFAULT_SENDER` | `MAIL_USERNAME`  | "From" address on outgoing verification emails. With Resend without a verified domain, set this to `onboarding@resend.dev`. |
 
 Optional admin setup variables used by `scripts/create_admin.py`:
 

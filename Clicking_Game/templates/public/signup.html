@@ -164,7 +164,19 @@
       <!-- Message area used by JavaScript for form validation feedback -->
       <p id="message" class="text-danger mb-3"></p>
 
-      <button type="submit" class="btn auth-primary-btn w-100">Sign Up</button>
+      <button
+        type="submit"
+        id="signupSubmitBtn"
+        class="btn auth-primary-btn w-100"
+      >
+        <span
+          id="signupSubmitSpinner"
+          class="spinner-border spinner-border-sm me-2 d-none"
+          role="status"
+          aria-hidden="true"
+        ></span>
+        <span id="signupSubmitLabel">Sign Up</span>
+      </button>
     </form>
 
     <!-- Link to the login page for users who already have an account -->
