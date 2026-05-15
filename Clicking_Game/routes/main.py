@@ -1,7 +1,7 @@
 # Handles public routes that don't require authentication 
 from flask import Blueprint, render_template, g, request, jsonify
 from Clicking_Game.models import users, database
-from Clicking_Game.game_logic import EGG_CONFIG
+from Clicking_Game.game_logic import EGG_CONFIG, format_points
 from Clicking_Game.utils.auth import login_required # for game sync routes
 
 bp = Blueprint("main", __name__)
@@ -73,6 +73,7 @@ def game():
         state=initial_state,
         config=EGG_CONFIG,
         leaderboard=leaderboard,
+        format_points=format_points,
     )
 
 @bp.route("/api/sync", methods=["POST"])
