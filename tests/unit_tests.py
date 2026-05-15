@@ -1,5 +1,9 @@
-import re
+# Unit tests for core backend behaviours.
+# This file focuses on authentication redirects, role-based access control,
+# score saving, CSRF protection, password hashing, and leaderboard ordering.
+
 import html
+import re
 import unittest
 
 from Clicking_Game import create_app
@@ -7,22 +11,12 @@ from Clicking_Game.models import database, users
 
 
 class BasicTests(unittest.TestCase):
-    def test_password_hashing(self):
-        plain_password = "Password123"
-
-        user = users.create_user(
-            name="Hash Test User",
-            email="hash@example.com",
-            password=plain_password,
-            role="player",
-        )
-
-        self.assertIsNotNone(user)
-        self.assertNotEqual(user.password_hash, plain_password)
-        self.assertTrue(user.check_password(plain_password))
-        self.assertFalse(user.check_password("WrongPassword"))
+    # Basic unit tests with CSRF disabled.
+    # These tests use Flask's test client and an in-memory SQLite database,
+    # so they run quickly and do not affect the real application database.
 
     def setUp(self):
+        # Create a temporary app and in-memory database before each test.
         self.testApp = create_app(
             {
                 "TESTING": True,
@@ -43,6 +37,7 @@ class BasicTests(unittest.TestCase):
         )
 
     def tearDown(self):
+        # Clean up database tables, sessions, and app context after each test.
         engine = self.testApp.extensions["sqlalchemy_engine"]
 
         database.SessionLocal.remove()
@@ -62,6 +57,7 @@ class BasicTests(unittest.TestCase):
         password="Password123",
         role="player",
     ):
+        # Helper for creating a verified user for login and access-control tests.
         user = users.create_user(
             name=name,
             email=email,
@@ -75,6 +71,7 @@ class BasicTests(unittest.TestCase):
         return user
 
     def login(self, email="player@example.com", password="Password123"):
+        # Helper for posting login credentials to the login route.
         return self.client.post(
             "/login",
             data={
@@ -84,7 +81,24 @@ class BasicTests(unittest.TestCase):
             follow_redirects=False,
         )
 
+    def test_password_hashing(self):
+        # Check that passwords are stored as hashes and not as plain text.
+        plain_password = "Password123"
+
+        user = users.create_user(
+            name="Hash Test User",
+            email="hash@example.com",
+            password=plain_password,
+            role="player",
+        )
+
+        self.assertIsNotNone(user)
+        self.assertNotEqual(user.password_hash, plain_password)
+        self.assertTrue(user.check_password(plain_password))
+        self.assertFalse(user.check_password("WrongPassword"))
+
     def test_signup_with_valid_user_details(self):
+        # Check that a valid signup creates a player account.
         response = self.client.post(
             "/signup",
             data={
@@ -106,6 +120,7 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(created_user.role, "player")
 
     def test_login_with_valid_account_details_redirects_player(self):
+        # Check that a verified player can log in and is redirected to the player dashboard.
         self.create_verified_user(
             name="Player User",
             email="player@example.com",
@@ -122,6 +137,7 @@ class BasicTests(unittest.TestCase):
         self.assertIn("/player_dashboard", response.headers["Location"])
 
     def test_login_with_invalid_account_details(self):
+        # Check that incorrect login details return the expected error message.
         response = self.login(
             email="wrong@example.com",
             password="WrongPassword",
@@ -131,6 +147,7 @@ class BasicTests(unittest.TestCase):
         self.assertIn(b"Invalid email or password", response.data)
 
     def test_player_role_redirects_to_player_dashboard(self):
+        # Check that players are redirected to the player dashboard after login.
         self.create_verified_user(
             name="Player User",
             email="player@example.com",
@@ -147,6 +164,7 @@ class BasicTests(unittest.TestCase):
         self.assertIn("/player_dashboard", response.headers["Location"])
 
     def test_admin_role_redirects_to_admin_dashboard(self):
+        # Check that admins are redirected to the admin dashboard after login.
         self.create_verified_user(
             name="Admin User",
             email="admin@example.com",
@@ -163,6 +181,7 @@ class BasicTests(unittest.TestCase):
         self.assertIn("/admin_dashboard", response.headers["Location"])
 
     def test_player_cannot_access_admin_dashboard(self):
+        # Check that a player cannot access the admin dashboard.
         self.create_verified_user(
             name="Player User",
             email="player@example.com",
@@ -184,6 +203,7 @@ class BasicTests(unittest.TestCase):
         self.assertIn("/login", response.headers["Location"])
 
     def test_admin_cannot_access_player_dashboard(self):
+        # Check that an admin cannot access the player dashboard route.
         self.create_verified_user(
             name="Admin User",
             email="admin@example.com",
@@ -205,6 +225,7 @@ class BasicTests(unittest.TestCase):
         self.assertIn("/login", response.headers["Location"])
 
     def test_logged_in_player_can_save_score(self):
+        # Check that a logged-in player can sync game progress and create a saved result.
         player = self.create_verified_user(
             name="Score Player",
             email="scoreplayer@example.com",
@@ -252,6 +273,7 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(saved_results[0].score, data["new_points"])
 
     def test_guest_user_cannot_save_score(self):
+        # Check that anonymous guest users cannot save scores through the sync API.
         response = self.client.post(
             "/api/sync",
             json={},
@@ -266,6 +288,7 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(saved_results, [])
 
     def test_player_dashboard_displays_highest_egg(self):
+        # Check that the player dashboard loads and displays the highest egg section.
         self.create_verified_user(
             name="Dashboard Player",
             email="dashboard@example.com",
@@ -285,7 +308,8 @@ class BasicTests(unittest.TestCase):
         self.assertIn(b"Standard", response.data)
 
     def test_game_page_leaderboard_ranks_players_by_points(self):
-        """Top players appear on the /game leaderboard in descending point order."""
+        # Check that the /game leaderboard displays players in descending
+        # point order based on GameState.points.
         db_session = database.get_session()
 
         for name, email, points in [
@@ -299,6 +323,7 @@ class BasicTests(unittest.TestCase):
                 password="Password123",
                 role="player",
             )
+
             db_session.add(
                 users.GameState(
                     user_id=player.id,
@@ -314,25 +339,30 @@ class BasicTests(unittest.TestCase):
 
         db_session.commit()
 
-        # /game is public, so a guest request still gets the leaderboard
+        # The game page is public, so a guest request should still receive
+        # the leaderboard section.
         response = self.client.get("/game")
         self.assertEqual(response.status_code, 200)
 
         body = response.data.decode("utf-8")
 
-        # Pull out just the leaderboard <ul> so we don't accidentally match
-        # player names that appear elsewhere on the page
+        # Extract only the leaderboard list so names elsewhere on the page
+        # do not affect the ordering check.
         leaderboard_match = re.search(
             r'<ul class="list-group list-group-flush">(.*?)</ul>',
             body,
             re.DOTALL,
         )
 
-        self.assertIsNotNone(leaderboard_match, "Leaderboard <ul> not found in /game response")
+        self.assertIsNotNone(
+            leaderboard_match,
+            "Leaderboard <ul> not found in /game response",
+        )
 
         leaderboard_html = leaderboard_match.group(1)
 
-        # Extract names in the order they appear: "1. Bob", "2. Alice", ...
+        # Extract names in the displayed order, for example:
+        # "1. Bob", "2. Alice", "3. Carol".
         names_in_order = re.findall(r"\d+\.\s*([A-Za-z]+)", leaderboard_html)
 
         self.assertEqual(
@@ -343,7 +373,12 @@ class BasicTests(unittest.TestCase):
 
 
 class CSRFTests(unittest.TestCase):
+    # Unit tests for CSRF protection.
+    # These tests turn CSRF protection on and check that sensitive routes
+    # reject missing tokens. They also check that pages provide tokens where needed.
+
     def setUp(self):
+        # Create a temporary app with CSRF protection enabled.
         self.testApp = create_app(
             {
                 "TESTING": True,
@@ -364,6 +399,7 @@ class CSRFTests(unittest.TestCase):
         )
 
     def tearDown(self):
+        # Clean up database tables, sessions, and app context after each CSRF test.
         engine = self.testApp.extensions["sqlalchemy_engine"]
 
         database.SessionLocal.remove()
@@ -377,6 +413,7 @@ class CSRFTests(unittest.TestCase):
         self.testApp = None
 
     def get_csrf_token(self, url):
+        # Extract a CSRF token from either a hidden form input or a meta tag.
         response = self.client.get(url)
         page = response.data.decode("utf-8")
 
@@ -405,6 +442,7 @@ class CSRFTests(unittest.TestCase):
         password="Password123",
         role="player",
     ):
+        # Helper for creating a verified user for CSRF-protected tests.
         user = users.create_user(
             name=name,
             email=email,
@@ -418,6 +456,7 @@ class CSRFTests(unittest.TestCase):
         return user
 
     def login_with_csrf(self, email="player@example.com", password="Password123"):
+        # Log in using a valid CSRF token.
         csrf_token = self.get_csrf_token("/login")
 
         return self.client.post(
@@ -431,6 +470,7 @@ class CSRFTests(unittest.TestCase):
         )
 
     def test_login_rejects_missing_csrf_token(self):
+        # Check that login rejects POST requests without a CSRF token.
         response = self.client.post(
             "/login",
             data={
@@ -443,6 +483,7 @@ class CSRFTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_signup_rejects_missing_csrf_token(self):
+        # Check that signup rejects POST requests without a CSRF token.
         response = self.client.post(
             "/signup",
             data={
@@ -457,6 +498,7 @@ class CSRFTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_signup_accepts_valid_csrf_token(self):
+        # Check that signup works when a valid CSRF token is submitted.
         csrf_token = self.get_csrf_token("/signup")
 
         response = self.client.post(
@@ -475,6 +517,7 @@ class CSRFTests(unittest.TestCase):
         self.assertIn(b"Account created", response.data)
 
     def test_profile_update_rejects_missing_csrf_token(self):
+        # Check that profile updates are rejected without a CSRF token.
         self.create_verified_user(
             name="Profile Player",
             email="profile@example.com",
@@ -499,6 +542,7 @@ class CSRFTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_score_submission_rejects_missing_csrf_token(self):
+        # Check that score sync requests are rejected without a CSRF token.
         player = self.create_verified_user(
             name="Score Player",
             email="score@example.com",
@@ -536,6 +580,7 @@ class CSRFTests(unittest.TestCase):
         self.assertEqual(response.status_code, 400)
 
     def test_game_page_includes_csrf_token_for_score_submission(self):
+        # Check that the game page includes a CSRF meta token for JavaScript requests.
         self.create_verified_user(
             name="Game Player",
             email="gamecsrf@example.com",
