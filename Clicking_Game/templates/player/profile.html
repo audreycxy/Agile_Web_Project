@@ -1,279 +1,260 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <!-- Page metadata and external style resources -->
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>User Profile | Egg Clicker</title>
+{% extends "base.html" %} {% block title %}User Profile | Egg Clicker{% endblock
+%} {% block body_class %}dashboard-page{% endblock %} {% block navbar %}
+<!-- Shared game-style navigation bar -->
+<nav class="game-navbar">
+  <a href="{{ url_for('auth.player_dashboard') }}" class="game-logo">
+    🥚 Egg Clicker
+  </a>
 
-    <!-- Bootstrap, Google Fonts, and custom CSS file -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      rel="stylesheet"
-      href="{{ url_for('static', filename='css/style.css') }}"
-    />
-  </head>
+  <div class="game-nav-links">
+    <a
+      href="{{ url_for('auth.player_dashboard') }}"
+      class="{% if request.endpoint == 'auth.player_dashboard' %}active{% endif %}"
+    >
+      Dashboard
+    </a>
 
-  <body class="dashboard-page">
-    <!-- Shared game-style navigation bar -->
-    <nav class="game-navbar">
-      <a href="{{ url_for('auth.player_dashboard') }}" class="game-logo">
-        🥚 Egg Clicker
-      </a>
+    <a
+      href="{{ url_for('auth.history') }}"
+      class="{% if request.endpoint == 'auth.history' %}active{% endif %}"
+    >
+      Results
+    </a>
 
-      <div class="game-nav-links">
-        <a href="{{ url_for('auth.player_dashboard') }}"
-        class="{% if request.endpoint == 'auth.player_dashboard' %}active{% endif %}">
-        Dashboard
-      </a>
+    <a
+      href="{{ url_for('auth.profile') }}"
+      class="{% if request.endpoint == 'auth.profile' %}active{% endif %}"
+    >
+      Profile
+    </a>
 
-      <a href="{{ url_for('auth.history', search=search) }}"
-        class="{% if request.endpoint == 'auth.history' %}active{% endif %}">
-        Results
-      </a>
+    <a href="{{ url_for('auth.logout') }}" class="nav-signup"> Logout </a>
+  </div>
+</nav>
+{% endblock %} {% block content %}
+<!-- Profile page content -->
+<main class="dashboard-layout">
+  <!-- Page header -->
+  <section class="dashboard-hero">
+    <p class="hero-badge">User Profile</p>
 
-      <a href="{{ url_for('auth.profile') }}"
-        class="{% if request.endpoint == 'auth.profile' %}active{% endif %}">
-        Profile
-      </a>
+    <h1>Manage your player account.</h1>
 
-      <a href="{{ url_for('auth.logout') }}" class="nav-signup">
-        Logout
-      </a>
+    <p>
+      Update your username, email, or password, and keep your Egg Clicker
+      account details up to date. Password fields are optional unless you want
+      to change your password.
+    </p>
+  </section>
+
+  <!-- Profile form card -->
+  <section class="dashboard-panel profile-panel">
+    <div class="dashboard-panel-header">
+      <p class="section-label">Profile information</p>
+      <h2>Edit your account details</h2>
+    </div>
+
+    <!-- Display error message if the profile update fails -->
+    {% if error %}
+    <div class="alert alert-danger text-center" role="alert">{{ error }}</div>
+    {% endif %}
+
+    <!-- Display success message if the profile update is completed -->
+    {% if success %}
+    <div class="alert alert-success text-center" role="alert">
+      {{ success }}
+    </div>
+    {% endif %}
+
+    <!-- Profile update form submitted to the Flask profile route -->
+    <form
+      method="POST"
+      action="{{ url_for('auth.profile') }}"
+      class="profile-form"
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <div class="profile-form-grid">
+        <!-- Username input field -->
+        <div class="mb-3">
+          <label for="username" class="auth-label">Username</label>
+          <input
+            type="text"
+            class="form-control auth-input"
+            id="username"
+            name="username"
+            value="{{ username }}"
+            placeholder="Enter your username"
+          />
+        </div>
+
+        <!-- Email input field -->
+        <div class="mb-3">
+          <label for="email" class="auth-label">Email</label>
+          <input
+            type="email"
+            class="form-control auth-input"
+            id="email"
+            name="email"
+            value="{{ email }}"
+            placeholder="Enter your email"
+          />
+        </div>
       </div>
-    </nav>
 
-    <!-- Profile page content -->
-    <main class="dashboard-layout">
-      <!-- Page header -->
-      <section class="dashboard-hero">
-        <p class="hero-badge">User Profile</p>
-
-        <h1>Manage your player account.</h1>
+      <!-- Change password section -->
+      <div class="profile-password-card">
+        <h3>Change Password</h3>
 
         <p>
-          Update your username, email, or password, and keep your Egg Clicker
-          account details up to date. Password fields are optional unless you
-          want to change your password.
+          Leave these fields blank if you do not want to change your password.
         </p>
-      </section>
 
-      <!-- Profile form card -->
-      <section class="dashboard-panel profile-panel">
-        <div class="dashboard-panel-header">
-          <p class="section-label">Profile information</p>
-          <h2>Edit your account details</h2>
-        </div>
+        <!-- Current password is used to verify the user's identity before changing the password -->
+        <div class="mb-3">
+          <label for="current_password" class="auth-label">
+            Current Password
+          </label>
 
-        <!-- Display error message if the profile update fails -->
-        {% if error %}
-        <div class="alert alert-danger text-center" role="alert">
-          {{ error }}
-        </div>
-        {% endif %}
+          <div class="password-toggle-wrap">
+            <input
+              type="password"
+              class="form-control auth-input"
+              id="current_password"
+              name="current_password"
+              placeholder="Enter current password"
+            />
 
-        <!-- Display success message if the profile update is completed -->
-        {% if success %}
-        <div class="alert alert-success text-center" role="alert">
-          {{ success }}
-        </div>
-        {% endif %}
-
-        <!-- Profile update form submitted to the Flask profile route -->
-        <form
-          method="POST"
-          action="{{ url_for('auth.profile') }}"
-          class="profile-form"
-        >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-
-          <div class="profile-form-grid">
-            <!-- Username input field -->
-            <div class="mb-3">
-              <label for="username" class="auth-label">Username</label>
-              <input
-                type="text"
-                class="form-control auth-input"
-                id="username"
-                name="username"
-                value="{{ username }}"
-                placeholder="Enter your username"
-              />
-            </div>
-
-            <!-- Email input field -->
-            <div class="mb-3">
-              <label for="email" class="auth-label">Email</label>
-              <input
-                type="email"
-                class="form-control auth-input"
-                id="email"
-                name="email"
-                value="{{ email }}"
-                placeholder="Enter your email"
-              />
-            </div>
-          </div>
-
-          <!-- Change password section -->
-          <div class="profile-password-card">
-            <h3>Change Password</h3>
-
-            <p>
-              Leave these fields blank if you do not want to change your
-              password.
-            </p>
-
-            <!-- Current password is used to verify the user's identity before changing the password -->
-            <div class="mb-3">
-              <label for="current_password" class="auth-label">
-                Current Password
-              </label>
-              <div class="password-toggle-wrap">
-                <input
-                  type="password"
-                  class="form-control auth-input"
-                  id="current_password"
-                  name="current_password"
-                  placeholder="Enter current password"
-                />
-                <button
-                  type="button"
-                  class="password-toggle-btn"
-                  data-target="current_password"
-                  aria-pressed="false"
-                >
-                  Show
-                </button>
-              </div>
-            </div>
-
-            <!-- New password input field -->
-            <div class="mb-3">
-              <label for="new_password" class="auth-label">New Password</label>
-              <div class="password-toggle-wrap">
-                <input
-                  type="password"
-                  class="form-control auth-input"
-                  id="new_password"
-                  name="new_password"
-                  placeholder="Enter new password"
-                />
-                <button
-                  type="button"
-                  class="password-toggle-btn"
-                  data-target="new_password"
-                  aria-pressed="false"
-                >
-                  Show
-                </button>
-              </div>
-            </div>
-
-            <!-- Confirm password field used to check that the new password was typed correctly -->
-            <div class="mb-0">
-              <label for="confirm_password" class="auth-label">
-                Confirm New Password
-              </label>
-              <div class="password-toggle-wrap">
-                <input
-                  type="password"
-                  class="form-control auth-input"
-                  id="confirm_password"
-                  name="confirm_password"
-                  placeholder="Confirm new password"
-                />
-                <button
-                  type="button"
-                  class="password-toggle-btn"
-                  data-target="confirm_password"
-                  aria-pressed="false"
-                >
-                  Show
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Buttons for submitting the form -->
-          <div class="profile-form-actions">
             <button
-              type="submit"
-              class="btn auth-primary-btn dashboard-action-btn"
+              type="button"
+              class="password-toggle-btn"
+              data-target="current_password"
+              aria-pressed="false"
             >
-              Save Profile Changes
+              Show
             </button>
-
-            <a
-              href="{{ url_for('auth.player_dashboard') }}"
-              class="btn auth-secondary-btn dashboard-action-btn"
-            >
-              Back to Dashboard
-            </a>
           </div>
-        </form>
-      </section>
-
-      <section class="dashboard-panel border border-danger-subtle">
-        <div class="dashboard-panel-header">
-          <p class="section-label text-danger mb-1">Danger zone</p>
-          <h2>Delete your account</h2>
         </div>
 
-        <p class="mb-3">
-          Deleting your account will immediately disable your login. Admins
-          will still be able to see that this account was deleted.
-        </p>
+        <!-- New password input field -->
+        <div class="mb-3">
+          <label for="new_password" class="auth-label">New Password</label>
 
-        <form
-          method="POST"
-          action="{{ url_for('auth.delete_account') }}"
-          onsubmit="return confirm('Delete your account permanently? This will log you out immediately.');"
-        >
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <div class="password-toggle-wrap">
+            <input
+              type="password"
+              class="form-control auth-input"
+              id="new_password"
+              name="new_password"
+              placeholder="Enter new password"
+            />
 
-          <div class="mb-3">
-            <label for="delete_password" class="auth-label">
-              Confirm with current password
-            </label>
-            <div class="password-toggle-wrap">
-              <input
-                type="password"
-                class="form-control auth-input"
-                id="delete_password"
-                name="delete_password"
-                placeholder="Enter current password"
-                required
-              />
-              <button
-                type="button"
-                class="password-toggle-btn"
-                data-target="delete_password"
-                aria-pressed="false"
-              >
-                Show
-              </button>
-            </div>
+            <button
+              type="button"
+              class="password-toggle-btn"
+              data-target="new_password"
+              aria-pressed="false"
+            >
+              Show
+            </button>
           </div>
+        </div>
 
-          <button type="submit" class="btn btn-danger">
-            Delete Account
+        <!-- Confirm password field used to check that the new password was typed correctly -->
+        <div class="mb-0">
+          <label for="confirm_password" class="auth-label">
+            Confirm New Password
+          </label>
+
+          <div class="password-toggle-wrap">
+            <input
+              type="password"
+              class="form-control auth-input"
+              id="confirm_password"
+              name="confirm_password"
+              placeholder="Confirm new password"
+            />
+
+            <button
+              type="button"
+              class="password-toggle-btn"
+              data-target="confirm_password"
+              aria-pressed="false"
+            >
+              Show
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Buttons for submitting the form -->
+      <div class="profile-form-actions">
+        <button type="submit" class="btn auth-primary-btn dashboard-action-btn">
+          Save Profile Changes
+        </button>
+
+        <a
+          href="{{ url_for('auth.player_dashboard') }}"
+          class="btn auth-secondary-btn dashboard-action-btn"
+        >
+          Back to Dashboard
+        </a>
+      </div>
+    </form>
+  </section>
+
+  <section class="dashboard-panel border border-danger-subtle">
+    <div class="dashboard-panel-header">
+      <p class="section-label text-danger mb-1">Danger zone</p>
+      <h2>Delete your account</h2>
+    </div>
+
+    <p class="mb-3">
+      Deleting your account will immediately disable your login. Admins will
+      still be able to see that this account was deleted.
+    </p>
+
+    <form
+      method="POST"
+      action="{{ url_for('auth.delete_account') }}"
+      onsubmit="
+        return confirm(
+          'Delete your account permanently? This will log you out immediately.',
+        );
+      "
+    >
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+      <div class="mb-3">
+        <label for="delete_password" class="auth-label">
+          Confirm with current password
+        </label>
+
+        <div class="password-toggle-wrap">
+          <input
+            type="password"
+            class="form-control auth-input"
+            id="delete_password"
+            name="delete_password"
+            placeholder="Enter current password"
+            required
+          />
+
+          <button
+            type="button"
+            class="password-toggle-btn"
+            data-target="delete_password"
+            aria-pressed="false"
+          >
+            Show
           </button>
-        </form>
-      </section>
-    </main>
+        </div>
+      </div>
 
-    <!-- Bootstrap JavaScript -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="{{ url_for('static', filename='js/profile.js') }}"></script>
-  </body>
-</html>
+      <button type="submit" class="btn btn-danger">Delete Account</button>
+    </form>
+  </section>
+</main>
+{% endblock %} {% block scripts %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}
