@@ -47,6 +47,68 @@
     </p>
   </section>
 
+  <!-- Avatar upload card -->
+  <section class="dashboard-panel profile-panel">
+    <div class="dashboard-panel-header">
+      <p class="section-label">Profile picture</p>
+      <h2>Upload an avatar</h2>
+    </div>
+
+    <p>
+      Upload a personal avatar to show on the leaderboard and on your
+      dashboard. PNG, JPG, JPEG, and GIF files up to 1 MB are accepted.
+    </p>
+
+    <div class="profile-avatar-row">
+      <img
+        src="{{ url_for('auth.serve_avatar', user_id=g.user.id) }}"
+        alt="Your current profile picture"
+        class="profile-avatar-preview"
+      />
+
+      <div class="profile-avatar-forms">
+        <form
+          method="POST"
+          action="{{ url_for('auth.upload_avatar') }}"
+          enctype="multipart/form-data"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+          <div class="mb-3">
+            <label for="avatar" class="auth-label">Choose a new avatar</label>
+            <input
+              type="file"
+              class="form-control auth-input"
+              id="avatar"
+              name="avatar"
+              accept=".png,.jpg,.jpeg,.gif,image/png,image/jpeg,image/gif"
+            />
+          </div>
+
+          <button
+            type="submit"
+            class="btn auth-primary-btn dashboard-action-btn"
+          >
+            Upload Avatar
+          </button>
+        </form>
+
+        {% if g.user.avatar_filename %}
+        <form
+          method="POST"
+          action="{{ url_for('auth.delete_avatar') }}"
+          onsubmit="return confirm('Remove your current avatar?');"
+        >
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <button type="submit" class="btn auth-secondary-btn dashboard-action-btn">
+            Remove Avatar
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+  </section>
+
   <!-- Profile form card -->
   <section class="dashboard-panel profile-panel">
     <div class="dashboard-panel-header">

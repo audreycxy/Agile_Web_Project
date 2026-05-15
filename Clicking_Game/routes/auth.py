@@ -1,13 +1,58 @@
 # Handles authentication routes for login, signup, dashboards, history, profile, and logout
 import os
+import uuid
+from pathlib import Path
 from google import genai
 from google.genai import errors as genai_errors
-from flask import Blueprint, g, jsonify, redirect, render_template, request, session, url_for
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    g,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_from_directory,
+    session,
+    url_for,
+)
+from werkzeug.utils import secure_filename
 from datetime import timezone
-from Clicking_Game.models import users
+from Clicking_Game.models import users, database
 from Clicking_Game.utils.auth import login_required
-from flask_mail import Message
-from Clicking_Game.extensions import mail
+from Clicking_Game import email_service
+
+
+# Magic-byte prefixes for the file types we accept as avatar uploads.
+# Checking the first bytes blocks an attacker from renaming a non-image
+# (e.g. evil.exe → evil.png) and still getting it accepted.
+AVATAR_MAGIC_PREFIXES = (
+    b"\x89PNG\r\n\x1a\n",   # PNG
+    b"\xff\xd8\xff",        # JPEG
+    b"GIF87a",              # GIF87a
+    b"GIF89a",              # GIF89a
+)
+
+
+def _avatar_extension(filename):
+    """Return the lowercased extension of `filename` if it is on the allow-list."""
+    if not filename or "." not in filename:
+        return None
+
+    ext = filename.rsplit(".", 1)[1].lower()
+
+    if ext not in current_app.config["ALLOWED_AVATAR_EXTENSIONS"]:
+        return None
+
+    return ext
+
+
+def _looks_like_image(file_storage):
+    """Read the first few bytes and confirm the file starts with an image magic header."""
+    head = file_storage.stream.read(16)
+    file_storage.stream.seek(0)
+    return any(head.startswith(prefix) for prefix in AVATAR_MAGIC_PREFIXES)
 
 bp = Blueprint("auth", __name__)
 
@@ -30,19 +75,19 @@ def send_verification_email(user):
         _external=True,
     )
 
-    msg = Message(
-        subject="Verify your Clicking Game account",
-        recipients=[user.email],
-        body=(
-            f"Hi {user.name},\n\n"
-            "Thank you for signing up for Clicking Game.\n\n"
-            "Please click the link below to verify your email address:\n\n"
-            f"{verification_url}\n\n"
-            "If you did not create this account, you can ignore this email."
-        ),
+    body = (
+        f"Hi {user.name},\n\n"
+        "Thank you for signing up for Clicking Game.\n\n"
+        "Please click the link below to verify your email address:\n\n"
+        f"{verification_url}\n\n"
+        "If you did not create this account, you can ignore this email."
     )
 
-    mail.send(msg)
+    email_service.send_email(
+        subject="Verify your Clicking Game account",
+        recipients=[user.email],
+        body=body,
+    )
 
 # Route for user login
 @bp.route("/login", methods=("GET", "POST"))
@@ -122,7 +167,30 @@ def signup():
             if user is None:
                 error = "Account already exists."
             else:
-                send_verification_email(user)
+                # The account row has already been committed. If the email
+                # backend fails (e.g. SMTP blocked on the host, Resend API
+                # rejected the recipient), log it and tell the user to ask
+                # an admin for help rather than crashing on a 500.
+                try:
+                    send_verification_email(user)
+                except Exception:
+                    from flask import current_app
+
+                    current_app.logger.exception(
+                        "Failed to send verification email to %s", user.email
+                    )
+
+                    return render_template(
+                        "public/signup.html",
+                        success=None,
+                        error=(
+                            "Account created, but we could not send the "
+                            "verification email. Please contact an "
+                            "administrator to verify your account, or use "
+                            "the seeded demo credentials documented in the "
+                            "README."
+                        ),
+                    )
 
                 return render_template(
                     "public/signup.html",
@@ -436,6 +504,121 @@ def delete_account():
     users.soft_delete_user(g.user)
     session.clear()
     return redirect(url_for("auth.login", account_deleted="1"))
+
+
+# AVATAR UPLOAD ROUTES
+# A player can upload a profile avatar from /profile. The image is saved
+# under instance/uploads/avatars/avatar_<user_id>.<ext> and the filename
+# is recorded on the user row. Other pages reference /avatar/<user_id> to
+# render the image (with a default-egg fallback when no avatar is set).
+
+@bp.route("/profile/avatar", methods=["POST"])
+@login_required(role="player")
+def upload_avatar():
+    error = None
+    success = None
+
+    uploaded_file = request.files.get("avatar")
+
+    if uploaded_file is None or uploaded_file.filename == "":
+        error = "Please choose an image file to upload."
+    else:
+        # Sanitise the original filename so anything weird (path separators,
+        # null bytes, etc.) is stripped before we look at the extension.
+        safe_name = secure_filename(uploaded_file.filename)
+        ext = _avatar_extension(safe_name)
+
+        if ext is None:
+            allowed = sorted(current_app.config["ALLOWED_AVATAR_EXTENSIONS"])
+            error = f"Avatar must be one of: {', '.join(allowed)}."
+        elif not _looks_like_image(uploaded_file):
+            error = "Uploaded file does not look like a real image."
+        else:
+            upload_folder = Path(current_app.config["UPLOAD_FOLDER"])
+            upload_folder.mkdir(parents=True, exist_ok=True)
+
+            # Remove any previous avatar file for this user so we never
+            # leave orphaned images on disk after an extension change.
+            if g.user.avatar_filename:
+                old_path = upload_folder / g.user.avatar_filename
+                try:
+                    old_path.unlink(missing_ok=True)
+                except OSError:
+                    pass
+
+            # Use the user id (plus a short suffix to bust caches) so we
+            # don't have to track historical filenames.
+            new_basename = f"avatar_{g.user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+            target_path = upload_folder / new_basename
+            uploaded_file.save(str(target_path))
+
+            db_session = database.get_session()
+            user = db_session.merge(g.user)
+            user.avatar_filename = new_basename
+            db_session.commit()
+
+            g.user.avatar_filename = new_basename
+            success = "Avatar updated."
+
+    return render_template(
+        "player/profile.html",
+        username=g.user.name,
+        email=g.user.email,
+        error=error,
+        success=success,
+    )
+
+
+@bp.route("/profile/avatar/delete", methods=["POST"])
+@login_required(role="player")
+def delete_avatar():
+    if g.user.avatar_filename:
+        upload_folder = Path(current_app.config["UPLOAD_FOLDER"])
+        old_path = upload_folder / g.user.avatar_filename
+        try:
+            old_path.unlink(missing_ok=True)
+        except OSError:
+            pass
+
+        db_session = database.get_session()
+        user = db_session.merge(g.user)
+        user.avatar_filename = None
+        db_session.commit()
+
+        g.user.avatar_filename = None
+
+    return render_template(
+        "player/profile.html",
+        username=g.user.name,
+        email=g.user.email,
+        error=None,
+        success="Avatar removed.",
+    )
+
+
+@bp.route("/avatar/<int:user_id>")
+def serve_avatar(user_id):
+    """Serve a user's uploaded avatar, or fall back to the default egg image."""
+    user = users.get_by_id(user_id)
+
+    if user is None or not user.avatar_filename:
+        # Fall back to the bundled default egg image so callers can always
+        # use <img src="/avatar/<id>"> without checking for emptiness.
+        return redirect(
+            url_for("static", filename="images/defaultegg_nobackground.png")
+        )
+
+    upload_folder = current_app.config["UPLOAD_FOLDER"]
+    avatar_path = Path(upload_folder) / user.avatar_filename
+
+    if not avatar_path.exists():
+        # File got cleaned up on a Render redeploy or similar — degrade to
+        # the default instead of returning 404.
+        return redirect(
+            url_for("static", filename="images/defaultegg_nobackground.png")
+        )
+
+    return send_from_directory(upload_folder, user.avatar_filename)
 
 # Route for user logout
 @bp.route("/logout")

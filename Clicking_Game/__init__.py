@@ -45,6 +45,13 @@ def create_app(test_config=None):
         SQLALCHEMY_DATABASE_URI=os.environ.get("DATABASE_URL"),
         AUTO_MIGRATE=_bool_env("AUTO_MIGRATE", True),
 
+        # Avatar upload settings. Files land under instance/uploads/avatars/
+        # so they sit alongside app.db and do not need to be in the source
+        # tree. MAX_CONTENT_LENGTH protects the server from huge uploads.
+        UPLOAD_FOLDER=str(instance_path / "uploads" / "avatars"),
+        MAX_CONTENT_LENGTH=1 * 1024 * 1024,  # 1 MB
+        ALLOWED_AVATAR_EXTENSIONS={"png", "jpg", "jpeg", "gif"},
+
         MAIL_SERVER=os.environ.get("MAIL_SERVER", "smtp.gmail.com"),
         MAIL_PORT=int(os.environ.get("MAIL_PORT", 587)),
         MAIL_USE_TLS=_bool_env("MAIL_USE_TLS", True),
@@ -54,6 +61,12 @@ def create_app(test_config=None):
             "MAIL_DEFAULT_SENDER",
             os.environ.get("MAIL_USERNAME")
         ),
+
+        # When set, signup uses the Resend HTTPS API to send the verification
+        # email. This is required on hosts like Render free that block
+        # outbound SMTP (ports 25 / 465 / 587). When unset, the app falls
+        # back to Flask-Mail SMTP, which is the simpler path locally.
+        RESEND_API_KEY=os.environ.get("RESEND_API_KEY"),
     )
     app.config.from_prefixed_env()
 
@@ -62,6 +75,7 @@ def create_app(test_config=None):
 
     # Ensure the instance folder exists and create parent directories for the database if needed
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
+    Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
     if app.config["DATABASE"] != ":memory:":
         Path(app.config["DATABASE"]).parent.mkdir(parents=True, exist_ok=True)
 

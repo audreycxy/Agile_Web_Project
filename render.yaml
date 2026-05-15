@@ -4,7 +4,13 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: waitress-serve --listen=0.0.0.0:$PORT wsgi:app
+    # On free Render the container filesystem is ephemeral, so the SQLite
+    # database is recreated on each cold start. Re-seed the demo accounts
+    # before launching the server so graders can log in without going
+    # through the email-verification flow. `seed_users.py` is idempotent
+    # and only manages the two known seeded accounts, so any other users
+    # that exist in the current container are left untouched.
+    startCommand: python scripts/seed_users.py && waitress-serve --listen=0.0.0.0:$PORT wsgi:app
     envVars:
       - key: SECRET_KEY
         generateValue: true

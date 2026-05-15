@@ -1067,7 +1067,7 @@ a:hover {
 
 .admin-search-form {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr auto auto;
   gap: 14px;
   align-items: end;
   margin-top: 22px;
@@ -1195,8 +1195,9 @@ a:hover {
 
 .admin-results-controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 18px;
+  grid-template-columns: 1.3fr 0.7fr auto auto;
+  gap: 14px;
+  align-items: end;
 }
 
 .admin-results-table th,
@@ -1670,4 +1671,62 @@ a:hover {
     width: 220px !important;
     height: 220px !important;
   }
+}
+
+/* AVATAR / PROFILE PICTURE STYLES */
+
+/* Large preview shown on the profile page above the upload form. */
+.profile-avatar-preview {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #ffc107;
+  background: #fff;
+  display: block;
+}
+
+/* Layout for the avatar block on the profile page: image on the left,
+   upload + delete forms on the right. Stacks on narrow screens. */
+.profile-avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.profile-avatar-forms {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 240px;
+  flex: 1;
+}
+
+/* Medium thumb shown inside the "Profile" stat card on the dashboard. */
+.dashboard-avatar-thumb {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 8px auto;
+  display: block;
+  border: 2px solid #ffc107;
+  background: #fff;
+}
+
+/* Tiny avatar shown next to each player on the in-game leaderboard. */
+.leaderboard-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 8px;
+  vertical-align: middle;
+  background: #fff;
+}
+
+.leaderboard-player {
+  display: inline-flex;
+  align-items: center;
 }
