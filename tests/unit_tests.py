@@ -1,6 +1,6 @@
 # Unit tests for core backend behaviours.
 # This file focuses on authentication redirects, role-based access control,
-# score saving, CSRF protection, and password hashing.
+# score saving, CSRF protection, password hashing, and leaderboard ordering.
 
 import html
 import re
@@ -308,7 +308,8 @@ class BasicTests(unittest.TestCase):
         self.assertIn(b"Standard", response.data)
 
     def test_game_page_leaderboard_ranks_players_by_points(self):
-        """Top players appear on the /game leaderboard in descending point order."""
+        # Check that the /game leaderboard displays players in descending
+        # point order based on GameState.points.
         db_session = database.get_session()
 
         for name, email, points in [
@@ -322,6 +323,7 @@ class BasicTests(unittest.TestCase):
                 password="Password123",
                 role="player",
             )
+
             db_session.add(
                 users.GameState(
                     user_id=player.id,
@@ -337,25 +339,30 @@ class BasicTests(unittest.TestCase):
 
         db_session.commit()
 
-        # /game is public, so a guest request still gets the leaderboard
+        # The game page is public, so a guest request should still receive
+        # the leaderboard section.
         response = self.client.get("/game")
         self.assertEqual(response.status_code, 200)
 
         body = response.data.decode("utf-8")
 
-        # Pull out just the leaderboard <ul> so we don't accidentally match
-        # player names that appear elsewhere on the page
+        # Extract only the leaderboard list so names elsewhere on the page
+        # do not affect the ordering check.
         leaderboard_match = re.search(
             r'<ul class="list-group list-group-flush">(.*?)</ul>',
             body,
             re.DOTALL,
         )
 
-        self.assertIsNotNone(leaderboard_match, "Leaderboard <ul> not found in /game response")
+        self.assertIsNotNone(
+            leaderboard_match,
+            "Leaderboard <ul> not found in /game response",
+        )
 
         leaderboard_html = leaderboard_match.group(1)
 
-        # Extract names in the order they appear: "1. Bob", "2. Alice", ...
+        # Extract names in the displayed order, for example:
+        # "1. Bob", "2. Alice", "3. Carol".
         names_in_order = re.findall(r"\d+\.\s*([A-Za-z]+)", leaderboard_html)
 
         self.assertEqual(
