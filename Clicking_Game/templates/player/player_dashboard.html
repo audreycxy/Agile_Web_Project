@@ -82,6 +82,13 @@
     <div class="dashboard-stat-grid dashboard-stat-grid-four">
       <article class="dashboard-stat-card">
         <span class="stat-label">Profile</span>
+
+        <img
+          src="{{ url_for('auth.serve_avatar', user_id=g.user.id) }}"
+          alt="Your profile picture"
+          class="dashboard-avatar-thumb"
+        />
+
         <h3 id="profileText">{{ name }}</h3>
         <p>Your active player account.</p>
       </article>

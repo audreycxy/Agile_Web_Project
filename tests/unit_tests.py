@@ -1,13 +1,25 @@
 # Unit tests for core backend behaviours.
 # This file focuses on authentication redirects, role-based access control,
 # score saving, CSRF protection, password hashing, and leaderboard ordering.
-
+import io
+import shutil
+import tempfile
 import html
 import re
 import unittest
+from pathlib import Path
 
 from Clicking_Game import create_app
 from Clicking_Game.models import database, users
+
+
+# A 1×1 transparent PNG. Just enough bytes for the upload route's
+# magic-prefix check to recognise it as a real image.
+PNG_1PX = (
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
+    b"\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rIDATx\x9cc\x00"
+    b"\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00\x00IEND\xaeB`\x82"
+)
 
 
 class BasicTests(unittest.TestCase):
@@ -370,6 +382,157 @@ class BasicTests(unittest.TestCase):
             ["Bob", "Alice", "Carol"],
             "Leaderboard should be sorted by GameState.points descending",
         )
+
+
+class AvatarUploadTests(unittest.TestCase):
+    """Tests for the profile avatar upload, removal, and serving routes."""
+
+    def setUp(self):
+        # Use a real on-disk temp directory so the upload route can write files.
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.upload_folder = Path(self.temp_dir.name) / "avatars"
+
+        self.testApp = create_app(
+            {
+                "TESTING": True,
+                "SECRET_KEY": "test-secret-key",
+                "WTF_CSRF_ENABLED": False,
+                "DATABASE": ":memory:",
+                "SQLALCHEMY_DATABASE_URI": "sqlite:///:memory:",
+                "AUTO_MIGRATE": False,
+                "UPLOAD_FOLDER": str(self.upload_folder),
+                "ALLOWED_AVATAR_EXTENSIONS": {"png", "jpg", "jpeg", "gif"},
+                "MAX_CONTENT_LENGTH": 1 * 1024 * 1024,
+            }
+        )
+
+        self.client = self.testApp.test_client()
+        self.app_context = self.testApp.app_context()
+        self.app_context.push()
+
+        database.Base.metadata.create_all(
+            bind=self.testApp.extensions["sqlalchemy_engine"]
+        )
+
+        # Create a verified player and log them in.
+        self.player = users.create_user(
+            name="Avatar Player",
+            email="avatar@example.com",
+            password="Password123",
+            role="player",
+        )
+        self.player.email_verified = True
+        database.get_session().commit()
+
+        self.client.post(
+            "/login",
+            data={"email": "avatar@example.com", "password": "Password123"},
+            follow_redirects=False,
+        )
+
+    def tearDown(self):
+        engine = self.testApp.extensions["sqlalchemy_engine"]
+
+        database.SessionLocal.remove()
+        database.Base.metadata.drop_all(bind=engine)
+        database.SessionLocal.remove()
+        engine.dispose()
+
+        self.app_context.pop()
+        self.temp_dir.cleanup()
+
+        self.client = None
+        self.testApp = None
+
+    def test_upload_valid_png_saves_file_and_updates_user(self):
+        response = self.client.post(
+            "/profile/avatar",
+            data={"avatar": (io.BytesIO(PNG_1PX), "me.png")},
+            content_type="multipart/form-data",
+            follow_redirects=False,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Avatar updated.", response.data)
+
+        # Field set on the user and matching file present on disk.
+        refreshed = users.get_by_email("avatar@example.com")
+        self.assertIsNotNone(refreshed.avatar_filename)
+        self.assertTrue(refreshed.avatar_filename.endswith(".png"))
+
+        saved_path = self.upload_folder / refreshed.avatar_filename
+        self.assertTrue(saved_path.exists(), "Uploaded file missing from disk")
+
+    def test_upload_rejects_non_image_extension(self):
+        response = self.client.post(
+            "/profile/avatar",
+            data={"avatar": (io.BytesIO(b"hello"), "evil.exe")},
+            content_type="multipart/form-data",
+            follow_redirects=False,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Avatar must be one of", response.data)
+
+        refreshed = users.get_by_email("avatar@example.com")
+        self.assertIsNone(refreshed.avatar_filename)
+
+    def test_upload_rejects_file_with_valid_extension_but_wrong_magic_bytes(self):
+        response = self.client.post(
+            "/profile/avatar",
+            data={"avatar": (io.BytesIO(b"not an image"), "evil.png")},
+            content_type="multipart/form-data",
+            follow_redirects=False,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"does not look like a real image", response.data)
+
+        refreshed = users.get_by_email("avatar@example.com")
+        self.assertIsNone(refreshed.avatar_filename)
+
+    def test_delete_avatar_clears_db_and_removes_file(self):
+        # First upload one so there's something to delete.
+        self.client.post(
+            "/profile/avatar",
+            data={"avatar": (io.BytesIO(PNG_1PX), "me.png")},
+            content_type="multipart/form-data",
+        )
+
+        before = users.get_by_email("avatar@example.com")
+        self.assertIsNotNone(before.avatar_filename)
+        saved_path = self.upload_folder / before.avatar_filename
+        self.assertTrue(saved_path.exists())
+
+        response = self.client.post("/profile/avatar/delete")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Avatar removed.", response.data)
+
+        after = users.get_by_email("avatar@example.com")
+        self.assertIsNone(after.avatar_filename)
+        self.assertFalse(saved_path.exists(), "Avatar file was not removed from disk")
+
+    def test_serve_avatar_returns_uploaded_image(self):
+        self.client.post(
+            "/profile/avatar",
+            data={"avatar": (io.BytesIO(PNG_1PX), "me.png")},
+            content_type="multipart/form-data",
+        )
+
+        user = users.get_by_email("avatar@example.com")
+        response = self.client.get(f"/avatar/{user.id}")
+
+        # Either 200 (image streamed) is expected.
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data, PNG_1PX)
+
+    def test_serve_avatar_falls_back_to_default_when_no_upload(self):
+        user = users.get_by_email("avatar@example.com")
+        response = self.client.get(f"/avatar/{user.id}", follow_redirects=False)
+
+        # Redirects to the bundled default egg image in static/.
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("defaultegg_nobackground.png", response.headers["Location"])
 
 
 class CSRFTests(unittest.TestCase):
