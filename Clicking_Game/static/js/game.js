@@ -62,13 +62,11 @@
       const eggKeys = EGG_ORDER;
       const nextIndex = eggKeys.indexOf(gameState.currentType) + 1;
 
-      if (gameState.currentType == eggKeys[eggKeys.length - 1]) {
-        console.log("Final egg reached!");
-      } else {
+      // If the current egg is not the last egg, set the current egg as the next egg:
+      if (gameState.currentType !== eggKeys[eggKeys.length - 1]) {
         if (gameState.highestType == gameState.currentType) {
           gameState.highestType = eggKeys[nextIndex];
         }
-
         gameState.currentType = eggKeys[nextIndex];
       }
 
@@ -92,8 +90,6 @@
               gameState.highestType = data.highest_type;
               gameState.clicksRemaining = data.clicks_remaining;
 
-              console.log("Progress synced with server");
-
               isSyncing = false;
 
               updatePointsUI();
@@ -109,8 +105,6 @@
             console.error("Sync failed:", err);
           });
       } else {
-        console.log("Guest progress updated locally.");
-
         isSyncing = false;
 
         updatePointsUI();
@@ -193,8 +187,6 @@
       isAnimating = false;
       updateEggImage();
     }, 600);
-
-    console.log("broke and replaced the egg");
   }
 
   function changeEgg(direction) {
@@ -202,8 +194,8 @@
     const nextIndex = eggKeys.indexOf(gameState.currentType) + direction;
     const highestIndex = eggKeys.indexOf(gameState.highestType);
 
+    // Block passage to next egg if it's locked or doesn't exist:
     if (nextIndex < 0 || nextIndex > highestIndex) {
-      console.log("Egg locked or doesn't exist");
       return;
     }
 
@@ -308,8 +300,6 @@
 
           console.error("Sync failed:", err);
         });
-    } else {
-      console.log("Guest purchase done locally.");
     }
   }
 
