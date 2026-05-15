@@ -43,12 +43,61 @@
 
   let isAnimating = false;
   let isSyncing = false;
+  let hasShownForcedLogoutAlert = false;
 
   let lastManualClickTime = 0;
   const CLICK_DEBOUNCE = 50; // 50ms human limit threshold
+  const AUTO_CLICKER_IDLE_TIMEOUT = 30000;
+
+  let isWindowFocused = document.hasFocus();
+  let lastPlayerActivityTime = Date.now();
+
+  function markPlayerActive() {
+    lastPlayerActivityTime = Date.now();
+  }
+
+  function forceLogout(message, redirectUrl = "/login") {
+    if (hasShownForcedLogoutAlert) {
+      return;
+    }
+
+    hasShownForcedLogoutAlert = true;
+    alert(message || "Your session has ended. Please log in again.");
+    window.location.assign(redirectUrl);
+  }
+
+  function fetchGameJson(url, options) {
+    return fetch(url, options).then(async (response) => {
+      const data = await response.json().catch(() => null);
+
+      if (response.status === 401) {
+        forceLogout(data?.message, data?.redirect_url);
+        throw new Error(data?.message || "Authentication required.");
+      }
+
+      if (data === null) {
+        throw new Error("Invalid server response.");
+      }
+
+      return data;
+    });
+  }
+
+  function isAutoClickerAllowed() {
+    return (
+      gameState.autoClickerPower > 0 &&
+      !document.hidden &&
+      isWindowFocused &&
+      Date.now() - lastPlayerActivityTime <= AUTO_CLICKER_IDLE_TIMEOUT
+    );
+  }
 
   function handleEggClick(damageAmount = null) {
     if (isAnimating || isSyncing) return;
+
+    if (damageAmount !== null && !isAutoClickerAllowed()) {
+      return;
+    }
 
     // Rejects sub-50ms manual clicks to prevent external macro exploitation:
     if (damageAmount === null) {
@@ -56,6 +105,9 @@
       if (currentTime - lastManualClickTime < CLICK_DEBOUNCE) {
         return;
       }
+
+      lastManualClickTime = currentTime;
+      markPlayerActive();
     }
 
     // Injected clicks via handleEggClick(X) using a browser breakpoint will be treated as (standard) auto-clicks:
@@ -89,7 +141,7 @@
       gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].base_clicks;
 
       if (!gameState.isGuest) {
-        fetch("/api/sync", {
+        fetchGameJson("/api/sync", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -236,7 +288,7 @@
     updateProgressUI();
 
     if (!gameState.isGuest) {
-      fetch("/api/navigate", {
+      fetchGameJson("/api/navigate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -276,7 +328,7 @@
     updateUpgradeUI();
 
     if (!gameState.isGuest) {
-      fetch("/api/buy_upgrade", {
+      fetchGameJson("/api/buy_upgrade", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -361,8 +413,28 @@
     });
   }
 
+  ["pointerdown", "keydown", "touchstart", "scroll"].forEach((eventName) => {
+    window.addEventListener(eventName, markPlayerActive, { passive: true });
+  });
+
+  window.addEventListener("focus", () => {
+    isWindowFocused = true;
+    markPlayerActive();
+  });
+
+  window.addEventListener("blur", () => {
+    isWindowFocused = false;
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      isWindowFocused = document.hasFocus();
+      markPlayerActive();
+    }
+  });
+
   setInterval(() => {
-    if (gameState.autoClickerPower > 0) {
+    if (isAutoClickerAllowed()) {
       const autoDamage =
         gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 2;
 
