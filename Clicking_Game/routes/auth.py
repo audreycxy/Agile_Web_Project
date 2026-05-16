@@ -372,7 +372,7 @@ def player_dashboard():
         "player/player_dashboard.html",
         name=g.user.name,
         highest_score=max(scores) if scores else 0,
-        latest_result=results[0].score if results else 0,
+        latest_result=g.user.game_state.points if g.user.game_state else 0,
         highest_type=highest_type_display,
     )
 
@@ -397,15 +397,26 @@ def history():
 
     scores = [result.score for result in results]
 
+    current_score = g.user.game_state.points if g.user.game_state else 0
+
+    # This is used for the chart so the final point matches the latest/current score.
+    score_progress = game_history.copy()
+    score_progress.append({
+        "score": current_score,
+        "date": "Current",
+        "time": "Now",
+        "is_current": True,
+    })
+
     return render_template(
         "player/history.html",
         username=g.user.name,
         game_history=game_history,
-        highest_score=max(scores) if scores else 0,
-        latest_score=scores[-1] if scores else 0,
-        average_score=round(sum(scores) / len(scores), 1) if scores else 0,
+        score_progress=score_progress,
+        highest_score=max(scores + [current_score]) if scores else current_score,
+        latest_score=current_score,
+        average_score=round(sum(scores) / len(scores), 1) if scores else current_score,
     )
-
 # AI feedback route for player performance coaching
 @bp.route("/ai_feedback", methods=["POST"])
 @login_required(role="player")

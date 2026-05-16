@@ -150,7 +150,6 @@
           },
           body: JSON.stringify({}),
         })
-          .then((response) => response.json())
           .then((data) => {
             if (data.status === "success") {
               gameState.totalPoints = data.new_points;
@@ -269,7 +268,7 @@
 
     if (
       gameState.clicksRemaining <
-        EGG_CONFIG[gameState.currentType].base_clicks &&
+      EGG_CONFIG[gameState.currentType].base_clicks &&
       gameState.clicksRemaining > 0
     ) {
       const confirmed = confirm(
@@ -299,7 +298,6 @@
           type: gameState.currentType,
         }),
       })
-        .then((response) => response.json())
         .then((data) => {
           if (data.status !== "success") {
             console.error("Navigation sync failed:", data.error);
@@ -341,7 +339,6 @@
           new_points: gameState.totalPoints,
         }),
       })
-        .then((response) => response.json())
         .then((data) => {
           if (data.status === "success") {
             gameState.totalPoints = data.new_points;
@@ -455,7 +452,7 @@
   window.addEventListener("load", () => {
     updateProgressUI();
     updateUpgradeUI();
-    
+
     document.getElementById("loading-overlay").style.display = "none";
     document.getElementById("game-screen").style.display = "";
     updateEggImage();
