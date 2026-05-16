@@ -320,6 +320,60 @@ class SeleniumTests(unittest.TestCase):
         self.assertIn(seeded_player.name, self_row.text)
         self.assertIn("You", self_row.text)
 
+    def test_profile_page_uploads_avatar_through_form(self):
+        # Log in, open the profile page, upload a small PNG through the file
+        # picker, and assert the success banner appears and the avatar preview
+        # now sources from the served-avatar route. This exercises the
+        # multipart upload flow end-to-end in a real browser.
+
+        # A 1x1 transparent PNG. Smallest valid PNG payload that passes the
+        # magic-byte check in the upload route.
+        png_bytes = (
+            b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00"
+            b"\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\rI"
+            b"DATx\x9cc\x00\x01\x00\x00\x05\x00\x01\r\n-\xb4\x00\x00\x00"
+            b"\x00IEND\xaeB`\x82"
+        )
+
+        # Selenium's send_keys on an <input type="file"> needs a path on
+        # disk. Write the PNG to a temporary file inside the class's
+        # temp_dir so it gets cleaned up automatically in tearDownClass.
+        avatar_path = Path(self.temp_dir.name) / "avatar_under_test.png"
+        avatar_path.write_bytes(png_bytes)
+
+        self.login_as_player()
+
+        self.driver.get(f"{self.base_url}/profile")
+
+        file_input = self.wait.until(
+            EC.presence_of_element_located((By.ID, "avatar"))
+        )
+
+        file_input.send_keys(str(avatar_path))
+
+        # Submit the avatar form by clicking its Upload Avatar button.
+        upload_button = self.driver.find_element(
+            By.XPATH,
+            "//form[contains(@action, '/profile/avatar')]"
+            "//button[@type='submit']",
+        )
+        upload_button.click()
+
+        # Server-rendered success message confirms the upload completed and
+        # the model row was updated.
+        self.wait.until(
+            EC.text_to_be_present_in_element(
+                (By.TAG_NAME, "body"),
+                "Avatar updated.",
+            )
+        )
+
+        # The avatar preview image should now point at /avatar/<user_id>.
+        preview = self.driver.find_element(
+            By.CSS_SELECTOR, ".profile-avatar-preview"
+        )
+        self.assertIn("/avatar/", preview.get_attribute("src"))
+
 
 if __name__ == "__main__":
     unittest.main()
