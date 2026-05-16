@@ -228,6 +228,64 @@ class SystemTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(response.headers["Location"].endswith("/player_dashboard"))
 
+    def test_second_player_login_invalidates_first_session(self):
+        # Check that logging in from a second client forces the first client out.
+        self.create_user(email="single-session@example.com")
+
+        first_client = self.app.test_client()
+        second_client = self.app.test_client()
+
+        first_login = first_client.post(
+            "/login",
+            data={"email": "single-session@example.com", "password": "password123"},
+            follow_redirects=False,
+        )
+        self.assertEqual(first_login.status_code, 302)
+        self.assertTrue(first_login.headers["Location"].endswith("/player_dashboard"))
+
+        with self.app.app_context():
+            first_token = users.get_by_email(
+                "single-session@example.com"
+            ).active_session_token
+
+        self.assertIsNotNone(first_token)
+
+        second_login = second_client.post(
+            "/login",
+            data={"email": "single-session@example.com", "password": "password123"},
+            follow_redirects=False,
+        )
+        self.assertEqual(second_login.status_code, 302)
+        self.assertTrue(second_login.headers["Location"].endswith("/player_dashboard"))
+
+        with self.app.app_context():
+            second_token = users.get_by_email(
+                "single-session@example.com"
+            ).active_session_token
+
+        self.assertIsNotNone(second_token)
+        self.assertNotEqual(first_token, second_token)
+
+        stale_response = first_client.get("/player_dashboard", follow_redirects=False)
+        self.assertEqual(stale_response.status_code, 302)
+        self.assertTrue(stale_response.headers["Location"].endswith("/login"))
+
+        stale_login_page = first_client.get("/player_dashboard", follow_redirects=True)
+        self.assertIn(
+            "You were logged out because this account was signed in somewhere else.",
+            stale_login_page.get_data(as_text=True),
+        )
+
+        stale_api_response = first_client.post("/api/sync", json={}, follow_redirects=False)
+        self.assertEqual(stale_api_response.status_code, 401)
+        self.assertEqual(
+            stale_api_response.get_json()["message"],
+            "You were logged out because this account was signed in somewhere else.",
+        )
+
+        active_response = second_client.get("/player_dashboard")
+        self.assertEqual(active_response.status_code, 200)
+
     def test_admin_login_redirects_to_admin_dashboard(self):
         # Check that a verified admin logs in and is redirected to the admin dashboard.
         self.create_user(

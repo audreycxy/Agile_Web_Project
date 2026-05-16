@@ -1,7 +1,7 @@
 # Handles public routes that don't require authentication 
 from flask import Blueprint, render_template, g, request, jsonify
 from Clicking_Game.models import users, database
-from Clicking_Game.game_logic import EGG_CONFIG
+from Clicking_Game.game_logic import EGG_CONFIG, format_points
 from Clicking_Game.utils.auth import login_required # for game sync routes
 
 bp = Blueprint("main", __name__)
@@ -32,11 +32,12 @@ def game():
         "click_power_lvl": 1,
         "autoclicker_lvl": 0
     }
-    # Check if the player has an account
+    # Check if the player has an account:
     if g.user:
         initial_state.update({
             "is_guest": False
         })
+        # Check if the player has a save, if they don't, create one:
         if not g.user.game_state:
             db_session = database.get_session()
             new_gs = users.GameState(
@@ -73,6 +74,7 @@ def game():
         state=initial_state,
         config=EGG_CONFIG,
         leaderboard=leaderboard,
+        format_points=format_points,
     )
 
 @bp.route("/api/sync", methods=["POST"])

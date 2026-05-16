@@ -17,9 +17,13 @@ document.addEventListener("DOMContentLoaded", () => {
     window.historyScores &&
     window.historyScores.length > 0
   ) {
-    const labels = window.historyScores.map(
-      (game, index) => `Game ${index + 1}`,
-    );
+    const labels = window.historyScores.map((game, index) => {
+      if (game.is_current) {
+        return "Current";
+      }
+
+      return `Game ${index + 1}`;
+    });
 
     const scores = window.historyScores.map((game) => Number(game.score));
 
