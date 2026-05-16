@@ -127,6 +127,10 @@ class User(Base):
         String(255),
         nullable=True,
     )
+    active_session_token: Mapped[str | None] = mapped_column(
+        String(255),
+        nullable=True,
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -240,6 +244,34 @@ def verify_email_token(token):
     user.email_verification_token = None
     session.commit()
     return user
+
+
+def issue_active_session_token(user_id):
+    session = get_session()
+    user = session.get(User, user_id)
+
+    if user is None:
+        return None
+
+    token = secrets.token_urlsafe(32)
+    user.active_session_token = token
+    session.commit()
+    return token
+
+
+def clear_active_session_token(user_id):
+    if user_id is None:
+        return False
+
+    session = get_session()
+    user = session.get(User, user_id)
+
+    if user is None:
+        return False
+
+    user.active_session_token = None
+    session.commit()
+    return True
 
 # Updates a user's name/email/password; returns False on duplicate-email conflict
 def update_profile(user, name=None, email=None, password=None):
@@ -387,6 +419,8 @@ def set_user_active(user_id, is_active):
         return False
 
     user.is_active = bool(is_active)
+    if not user.is_active:
+        user.active_session_token = None
     session.commit()
     return True
 
@@ -400,6 +434,7 @@ def soft_delete_user(user):
     user.is_deleted = True
     user.deleted_at = datetime.utcnow()
     user.is_active = False
+    user.active_session_token = None
     session.commit()
     return True
 

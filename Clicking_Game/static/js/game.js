@@ -43,11 +43,79 @@
 
   let isAnimating = false;
   let isSyncing = false;
+  let hasShownForcedLogoutAlert = false;
+
+  let lastManualClickTime = 0;
+  const CLICK_DEBOUNCE = 50; // 50ms human limit threshold
+  const AUTO_CLICKER_IDLE_TIMEOUT = 30000;
+
+  let isWindowFocused = document.hasFocus();
+  let lastPlayerActivityTime = Date.now();
+
+  function markPlayerActive() {
+    lastPlayerActivityTime = Date.now();
+  }
+
+  function forceLogout(message, redirectUrl = "/login") {
+    if (hasShownForcedLogoutAlert) {
+      return;
+    }
+
+    hasShownForcedLogoutAlert = true;
+    alert(message || "Your session has ended. Please log in again.");
+    window.location.assign(redirectUrl);
+  }
+
+  function fetchGameJson(url, options) {
+    return fetch(url, options).then(async (response) => {
+      const data = await response.json().catch(() => null);
+
+      if (response.status === 401) {
+        forceLogout(data?.message, data?.redirect_url);
+        throw new Error(data?.message || "Authentication required.");
+      }
+
+      if (data === null) {
+        throw new Error("Invalid server response.");
+      }
+
+      return data;
+    });
+  }
+
+  function isAutoClickerAllowed() {
+    return (
+      gameState.autoClickerPower > 0 &&
+      !document.hidden &&
+      isWindowFocused &&
+      Date.now() - lastPlayerActivityTime <= AUTO_CLICKER_IDLE_TIMEOUT
+    );
+  }
 
   function handleEggClick(damageAmount = null) {
     if (isAnimating || isSyncing) return;
 
-    const damage = damageAmount !== null ? damageAmount : gameState.clickPower;
+    if (damageAmount !== null && !isAutoClickerAllowed()) {
+      return;
+    }
+
+    // Rejects sub-50ms manual clicks to prevent external macro exploitation:
+    if (damageAmount === null) {
+      const currentTime = Date.now();
+      if (currentTime - lastManualClickTime < CLICK_DEBOUNCE) {
+        return;
+      }
+
+      lastManualClickTime = currentTime;
+      markPlayerActive();
+    }
+
+    // Injected clicks via handleEggClick(X) using a browser breakpoint will be treated as (standard) auto-clicks:
+    const expectedAutoDamage = gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 2;
+
+    const clickDamage = gameState.clickPower === 1 ? 1 : gameState.clickPower * 3;
+    const damage = damageAmount !== null ? expectedAutoDamage : clickDamage;
+
     gameState.clicksRemaining -= damage;
 
     updateProgressUI();
@@ -62,18 +130,18 @@
       const eggKeys = EGG_ORDER;
       const nextIndex = eggKeys.indexOf(gameState.currentType) + 1;
 
+      // If the current egg is not the last egg, set the current egg as the next egg:
       if (gameState.currentType !== eggKeys[eggKeys.length - 1]) {
         if (gameState.highestType == gameState.currentType) {
           gameState.highestType = eggKeys[nextIndex];
         }
-
         gameState.currentType = eggKeys[nextIndex];
       }
 
       gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].base_clicks;
 
       if (!gameState.isGuest) {
-        fetch("/api/sync", {
+        fetchGameJson("/api/sync", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -82,7 +150,6 @@
           },
           body: JSON.stringify({}),
         })
-          .then((response) => response.json())
           .then((data) => {
             if (data.status === "success") {
               gameState.totalPoints = data.new_points;
@@ -194,13 +261,14 @@
     const nextIndex = eggKeys.indexOf(gameState.currentType) + direction;
     const highestIndex = eggKeys.indexOf(gameState.highestType);
 
+    // Block passage to next egg if it's locked or doesn't exist:
     if (nextIndex < 0 || nextIndex > highestIndex) {
       return;
     }
 
     if (
       gameState.clicksRemaining <
-        EGG_CONFIG[gameState.currentType].base_clicks &&
+      EGG_CONFIG[gameState.currentType].base_clicks &&
       gameState.clicksRemaining > 0
     ) {
       const confirmed = confirm(
@@ -219,7 +287,7 @@
     updateProgressUI();
 
     if (!gameState.isGuest) {
-      fetch("/api/navigate", {
+      fetchGameJson("/api/navigate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -230,7 +298,6 @@
           type: gameState.currentType,
         }),
       })
-        .then((response) => response.json())
         .then((data) => {
           if (data.status !== "success") {
             console.error("Navigation sync failed:", data.error);
@@ -259,7 +326,7 @@
     updateUpgradeUI();
 
     if (!gameState.isGuest) {
-      fetch("/api/buy_upgrade", {
+      fetchGameJson("/api/buy_upgrade", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -272,7 +339,6 @@
           new_points: gameState.totalPoints,
         }),
       })
-        .then((response) => response.json())
         .then((data) => {
           if (data.status === "success") {
             gameState.totalPoints = data.new_points;
@@ -344,8 +410,28 @@
     });
   }
 
+  ["pointerdown", "keydown", "touchstart", "scroll"].forEach((eventName) => {
+    window.addEventListener(eventName, markPlayerActive, { passive: true });
+  });
+
+  window.addEventListener("focus", () => {
+    isWindowFocused = true;
+    markPlayerActive();
+  });
+
+  window.addEventListener("blur", () => {
+    isWindowFocused = false;
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) {
+      isWindowFocused = document.hasFocus();
+      markPlayerActive();
+    }
+  });
+
   setInterval(() => {
-    if (gameState.autoClickerPower > 0) {
+    if (isAutoClickerAllowed()) {
       const autoDamage =
         gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 2;
 
@@ -366,8 +452,7 @@
   window.addEventListener("load", () => {
     updateProgressUI();
     updateUpgradeUI();
-    updatePointsUI();
-    
+
     document.getElementById("loading-overlay").style.display = "none";
     document.getElementById("game-screen").style.display = "";
     updateEggImage();
