@@ -98,7 +98,7 @@ def sync_game():
             if gs.highest_type == old_type:
                 gs.highest_type = gs.current_type
         else:
-            print("DEBUG: Final egg reached, staying on current type", flush=True)
+            # Player is already on the last egg type; stay there.
             gs.current_type = egg_keys[current_index]
         
         # Set required clicks for new egg

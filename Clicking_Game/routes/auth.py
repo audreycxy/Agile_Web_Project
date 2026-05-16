@@ -432,13 +432,13 @@ def ai_feedback():
         })
 
     except genai_errors.APIError as e:
-        print("Gemini API error:", repr(e))
+        current_app.logger.error("Gemini API error: %r", e)
         return jsonify({
             "feedback": "AI feedback is unavailable because the Gemini API request failed. Please check the API key, quota, or model access."
         }), 500
 
     except Exception as e:
-        print("Gemini feedback error:", repr(e))
+        current_app.logger.error("Gemini feedback error: %r", e)
         return jsonify({
             "feedback": "AI feedback is unavailable right now. Please try again later."
         }), 500
