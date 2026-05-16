@@ -401,9 +401,11 @@ Environment variables:
 | `PORT`         | `5000`                 | Local `app.py` bind port.                                               |
 | `FLASK_DEBUG`  | `0`                    | Set to `1` for local debug mode.                                        |
 
-Optional integration variables (the app degrades gracefully if these are not
-set — the AI-feedback button shows a "not configured" message and email
-verification falls back to a development log):
+Optional integration variables. The app degrades gracefully if these are
+not set: the AI-feedback button shows a "not configured" message, and the
+signup route shows a friendly "could not send the verification email"
+page instead of a 500 error. Set both `RESEND_API_KEY` and
+`MAIL_DEFAULT_SENDER` to enable end-to-end email verification.
 
 | Variable              | Default          | Purpose                                                                                            |
 | --------------------- | ---------------- | -------------------------------------------------------------------------------------------------- |
