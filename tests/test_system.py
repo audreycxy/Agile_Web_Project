@@ -152,7 +152,9 @@ class SystemTestCase(unittest.TestCase):
             self.assertIsNotNone(user.email_verification_token)
 
     def test_unverified_user_must_verify_before_login(self):
-        # Check that an unverified user cannot log in until the verification link is used.
+        # Check that an unverified user cannot log in until the verification link is used,
+        # and that clicking the verification link logs them in directly and redirects to
+        # their dashboard (no extra manual login step).
         user_id = self.create_user(
             email="needsverify@example.com",
             email_verified=False,
@@ -170,21 +172,23 @@ class SystemTestCase(unittest.TestCase):
             blocked_login.get_data(as_text=True),
         )
 
-        verify_response = self.client.get(f"/verify-email/{user.email_verification_token}")
-
-        self.assertIn(
-            "Email verified successfully. You can now log in.",
-            verify_response.get_data(as_text=True),
-        )
-
-        successful_login = self.client.post(
-            "/login",
-            data={"email": user.email, "password": "password123"},
+        # Clicking the verification link should both verify the account AND
+        # start a logged-in session, redirecting straight to the dashboard.
+        verify_response = self.client.get(
+            f"/verify-email/{user.email_verification_token}",
             follow_redirects=False,
         )
 
-        self.assertEqual(successful_login.status_code, 302)
-        self.assertTrue(successful_login.headers["Location"].endswith("/player_dashboard"))
+        self.assertEqual(verify_response.status_code, 302)
+        self.assertTrue(
+            verify_response.headers["Location"].endswith("/player_dashboard")
+        )
+
+        # Sanity check: the user record is now actually verified in the DB
+        # and the one-time token has been cleared.
+        refreshed = self.get_user(user_id)
+        self.assertTrue(refreshed.email_verified)
+        self.assertIsNone(refreshed.email_verification_token)
 
     def test_protected_routes_redirect_anonymous_users_to_login(self):
         # Check that protected routes redirect anonymous users to the login page.
