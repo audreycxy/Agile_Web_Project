@@ -6,7 +6,6 @@ from flask_wtf.csrf import CSRFProtect
 from .models import database
 from .routes import auth, main
 from dotenv import load_dotenv
-from .extensions import mail
 
 csrf = CSRFProtect()
 
@@ -52,21 +51,13 @@ def create_app(test_config=None):
         MAX_CONTENT_LENGTH=1 * 1024 * 1024,  # 1 MB
         ALLOWED_AVATAR_EXTENSIONS={"png", "jpg", "jpeg", "gif"},
 
-        MAIL_SERVER=os.environ.get("MAIL_SERVER", "smtp.gmail.com"),
-        MAIL_PORT=int(os.environ.get("MAIL_PORT", 587)),
-        MAIL_USE_TLS=_bool_env("MAIL_USE_TLS", True),
-        MAIL_USERNAME=os.environ.get("MAIL_USERNAME"),
-        MAIL_PASSWORD=os.environ.get("MAIL_PASSWORD"),
-        MAIL_DEFAULT_SENDER=os.environ.get(
-            "MAIL_DEFAULT_SENDER",
-            os.environ.get("MAIL_USERNAME")
-        ),
-
-        # When set, signup uses the Resend HTTPS API to send the verification
-        # email. This is required on hosts like Render free that block
-        # outbound SMTP (ports 25 / 465 / 587). When unset, the app falls
-        # back to Flask-Mail SMTP, which is the simpler path locally.
+        # Email backend: signup verification emails are sent through the
+        # Resend HTTPS API. The sender must be on a domain you have verified
+        # in your Resend account, or Resend's shared onboarding@resend.dev
+        # address (which is used as a fallback when MAIL_DEFAULT_SENDER is
+        # not set).
         RESEND_API_KEY=os.environ.get("RESEND_API_KEY"),
+        MAIL_DEFAULT_SENDER=os.environ.get("MAIL_DEFAULT_SENDER"),
     )
     app.config.from_prefixed_env()
 
@@ -82,10 +73,9 @@ def create_app(test_config=None):
     if not app.config.get("SQLALCHEMY_DATABASE_URI"):
         app.config["SQLALCHEMY_DATABASE_URI"] = _sqlite_uri(app.config["DATABASE"])
 
-    # Initializes database connection, CSRF protection, mail service, and registers route files
+    # Initializes database connection, CSRF protection, and registers route files
     database.init_app(app)
     csrf.init_app(app)
-    mail.init_app(app)
     app.register_blueprint(main.bp)
     app.register_blueprint(auth.bp)
 
