@@ -1,7 +1,5 @@
 // Run the code after the page has finished loading
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("Game History page loaded.");
-
   const historyChartScroll = document.getElementById("historyChartScroll");
 
   if (historyChartScroll && window.historyScores) {
