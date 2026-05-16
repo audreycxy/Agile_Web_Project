@@ -351,13 +351,29 @@ class SeleniumTests(unittest.TestCase):
 
         file_input.send_keys(str(avatar_path))
 
-        # Submit the avatar form by clicking its Upload Avatar button.
-        upload_button = self.driver.find_element(
-            By.XPATH,
-            "//form[contains(@action, '/profile/avatar')]"
-            "//button[@type='submit']",
+        # Locate the avatar form's submit button and wait for Selenium to
+        # consider it clickable (no in-flight transitions, not display:none,
+        # etc.).
+        upload_button = self.wait.until(
+            EC.element_to_be_clickable(
+                (
+                    By.XPATH,
+                    "//form[contains(@action, '/profile/avatar')]"
+                    "//button[@type='submit']",
+                )
+            )
         )
-        upload_button.click()
+
+        # The upload button sits below the viewport on the default 1200x900
+        # headless window. Selenium's auto-scroll positions it underneath
+        # the sticky navbar, which causes an ElementClickInterceptedException
+        # in CI. Scroll it to the centre of the viewport first, then click
+        # via JS so we bypass any residual z-index overlap with the navbar.
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block: 'center'});",
+            upload_button,
+        )
+        self.driver.execute_script("arguments[0].click();", upload_button)
 
         # Server-rendered success message confirms the upload completed and
         # the model row was updated.
