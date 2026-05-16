@@ -383,6 +383,47 @@ class BasicTests(unittest.TestCase):
             "Leaderboard should be sorted by GameState.points descending",
         )
 
+    def test_verify_email_auto_logs_in_and_redirects_to_dashboard(self):
+        # Clicking the verification link should both verify the account AND
+        # start a logged-in session, redirecting straight to the player
+        # dashboard. No separate /login round-trip should be required.
+        user = users.create_user(
+            name="Verify Me",
+            email="verifyme@example.com",
+            password="Password123",
+            role="player",
+        )
+
+        # The new user starts unverified, with a one-time token.
+        self.assertFalse(user.email_verified)
+        self.assertIsNotNone(user.email_verification_token)
+
+        token = user.email_verification_token
+
+        response = self.client.get(
+            f"/verify-email/{token}",
+            follow_redirects=False,
+        )
+
+        # Auto-login: response is a 302 to the player dashboard.
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/player_dashboard", response.headers["Location"])
+
+        # DB side-effects: user is verified and the token is cleared so the
+        # link cannot be re-used.
+        refreshed = users.get_by_email("verifyme@example.com")
+        self.assertTrue(refreshed.email_verified)
+        self.assertIsNone(refreshed.email_verification_token)
+
+        # The session should now be authenticated as that user, so hitting a
+        # protected route returns the page itself, not a redirect to /login.
+        dashboard_response = self.client.get(
+            "/player_dashboard",
+            follow_redirects=False,
+        )
+        self.assertEqual(dashboard_response.status_code, 200)
+        self.assertIn(b"Verify Me", dashboard_response.data)
+
 
 class AvatarUploadTests(unittest.TestCase):
     """Tests for the profile avatar upload, removal, and serving routes."""
