@@ -199,22 +199,47 @@ def signup():
 
     return render_template("public/signup.html", error=error)
 
-# Verify_email(token) route
-# When the user clicks the verification link, they will be redirected to the login page.
+# Verify-email route
+# When the user clicks the verification link in the signup email, mark the
+# account as verified, start a logged-in session for them, and send them
+# straight to their dashboard. This removes the awkward "verify then log in
+# manually" two-step that used to come right after signup.
 @bp.route("/verify-email/<token>")
 def verify_email(token):
-    if users.verify_email_token(token):
+    user = users.verify_email_token(token)
+
+    # Token did not match any user (expired, already-used, typo).
+    if user is None:
         return render_template(
             "public/login.html",
-            success="Email verified successfully. You can now log in.",
-            error=None,
+            error="Invalid or expired verification link.",
+            success=None,
         )
 
-    return render_template(
-        "public/login.html",
-        error="Invalid or expired verification link.",
-        success=None,
-    )
+    # An admin may have disabled the account between signup and verification.
+    # Refuse to auto-login but tell the user clearly what happened.
+    if user.is_deleted:
+        return render_template(
+            "public/login.html",
+            error="This account has been deleted.",
+            success=None,
+        )
+
+    if not user.is_active:
+        return render_template(
+            "public/login.html",
+            error="This account has been deactivated. Please contact an administrator.",
+            success=None,
+        )
+
+    # Start a logged-in session, identical to the /login success path.
+    session.clear()
+    session["user_id"] = user.id
+    session["email"] = user.email
+    session["name"] = user.name
+    session["role"] = user.role
+
+    return redirect(dashboard_url_for(user))
 
 # ADMIN ROUTES
 # Admin dashboard shows user stats and recent game results

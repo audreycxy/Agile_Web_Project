@@ -226,18 +226,20 @@ def get_by_verification_token(token):
         select(User).where(User.email_verification_token == token)
     )
 
-# Verify function
+# Verify function. Returns the freshly-verified User on success, or None if
+# the token does not match any user (e.g. expired, already-used, typo). The
+# caller can use the returned user to start a logged-in session right away.
 def verify_email_token(token):
     session = get_session()
     user = get_by_verification_token(token)
 
     if user is None:
-        return False
+        return None
 
     user.email_verified = True
     user.email_verification_token = None
     session.commit()
-    return True
+    return user
 
 # Updates a user's name/email/password; returns False on duplicate-email conflict
 def update_profile(user, name=None, email=None, password=None):
