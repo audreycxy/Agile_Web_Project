@@ -5,10 +5,9 @@ earn points, progress through egg tiers, and compete on a shared leaderboard.
 The project includes:
 
 - **User signup with real email verification**, powered by the
-  [Resend](https://resend.com) HTTPS API and a verified custom domain so
-  the verification flow works on the live Render demo even though Render's
-  free tier blocks outbound SMTP. Local development falls back to
-  Flask-Mail + Gmail SMTP automatically when no Resend key is configured.
+  [Resend](https://resend.com) HTTPS API and a verified custom domain.
+  Resend works on the live Render demo even though Render's free tier
+  blocks outbound SMTP at the network level.
 - **Profile avatar upload** with file-extension allow-listing, magic-byte
   validation (so renamed binaries are rejected), a 1 MB size cap, and
   `secure_filename` sanitisation. Uploaded avatars are displayed on the
@@ -81,7 +80,7 @@ re-created on each cold start, so they will always be available.
 |-- Clicking_Game/
 |   |-- __init__.py              # Flask app factory and configuration
 |   |-- app.py                   # Local development entry point
-|   |-- extensions.py            # Shared Flask extensions (Flask-Mail)
+|   |-- email_service.py         # Resend HTTPS API email backend
 |   |-- game_logic.py            # EGG_CONFIG and clicking-game logic
 |   |-- models/
 |   |   |-- database.py          # SQLAlchemy engine/session and Alembic commands
@@ -402,20 +401,17 @@ Environment variables:
 | `PORT`         | `5000`                 | Local `app.py` bind port.                                               |
 | `FLASK_DEBUG`  | `0`                    | Set to `1` for local debug mode.                                        |
 
-Optional integration variables (the app degrades gracefully if these are not
-set — the AI-feedback button shows a "not configured" message and email
-verification falls back to a development log):
+Optional integration variables. The app degrades gracefully if these are
+not set: the AI-feedback button shows a "not configured" message, and the
+signup route shows a friendly "could not send the verification email"
+page instead of a 500 error. Set both `RESEND_API_KEY` and
+`MAIL_DEFAULT_SENDER` to enable end-to-end email verification.
 
 | Variable              | Default          | Purpose                                                                                            |
 | --------------------- | ---------------- | -------------------------------------------------------------------------------------------------- |
 | `GEMINI_API_KEY`      | unset            | API key used by the player history page to generate AI performance feedback through Google Gemini. |
-| `RESEND_API_KEY`      | unset            | When set, signup verification emails go through Resend's HTTPS API. Required on hosts that block outbound SMTP (Render free, Heroku free). Get a key from <https://resend.com>. |
-| `MAIL_SERVER`         | `smtp.gmail.com` | SMTP server used by Flask-Mail when `RESEND_API_KEY` is not set.                                  |
-| `MAIL_PORT`           | `587`            | SMTP port used by Flask-Mail.                                                                      |
-| `MAIL_USE_TLS`        | `True`           | Whether Flask-Mail should use STARTTLS.                                                            |
-| `MAIL_USERNAME`       | unset            | SMTP account used to send verification emails.                                                     |
-| `MAIL_PASSWORD`       | unset            | SMTP password or Gmail app password. Do not commit.                                                |
-| `MAIL_DEFAULT_SENDER` | `MAIL_USERNAME`  | "From" address on outgoing verification emails. With Resend without a verified domain, set this to `onboarding@resend.dev`. |
+| `RESEND_API_KEY`      | unset            | API key for the Resend HTTPS email backend. Required for signup to send verification emails. Get a key from <https://resend.com>. |
+| `MAIL_DEFAULT_SENDER` | unset            | "From" address on outgoing verification emails (e.g. `noreply@yourdomain.xyz`). Must be an address on a domain verified in your Resend account. |
 
 Optional admin setup variables used by `scripts/create_admin.py`:
 
@@ -454,8 +450,9 @@ production deployment with actual end users, you would want to:
 6. Confirm automated tests pass with `python -m pytest`.
 7. If using the AI feedback feature in production, set `GEMINI_API_KEY` as a
    Render secret.
-8. If using real email verification in production, set `MAIL_USERNAME`,
-   `MAIL_PASSWORD`, and `MAIL_DEFAULT_SENDER` as Render secrets.
+8. For real email verification in production, set `RESEND_API_KEY` and
+   `MAIL_DEFAULT_SENDER` as Render secrets. The sender must be an address
+   on a domain you have verified in your Resend account.
 
 ## Development Direction
 
