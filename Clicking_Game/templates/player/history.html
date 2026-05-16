@@ -16,24 +16,17 @@
   </a>
 
   <div class="game-nav-links">
-    <a
-      href="{{ url_for('auth.player_dashboard') }}"
-      class="{% if request.endpoint == 'auth.player_dashboard' %}active{% endif %}"
-    >
+    <a href="{{ url_for('auth.player_dashboard') }}"
+      class="{% if request.endpoint == 'auth.player_dashboard' %}active{% endif %}">
       Dashboard
     </a>
 
-    <a
-      href="{{ url_for('auth.history', search=search) }}"
-      class="{% if request.endpoint == 'auth.history' %}active{% endif %}"
-    >
+    <a href="{{ url_for('auth.history', search=search) }}"
+      class="{% if request.endpoint == 'auth.history' %}active{% endif %}">
       Results
     </a>
 
-    <a
-      href="{{ url_for('auth.profile') }}"
-      class="{% if request.endpoint == 'auth.profile' %}active{% endif %}"
-    >
+    <a href="{{ url_for('auth.profile') }}" class="{% if request.endpoint == 'auth.profile' %}active{% endif %}">
       Profile
     </a>
 
@@ -96,11 +89,7 @@
       Get a short AI-generated suggestion based on your recent saved scores.
     </p>
 
-    <button
-      id="aiFeedbackBtn"
-      type="button"
-      class="btn auth-primary-btn dashboard-action-btn"
-    >
+    <button id="aiFeedbackBtn" type="button" class="btn auth-primary-btn dashboard-action-btn">
       Get AI Feedback
     </button>
 
@@ -127,7 +116,7 @@
   <section class="dashboard-panel">
     <div class="dashboard-panel-header">
       <p class="section-label">Past scores</p>
-      <h2>List of saved games</h2>
+      <h2>Current score and saved games</h2>
     </div>
 
     <div class="history-table-wrap results-scroll-area">
@@ -142,6 +131,13 @@
         </thead>
 
         <tbody>
+          <tr>
+            <td>Current</td>
+            <td>{{ latest_score }}</td>
+            <td>Current</td>
+            <td>Now</td>
+          </tr>
+
           <!-- Loop through the player's saved game history records -->
           {% for game in game_history %}
           <tr>
@@ -168,7 +164,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-  window.historyScores = {{ game_history | tojson }};
+  window.historyScores = {{ score_progress | tojson }};
 </script>
 
 <script src="{{ url_for('static', filename='js/history.js') }}"></script>
