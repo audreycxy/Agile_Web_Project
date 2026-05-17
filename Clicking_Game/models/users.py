@@ -326,6 +326,28 @@ def list_results(search=None, user_id=None, limit=None):
     return session.scalars(stmt).all()
 
 
+def list_highest_result_scores(user_ids=None):
+    session = get_session()
+    stmt = (
+        select(GameResult.user_id, func.max(GameResult.score))
+        .where(GameResult.user_id.is_not(None))
+        .group_by(GameResult.user_id)
+    )
+
+    if user_ids is not None:
+        user_ids = [user_id for user_id in user_ids if user_id is not None]
+
+        if not user_ids:
+            return {}
+
+        stmt = stmt.where(GameResult.user_id.in_(user_ids))
+
+    return {
+        user_id: highest_score
+        for user_id, highest_score in session.execute(stmt).all()
+    }
+
+
 def list_leaderboard(limit=10):
     session = get_session()
     stmt = (

@@ -335,14 +335,7 @@ def admin_dashboard():
                 if user.game_state is not None and user.game_state.points > 0
             ]
         ),
-        highest_score=max(
-            (
-                user.game_state.points
-                for user in player_progress
-                if user.game_state is not None
-            ),
-            default=0,
-        ),
+        highest_score=max((result.score for result in all_results), default=0),
         recent_results=recent_results,
     )
 
@@ -396,16 +389,9 @@ def update_account_status(user_id):
 def admin_player_results():
     search = request.args.get("search", "").strip()
     results = users.list_results(search=search)
-    highest_scores = {}
-
-    for result in results:
-        if result.user_id is None:
-            continue
-
-        highest_scores[result.user_id] = max(
-            highest_scores.get(result.user_id, result.score),
-            result.score,
-        )
+    highest_scores = users.list_highest_result_scores(
+        user_ids=[result.user_id for result in results]
+    )
 
     return render_template(
         "admin/admin_player_results.html",
