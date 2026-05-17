@@ -7,17 +7,39 @@
 
   --egg-navbar: rgba(32, 18, 8, 0.82);
 
+  --egg-page-background:
+    radial-gradient(
+      circle at top left,
+      rgba(255, 220, 112, 0.38),
+      transparent 35%
+    ),
+    radial-gradient(
+      circle at top right,
+      rgba(255, 255, 255, 0.18),
+      transparent 30%
+    ),
+    linear-gradient(
+      135deg,
+      var(--egg-dark) 0%,
+      var(--egg-brown) 45%,
+      var(--egg-deep) 100%
+    );
+
   --egg-gold: #ffd966;
   --egg-gold-hover: #f1c84d;
 
   --egg-cream: #fff8de;
   --egg-cream-soft: #fff0b8;
+  --egg-cream-panel: rgba(255, 248, 222, 0.95);
+  --egg-white-panel: #ffffff;
 
   --egg-text-dark: #2b1707;
   --egg-muted-brown: #75552b;
 
   --egg-card-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+  --egg-surface-shadow: 0 16px 44px rgba(85, 52, 15, 0.1);
   --egg-soft-border: 1px solid rgba(255, 255, 255, 0.16);
+  --egg-surface-border: 1px solid rgba(43, 23, 7, 0.08);
 }
 
 /* GLOBAL BASE STYLES */
@@ -80,27 +102,12 @@ a:hover {
 
 .game-home-page,
 .auth-page,
-.dashboard-page {
+.dashboard-page,
+.game-play-page {
   min-height: 100vh;
   margin: 0;
   font-family: "Poppins", sans-serif;
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(255, 220, 112, 0.38),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at top right,
-      rgba(255, 255, 255, 0.18),
-      transparent 30%
-    ),
-    linear-gradient(
-      135deg,
-      var(--egg-dark) 0%,
-      var(--egg-brown) 45%,
-      var(--egg-deep) 100%
-    );
+  background: var(--egg-page-background);
   color: #ffffff;
   overflow-x: hidden;
 }
@@ -114,13 +121,18 @@ a:hover {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.game-navbar,
+.game-play-page .game-page-navbar {
   padding: 18px 7vw;
-  background: var(--egg-navbar);
+  background: var(--egg-navbar) !important;
   backdrop-filter: blur(14px);
   border-bottom: 1px solid rgba(255, 255, 255, 0.12);
 }
 
-.game-logo {
+.game-logo,
+.game-play-page .navbar-brand {
   color: #fff4cf;
   font-size: 1.35rem;
   font-weight: 800;
@@ -128,8 +140,9 @@ a:hover {
   text-decoration: none;
 }
 
-.game-logo:hover {
-  color: var(--egg-gold);
+.game-logo:hover,
+.game-play-page .navbar-brand:hover {
+  color: var(--egg-gold) !important;
   text-decoration: none;
 }
 
@@ -181,6 +194,20 @@ a:hover {
   box-shadow: 0 8px 24px rgba(43, 23, 7, 0.12);
 }
 
+.hero-game-card,
+.auth-card,
+.dashboard-panel,
+.dashboard-start-card {
+  background: var(--egg-cream-panel);
+  color: var(--egg-text-dark);
+}
+
+.hero-game-card,
+.auth-card,
+.dashboard-panel {
+  box-shadow: var(--egg-card-shadow);
+}
+
 /* SHARED CTA BUTTONS */
 
 .game-home-page .btn-warning,
@@ -205,7 +232,8 @@ a:hover {
 
 .game-home-page .btn-outline-light,
 .auth-page .btn-outline-light,
-.dashboard-page .btn-outline-light {
+.dashboard-page .btn-outline-light,
+.game-play-page .btn-outline-light {
   color: #ffffff;
   border: 1px solid rgba(255, 255, 255, 0.82);
   border-radius: 999px;
@@ -214,7 +242,8 @@ a:hover {
 
 .game-home-page .btn-outline-light:hover,
 .auth-page .btn-outline-light:hover,
-.dashboard-page .btn-outline-light:hover {
+.dashboard-page .btn-outline-light:hover,
+.game-play-page .btn-outline-light:hover {
   color: var(--egg-text-dark);
   background: var(--egg-cream-soft);
   border-color: var(--egg-cream-soft);
@@ -225,7 +254,7 @@ a:hover {
 .dashboard-page .btn-light,
 .auth-secondary-btn {
   color: var(--egg-text-dark);
-  background: #ffffff;
+  background: var(--egg-white-panel);
   border: 1px solid rgba(43, 23, 7, 0.15);
   border-radius: 999px;
   font-weight: 800;
@@ -242,7 +271,8 @@ a:hover {
 
 /* HOME PAGE */
 
-.home-hero {
+.home-hero,
+.auth-layout {
   min-height: calc(100vh - 78px);
   display: grid;
   grid-template-columns: 1.1fr 0.9fr;
@@ -251,21 +281,33 @@ a:hover {
   padding: 70px 7vw 90px;
 }
 
-.hero-text h1 {
-  max-width: 760px;
-  margin-bottom: 28px;
-  font-size: clamp(3rem, 6vw, 6.8rem);
+.hero-text h1,
+.auth-intro h1,
+.dashboard-hero h1 {
   line-height: 1.08;
   font-weight: 800;
   letter-spacing: -2px;
 }
 
-.hero-description {
+.hero-text h1,
+.auth-intro h1 {
+  max-width: 760px;
+  margin-bottom: 28px;
+  font-size: clamp(3rem, 6vw, 6.8rem);
+}
+
+.hero-description,
+.auth-intro p,
+.dashboard-hero p {
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.75;
+}
+
+.hero-description,
+.auth-intro p {
   max-width: 620px;
   margin-bottom: 30px;
-  color: rgba(255, 255, 255, 0.82);
   font-size: 1.18rem;
-  line-height: 1.75;
 }
 
 .hero-actions {
@@ -318,10 +360,7 @@ a:hover {
   position: relative;
   padding: 28px;
   text-align: center;
-  background: rgba(255, 248, 222, 0.95);
-  color: var(--egg-text-dark);
   border-radius: 36px;
-  box-shadow: var(--egg-card-shadow);
 }
 
 .game-card-top {
@@ -473,41 +512,12 @@ a:hover {
 
 /* AUTH PAGES */
 
-.auth-layout {
-  min-height: calc(100vh - 78px);
-  display: grid;
-  grid-template-columns: 1.1fr 0.9fr;
-  gap: 48px;
-  align-items: center;
-  padding: 70px 7vw 90px;
-}
-
-.auth-intro h1 {
-  max-width: 760px;
-  margin-bottom: 28px;
-  font-size: clamp(3rem, 6vw, 6.8rem);
-  line-height: 1.08;
-  font-weight: 800;
-  letter-spacing: -2px;
-}
-
-.auth-intro p {
-  max-width: 620px;
-  margin-bottom: 30px;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 1.18rem;
-  line-height: 1.75;
-}
-
 .auth-card {
   width: 100%;
   max-width: 460px;
   justify-self: center;
   padding: 38px;
-  background: rgba(255, 248, 222, 0.95);
-  color: var(--egg-text-dark);
   border-radius: 34px;
-  box-shadow: var(--egg-card-shadow);
 }
 
 .auth-card h2 {
@@ -575,9 +585,9 @@ a:hover {
   border-radius: 6px;
 }
 
-.auth-primary-btn {
-  min-height: 52px;
-  margin-top: 4px;
+.auth-primary-btn,
+.auth-secondary-btn,
+.dashboard-action-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -586,14 +596,13 @@ a:hover {
   text-align: center;
 }
 
+.auth-primary-btn {
+  min-height: 52px;
+  margin-top: 4px;
+}
+
 .auth-secondary-btn {
   min-height: 50px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 24px;
-  line-height: 1.2;
-  text-align: center;
 }
 
 .auth-switch-link {
@@ -634,17 +643,12 @@ a:hover {
   max-width: 900px;
   margin-bottom: 24px;
   font-size: clamp(3rem, 6vw, 6.4rem);
-  line-height: 1.08;
-  font-weight: 800;
-  letter-spacing: -2px;
 }
 
 .dashboard-hero p {
   max-width: 760px;
   margin-bottom: 30px;
-  color: rgba(255, 255, 255, 0.82);
   font-size: 1.15rem;
-  line-height: 1.75;
 }
 
 .dashboard-actions {
@@ -655,13 +659,7 @@ a:hover {
 
 .dashboard-action-btn {
   min-height: 52px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 24px;
   border-radius: 999px;
-  line-height: 1.2;
-  text-align: center;
   font-weight: 800;
   text-decoration: none;
 }
@@ -687,10 +685,7 @@ a:hover {
 
 .dashboard-panel {
   padding: 42px;
-  background: rgba(255, 248, 222, 0.95);
-  color: var(--egg-text-dark);
   border-radius: 36px;
-  box-shadow: var(--egg-card-shadow);
 }
 
 .dashboard-panel-header {
@@ -729,8 +724,8 @@ a:hover {
 .dashboard-stat-card {
   min-height: 210px;
   padding: 28px;
-  background: #ffffff;
-  border: 1px solid rgba(43, 23, 7, 0.08);
+  background: var(--egg-white-panel);
+  border: var(--egg-surface-border);
   border-radius: 28px;
   box-shadow: 0 16px 44px rgba(85, 52, 15, 0.12);
 }
@@ -939,19 +934,19 @@ a:hover {
   width: 100%;
   overflow-x: auto;
   border-radius: 24px;
-  border: 1px solid rgba(43, 23, 7, 0.08);
-  background: #ffffff;
-  box-shadow: 0 16px 44px rgba(85, 52, 15, 0.1);
+  border: var(--egg-surface-border);
+  background: var(--egg-white-panel);
+  box-shadow: var(--egg-surface-shadow);
 }
 
 .chart-card {
   width: 100%;
   min-height: 360px;
   padding: 24px;
-  background: #ffffff;
-  border: 1px solid rgba(43, 23, 7, 0.08);
+  background: var(--egg-white-panel);
+  border: var(--egg-surface-border);
   border-radius: 24px;
-  box-shadow: 0 16px 44px rgba(85, 52, 15, 0.1);
+  box-shadow: var(--egg-surface-shadow);
   overflow-x: auto;
 }
 
@@ -1032,10 +1027,10 @@ a:hover {
 .profile-password-card {
   margin-top: 20px;
   padding: 28px;
-  background: #ffffff;
-  border: 1px solid rgba(43, 23, 7, 0.08);
+  background: var(--egg-white-panel);
+  border: var(--egg-surface-border);
   border-radius: 28px;
-  box-shadow: 0 16px 44px rgba(85, 52, 15, 0.1);
+  box-shadow: var(--egg-surface-shadow);
 }
 
 .profile-password-card h3 {
@@ -1197,9 +1192,9 @@ a:hover {
 .admin-empty-state {
   padding: 48px 24px;
   text-align: center;
-  background: #ffffff;
+  background: var(--egg-white-panel);
   border-radius: 24px;
-  border: 1px solid rgba(43, 23, 7, 0.08);
+  border: var(--egg-surface-border);
 }
 
 .admin-empty-state h3 {
@@ -1233,10 +1228,10 @@ a:hover {
   margin-top: 18px;
   padding: 20px 22px;
   color: var(--egg-text-dark);
-  background: #ffffff;
-  border: 1px solid rgba(43, 23, 7, 0.08);
+  background: var(--egg-white-panel);
+  border: var(--egg-surface-border);
   border-radius: 24px;
-  box-shadow: 0 16px 44px rgba(85, 52, 15, 0.1);
+  box-shadow: var(--egg-surface-shadow);
   font-weight: 700;
   line-height: 1.7;
 }
@@ -1250,63 +1245,6 @@ a:hover {
 }
 
 /* PLAY GAME PAGE */
-
-/* Page background */
-.game-play-page {
-  min-height: 100vh;
-  margin: 0;
-  font-family: "Poppins", sans-serif;
-  background:
-    radial-gradient(
-      circle at top left,
-      rgba(255, 220, 112, 0.38),
-      transparent 35%
-    ),
-    radial-gradient(
-      circle at top right,
-      rgba(255, 255, 255, 0.18),
-      transparent 30%
-    ),
-    linear-gradient(
-      135deg,
-      var(--egg-dark) 0%,
-      var(--egg-brown) 45%,
-      var(--egg-deep) 100%
-    );
-  color: #ffffff;
-  overflow-x: hidden;
-}
-
-/* Navbar: keep Bootstrap structure, only override appearance */
-.game-play-page .game-page-navbar {
-  padding: 18px 7vw;
-  background: var(--egg-navbar) !important;
-  backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.game-play-page .navbar-brand {
-  color: #fff4cf !important;
-  font-size: 1.35rem;
-  font-weight: 800;
-}
-
-.game-play-page .navbar-brand:hover {
-  color: var(--egg-gold) !important;
-}
-
-.game-play-page .btn-outline-light {
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.82);
-  border-radius: 999px;
-  font-weight: 800;
-}
-
-.game-play-page .btn-outline-light:hover {
-  color: var(--egg-text-dark);
-  background: var(--egg-cream-soft);
-  border-color: var(--egg-cream-soft);
-}
 
 /* Account dropdown */
 .game-play-page .dropdown-menu {
