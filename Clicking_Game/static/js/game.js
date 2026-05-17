@@ -256,6 +256,13 @@
       markPlayerActive();
     }
 
+    // If egg is somehow dead before the final click, reset to full health and exit:
+    if (gameState.clicksRemaining <= 0) {
+      gameState.clicksRemaining = EGG_CONFIG[gameState.currentType].base_clicks;
+      updateProgressUI();
+      return;
+    }
+
     // Injected clicks via handleEggClick(X) using a browser breakpoint will be treated as (standard) auto-clicks:
     const expectedAutoDamage = gameState.autoClickerPower === 1 ? 1 : gameState.autoClickerPower * 2;
 
@@ -404,6 +411,12 @@
 
   function changeEgg(direction) {
     if (!ownsGameLock) return;
+    if (isAnimating || isSyncing) return;
+
+    // Only allow 1-step jumps:
+    if (direction !== 1 && direction !== -1) {
+      return;
+    }
 
     const eggKeys = EGG_ORDER;
     const nextIndex = eggKeys.indexOf(gameState.currentType) + direction;
@@ -633,6 +646,12 @@
   document
     .getElementById("autoclicker-btn")
     .addEventListener("click", () => buyUpgrade("autoClickerPower"));
+  document
+    .getElementById("prev-egg-btn")
+    .addEventListener("click", () => changeEgg(-1));
+  document
+    .getElementById("next-egg-btn")
+    .addEventListener("click", () => changeEgg(1));
 
   window.addEventListener("load", () => {
     if (!tryAcquireGameLock()) {
@@ -647,6 +666,4 @@
     document.getElementById("game-screen").style.display = "";
     updateEggImage();
   });
-
-  window.changeEgg = changeEgg;
 })();
