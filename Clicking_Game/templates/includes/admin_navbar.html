@@ -1,0 +1,30 @@
+<nav class="game-navbar">
+  <a href="{{ url_for('auth.admin_dashboard') }}" class="game-logo">
+    🥚 Egg Clicker
+  </a>
+
+  <div class="game-nav-links">
+    <a
+      href="{{ url_for('auth.admin_dashboard') }}"
+      class="{% if request.endpoint == 'auth.admin_dashboard' %}active{% endif %}"
+    >
+      Dashboard
+    </a>
+
+    <a
+      href="{{ url_for('auth.admin_player_results', search=search) }}"
+      class="{% if request.endpoint == 'auth.admin_player_results' %}active{% endif %}"
+    >
+      Results
+    </a>
+
+    <a
+      href="{{ url_for('auth.admin_accounts') }}"
+      class="{% if request.endpoint == 'auth.admin_accounts' %}active{% endif %}"
+    >
+      Accounts
+    </a>
+
+    <a href="{{ url_for('auth.logout') }}" class="nav-signup"> Logout </a>
+  </div>
+</nav>

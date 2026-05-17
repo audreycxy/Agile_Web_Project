@@ -6,7 +6,6 @@ from google import genai
 from google.genai import errors as genai_errors
 from flask import (
     Blueprint,
-    abort,
     current_app,
     g,
     jsonify,
@@ -106,6 +105,50 @@ def dashboard_url_for(user):
         return url_for("auth.admin_dashboard")
     return url_for("auth.player_dashboard")
 
+
+def redirect_authenticated_user():
+    if g.user is None:
+        return None
+
+    if g.user.is_deleted or not g.user.is_active:
+        session.clear()
+        return None
+
+    return redirect(dashboard_url_for(g.user))
+
+
+def render_login_page(error=None, success=None, forced_logout_message=None):
+    return render_template(
+        "public/login.html",
+        error=error,
+        success=success,
+        forced_logout_message=forced_logout_message,
+    )
+
+
+def render_signup_page(error=None, success=None):
+    return render_template(
+        "public/signup.html",
+        error=error,
+        success=success,
+    )
+
+
+def render_profile_page(error=None, success=None, username=None, email=None):
+    return render_template(
+        "player/profile.html",
+        username=g.user.name if username is None else username,
+        email=g.user.email if email is None else email,
+        error=error,
+        success=success,
+    )
+
+
+def sync_session_profile(user):
+    session["name"] = user.name
+    session["email"] = user.email
+
+
 def send_verification_email(user):
     verification_url = url_for(
         "auth.verify_email",
@@ -132,11 +175,9 @@ def send_verification_email(user):
 def login():
     forced_logout_message = pop_auth_notice()
 
-    if g.user is not None:
-        if g.user.is_deleted or not g.user.is_active:
-            session.clear()
-        else:
-            return redirect(dashboard_url_for(g.user))
+    authenticated_redirect = redirect_authenticated_user()
+    if authenticated_redirect is not None:
+        return authenticated_redirect
 
     error = None
     success = (
@@ -172,8 +213,7 @@ def login():
                 establish_login_session(user)
                 return redirect(dashboard_url_for(user))
 
-    return render_template(
-        "public/login.html",
+    return render_login_page(
         error=error,
         success=success,
         forced_logout_message=forced_logout_message,
@@ -183,11 +223,9 @@ def login():
 # New users are created with the "player" role by default
 @bp.route("/signup", methods=("GET", "POST"))
 def signup():
-    if g.user is not None:
-        if g.user.is_deleted or not g.user.is_active:
-            session.clear()
-        else:
-            return redirect(dashboard_url_for(g.user))
+    authenticated_redirect = redirect_authenticated_user()
+    if authenticated_redirect is not None:
+        return authenticated_redirect
 
     error = None
 
@@ -216,14 +254,11 @@ def signup():
                 try:
                     send_verification_email(user)
                 except Exception:
-                    from flask import current_app
-
                     current_app.logger.exception(
                         "Failed to send verification email to %s", user.email
                     )
 
-                    return render_template(
-                        "public/signup.html",
+                    return render_signup_page(
                         success=None,
                         error=(
                             "Account created, but we could not send the "
@@ -234,13 +269,12 @@ def signup():
                         ),
                     )
 
-                return render_template(
-                    "public/signup.html",
+                return render_signup_page(
                     success="Account created. Please check your email to verify your account before logging in.",
                     error=None,
                 )
 
-    return render_template("public/signup.html", error=error)
+    return render_signup_page(error=error)
 
 # Verify-email route
 # When the user clicks the verification link in the signup email, mark the
@@ -253,8 +287,7 @@ def verify_email(token):
 
     # Token did not match any user (expired, already-used, typo).
     if user is None:
-        return render_template(
-            "public/login.html",
+        return render_login_page(
             error="Invalid or expired verification link.",
             success=None,
         )
@@ -262,26 +295,18 @@ def verify_email(token):
     # An admin may have disabled the account between signup and verification.
     # Refuse to auto-login but tell the user clearly what happened.
     if user.is_deleted:
-        return render_template(
-            "public/login.html",
+        return render_login_page(
             error="This account has been deleted.",
             success=None,
         )
 
     if not user.is_active:
-        return render_template(
-            "public/login.html",
+        return render_login_page(
             error="This account has been deactivated. Please contact an administrator.",
             success=None,
         )
 
-    # Start a logged-in session, identical to the /login success path.
-    session.clear()
-    session["user_id"] = user.id
-    session["email"] = user.email
-    session["name"] = user.name
-    session["role"] = user.role
-
+    establish_login_session(user)
     return redirect(dashboard_url_for(user))
 
 # ADMIN ROUTES
@@ -295,7 +320,6 @@ def admin_dashboard():
     player_progress = users.list_player_progress(search=search)
     all_results = users.list_results(search=search)
     recent_results = users.list_results(search=search, limit=10)
-    recent_player_progress = users.list_player_progress(search=search, limit=10, sort_by="updated")
 
     return render_template(
         "admin/admin_dashboard.html",
@@ -304,10 +328,15 @@ def admin_dashboard():
         total_users=len(all_users),
         player_count=len([user for user in all_users if user.role == "player"]),
         total_results=len(all_results),
-        tracked_players=len([user for user in player_progress if user.points > 0]),
-        highest_score=max((user.points for user in player_progress), default=0),
+        tracked_players=len(
+            [
+                user
+                for user in player_progress
+                if user.game_state is not None and user.game_state.points > 0
+            ]
+        ),
+        highest_score=max((result.score for result in all_results), default=0),
         recent_results=recent_results,
-        recent_players=recent_player_progress,
     )
 
 # Admin accounts page allows searching and filtering users by role
@@ -360,16 +389,9 @@ def update_account_status(user_id):
 def admin_player_results():
     search = request.args.get("search", "").strip()
     results = users.list_results(search=search)
-    highest_scores = {}
-
-    for result in results:
-        if result.user_id is None:
-            continue
-
-        highest_scores[result.user_id] = max(
-            highest_scores.get(result.user_id, result.score),
-            result.score,
-        )
+    highest_scores = users.list_highest_result_scores(
+        user_ids=[result.user_id for result in results]
+    )
 
     return render_template(
         "admin/admin_player_results.html",
@@ -539,20 +561,18 @@ def profile():
             email=new_email,
             password=new_password or None,
         ):
-            session["name"] = g.user.name
-            session["email"] = g.user.email
+            sync_session_profile(g.user)
             success = "Profile updated."
             form_username = g.user.name
             form_email = g.user.email
         else:
             error = "Email already in use."
 
-    return render_template(
-        "player/profile.html",
-        username=form_username,
-        email=form_email,
+    return render_profile_page(
         error=error,
         success=success,
+        username=form_username,
+        email=form_email,
     )
 
 
@@ -562,19 +582,13 @@ def delete_account():
     current_password = request.form.get("delete_password", "")
 
     if not current_password:
-        return render_template(
-            "player/profile.html",
-            username=g.user.name,
-            email=g.user.email,
+        return render_profile_page(
             error="Current password is required to delete your account.",
             success=None,
         )
 
     if not g.user.check_password(current_password):
-        return render_template(
-            "player/profile.html",
-            username=g.user.name,
-            email=g.user.email,
+        return render_profile_page(
             error="Current password is incorrect.",
             success=None,
         )
@@ -638,10 +652,7 @@ def upload_avatar():
             g.user.avatar_filename = new_basename
             success = "Avatar updated."
 
-    return render_template(
-        "player/profile.html",
-        username=g.user.name,
-        email=g.user.email,
+    return render_profile_page(
         error=error,
         success=success,
     )
@@ -665,10 +676,7 @@ def delete_avatar():
 
         g.user.avatar_filename = None
 
-    return render_template(
-        "player/profile.html",
-        username=g.user.name,
-        email=g.user.email,
+    return render_profile_page(
         error=None,
         success="Avatar removed.",
     )
@@ -705,23 +713,6 @@ def logout():
     session.clear()
     return redirect(url_for("main.home"))
 
-@bp.route("/save_game_state", methods=["POST"])
-@login_required(role="player")
-def save_game_state():
-    data = request.get_json() or {}
-
-    users.update_user_game_state(
-        user_id=g.user.id,
-        points=int(data.get("points", 0)),
-        current_infinity_level=int(data.get("current_infinity_level", 0)),
-        current_type=data.get("current_type", "standard"),
-        highest_type=data.get("highest_type", "standard"),
-        clicks_remaining=data.get("clicks_remaining"),
-        progress_percent=int(data.get("progress_percent", 0)),
-    )
-
-    return jsonify({"success": True})
-
 
 @bp.route("/restart_game", methods=["POST"])
 @login_required(role="player")
@@ -731,3 +722,21 @@ def restart_game():
     # back to the dashboard so they immediately see the fresh state.
     users.reset_user_game_state(g.user.id)
     return redirect(url_for("auth.player_dashboard"))
+
+
+@bp.route("/leaderboard")
+def leaderboard():
+    players = users.list_leaderboard(limit=10)
+
+    return jsonify({
+        "current_user_id": g.user.id if g.user else None,
+        "players": [
+            {
+                "id": player.id,
+                "name": player.name,
+                "points": player.game_state.points if player.game_state else 0,
+                "highest_type": player.game_state.highest_type if player.game_state else "standard",
+            }
+            for player in players
+        ],
+    })

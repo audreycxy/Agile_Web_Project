@@ -5,35 +5,7 @@
 {% block body_class %}dashboard-page{% endblock %}
 
 {% block navbar %}
-<!-- Shared game-style navigation bar -->
-<nav class="game-navbar">
-  <a href="{{ url_for('main.home') }}" class="game-logo">🥚 Egg Clicker</a>
-
-  <div class="game-nav-links">
-    <a
-      href="{{ url_for('auth.player_dashboard') }}"
-      class="{% if request.endpoint == 'auth.player_dashboard' %}active{% endif %}"
-    >
-      Dashboard
-    </a>
-
-    <a
-      href="{{ url_for('auth.history', search=search) }}"
-      class="{% if request.endpoint == 'auth.history' %}active{% endif %}"
-    >
-      Results
-    </a>
-
-    <a
-      href="{{ url_for('auth.profile') }}"
-      class="{% if request.endpoint == 'auth.profile' %}active{% endif %}"
-    >
-      Profile
-    </a>
-
-    <a href="{{ url_for('auth.logout') }}" class="nav-signup"> Logout </a>
-  </div>
-</nav>
+{% include "includes/player_navbar.html" %}
 {% endblock %}
 
 {% block content %}
@@ -72,10 +44,10 @@
 
       <!--
         Restart Progress: wipes the player's points, upgrades, and egg
-        progression. POSTs to /restart_game which resets both the User row
-        and the GameState row, then redirects back here so the dashboard
-        re-renders with the fresh state. The native confirm() dialog is a
-        last-line guard against an accidental click on a destructive action.
+        progression. POSTs to /restart_game which resets the player's
+        GameState row, then redirects back here so the dashboard re-renders
+        with the fresh state. The native confirm() dialog is a last-line
+        guard against an accidental click on a destructive action.
       -->
       <form
         method="POST"

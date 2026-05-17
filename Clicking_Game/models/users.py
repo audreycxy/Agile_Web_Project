@@ -3,9 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, String, func, select
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, contains_eager, mapped_column, relationship
 from werkzeug.security import check_password_hash, generate_password_hash
 from .database import Base, get_session
+from Clicking_Game.game_logic import EGG_CONFIG
 import secrets
 
 # User table
@@ -68,40 +69,6 @@ class User(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime,
         nullable=True,
-    )
-    points: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-        server_default="0",
-        nullable=False,
-    )
-    current_infinity_level: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-        server_default="0",
-        nullable=False,
-    )
-    current_type: Mapped[str] = mapped_column(
-        String(50),
-        default="standard",
-        server_default="standard",
-        nullable=False,
-    )
-    highest_type: Mapped[str] = mapped_column(
-        String(50),
-        default="standard",
-        server_default="standard",
-        nullable=False,
-    )
-    clicks_remaining: Mapped[int | None] = mapped_column(
-        Integer,
-        nullable=True,
-    )
-    progress_percent: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-        server_default="0",
-        nullable=False,
     )
 
     # email_verified = Has the user completed the email verification
@@ -303,28 +270,6 @@ def update_profile(user, name=None, email=None, password=None):
         session.rollback()
         return False
 
-# Authenticates a user by email and password, returning the user if valid
-# Prevent unverified users from logging in
-def authenticate(email, password):
-    user = get_by_email(email)
-
-    if user is None:
-        return None
-
-    if not user.check_password(password):
-        return None
-
-    if user.is_deleted:
-        return None
-
-    if not user.is_active:
-        return None
-
-    if not user.email_verified:
-        return None
-
-    return user
-
 # Lists users for admin pages
 def list_users(search=None, role=None):
     session = get_session()
@@ -359,11 +304,34 @@ def list_results(search=None, user_id=None, limit=None):
     return session.scalars(stmt).all()
 
 
+def list_highest_result_scores(user_ids=None):
+    session = get_session()
+    stmt = (
+        select(GameResult.user_id, func.max(GameResult.score))
+        .where(GameResult.user_id.is_not(None))
+        .group_by(GameResult.user_id)
+    )
+
+    if user_ids is not None:
+        user_ids = [user_id for user_id in user_ids if user_id is not None]
+
+        if not user_ids:
+            return {}
+
+        stmt = stmt.where(GameResult.user_id.in_(user_ids))
+
+    return {
+        user_id: highest_score
+        for user_id, highest_score in session.execute(stmt).all()
+    }
+
+
 def list_leaderboard(limit=10):
     session = get_session()
     stmt = (
         select(User)
-        .join(GameState)
+        .join(User.game_state)
+        .options(contains_eager(User.game_state))
         .where(
             User.role == "player",
             User.is_active.is_(True),
@@ -380,28 +348,30 @@ def list_leaderboard(limit=10):
     return session.scalars(stmt).all()
 
 
-def list_player_progress(search=None, limit=None, sort_by="points"):
+def list_player_progress(search=None, limit=None):
     session = get_session()
-    stmt = select(User).where(User.role == "player", User.is_deleted.is_(False))
+    score_expr = func.coalesce(GameState.points, 0)
+    infinity_expr = func.coalesce(GameState.current_infinity_level, 0)
+    stmt = (
+        select(User)
+        .outerjoin(User.game_state)
+        .options(contains_eager(User.game_state))
+        .where(User.role == "player", User.is_deleted.is_(False))
+        .order_by(
+            score_expr.desc(),
+            infinity_expr.desc(),
+            User.id.asc(),
+        )
+    )
 
     if search:
         term = f"%{search.strip()}%"
         stmt = stmt.where((User.name.ilike(term)) | (User.email.ilike(term)))
 
-    if sort_by == "updated":
-        stmt = stmt.order_by(User.updated_at.desc(), User.points.desc(), User.id.desc())
-    else:
-        stmt = stmt.order_by(
-            User.points.desc(),
-            User.current_infinity_level.desc(),
-            User.updated_at.desc(),
-            User.id.asc(),
-        )
-
     if limit is not None:
         stmt = stmt.limit(limit)
 
-    return session.scalars(stmt).all()
+    return session.execute(stmt).scalars().unique().all()
 
 # Updates a user's role from the admin account management page
 def update_user_role(user_id, new_role):
@@ -451,47 +421,6 @@ def soft_delete_user(user):
     user.active_session_token = None
     session.commit()
     return True
-
-def create_game_result(user_id, score, duration_seconds=None):
-    session = get_session()
-
-    result = GameResult(
-        user_id=user_id,
-        score=score,
-        duration_seconds=duration_seconds,
-    )
-
-    session.add(result)
-    session.commit()
-
-    return result
-
-def update_user_game_state(
-    user_id,
-    points,
-    current_infinity_level,
-    current_type,
-    highest_type,
-    clicks_remaining,
-    progress_percent,
-):
-    session = get_session()
-    user = session.get(User, user_id)
-
-    if user is None:
-        return None
-
-    user.points = points
-    user.current_infinity_level = current_infinity_level
-    user.current_type = current_type
-    user.highest_type = highest_type
-    user.clicks_remaining = clicks_remaining
-    user.progress_percent = progress_percent
-
-    session.commit()
-    return user
-
-
 def reset_user_game_state(user_id):
     session = get_session()
     user = session.get(User, user_id)
@@ -499,26 +428,16 @@ def reset_user_game_state(user_id):
     if user is None:
         return None
 
-    # Reset the legacy User-row copies. Some admin reports still read from
-    # these fields, so we keep them in sync with the live state.
-    user.points = 0
-    user.current_infinity_level = 0
-    user.current_type = "standard"
-    user.highest_type = "standard"
-    user.clicks_remaining = None
-    user.progress_percent = 0
+    if user.game_state is None:
+        user.game_state = GameState(user_id=user.id)
 
-    # Reset the live GameState row, which is what the in-game UI actually
-    # reads on /game. Without this, the reset above would be invisible to
-    # the player after they click "Restart Progress".
-    if user.game_state is not None:
-        user.game_state.points = 0
-        user.game_state.current_infinity_level = 0
-        user.game_state.current_type = "standard"
-        user.game_state.highest_type = "standard"
-        user.game_state.clicks_remaining = None
-        user.game_state.click_power_lvl = 1
-        user.game_state.autoclicker_lvl = 0
+    user.game_state.points = 0
+    user.game_state.current_infinity_level = 0
+    user.game_state.current_type = "standard"
+    user.game_state.highest_type = "standard"
+    user.game_state.clicks_remaining = EGG_CONFIG["standard"]["base_clicks"]
+    user.game_state.click_power_lvl = 1
+    user.game_state.autoclicker_lvl = 0
 
     session.commit()
-    return user
+    return user.game_state

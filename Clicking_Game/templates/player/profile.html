@@ -1,37 +1,7 @@
-{% extends "base.html" %} {% block title %}User Profile | Egg Clicker{% endblock
-%} {% block body_class %}dashboard-page{% endblock %} {% block navbar %}
-<!-- Shared game-style navigation bar -->
-<nav class="game-navbar">
-  <a href="{{ url_for('auth.player_dashboard') }}" class="game-logo">
-    🥚 Egg Clicker
-  </a>
-
-  <div class="game-nav-links">
-    <a
-      href="{{ url_for('auth.player_dashboard') }}"
-      class="{% if request.endpoint == 'auth.player_dashboard' %}active{% endif %}"
-    >
-      Dashboard
-    </a>
-
-    <a
-      href="{{ url_for('auth.history') }}"
-      class="{% if request.endpoint == 'auth.history' %}active{% endif %}"
-    >
-      Results
-    </a>
-
-    <a
-      href="{{ url_for('auth.profile') }}"
-      class="{% if request.endpoint == 'auth.profile' %}active{% endif %}"
-    >
-      Profile
-    </a>
-
-    <a href="{{ url_for('auth.logout') }}" class="nav-signup"> Logout </a>
-  </div>
-</nav>
-{% endblock %} {% block content %}
+{% extends "base.html" %} {% from "macros/forms.html" import password_field
+with context %} {% block title %}User Profile | Egg Clicker{% endblock %} {% block body_class
+%}dashboard-page{% endblock %} {% block navbar %} {% include
+"includes/player_navbar.html" %} {% endblock %} {% block content %}
 <!-- Profile page content -->
 <main class="dashboard-layout">
   <!-- Page header -->
@@ -173,80 +143,16 @@
         </p>
 
         <!-- Current password is used to verify the user's identity before changing the password -->
-        <div class="mb-3">
-          <label for="current_password" class="auth-label">
-            Current Password
-          </label>
-
-          <div class="password-toggle-wrap">
-            <input
-              type="password"
-              class="form-control auth-input"
-              id="current_password"
-              name="current_password"
-              placeholder="Enter current password"
-            />
-
-            <button
-              type="button"
-              class="password-toggle-btn"
-              data-target="current_password"
-              aria-pressed="false"
-            >
-              Show
-            </button>
-          </div>
-        </div>
+        {{ password_field('current_password', 'current_password', 'Current
+        Password', 'Enter current password') }}
 
         <!-- New password input field -->
-        <div class="mb-3">
-          <label for="new_password" class="auth-label">New Password</label>
-
-          <div class="password-toggle-wrap">
-            <input
-              type="password"
-              class="form-control auth-input"
-              id="new_password"
-              name="new_password"
-              placeholder="Enter new password"
-            />
-
-            <button
-              type="button"
-              class="password-toggle-btn"
-              data-target="new_password"
-              aria-pressed="false"
-            >
-              Show
-            </button>
-          </div>
-        </div>
+        {{ password_field('new_password', 'new_password', 'New Password',
+        'Enter new password') }}
 
         <!-- Confirm password field used to check that the new password was typed correctly -->
-        <div class="mb-0">
-          <label for="confirm_password" class="auth-label">
-            Confirm New Password
-          </label>
-
-          <div class="password-toggle-wrap">
-            <input
-              type="password"
-              class="form-control auth-input"
-              id="confirm_password"
-              name="confirm_password"
-              placeholder="Confirm new password"
-            />
-
-            <button
-              type="button"
-              class="password-toggle-btn"
-              data-target="confirm_password"
-              aria-pressed="false"
-            >
-              Show
-            </button>
-          </div>
-        </div>
+        {{ password_field('confirm_password', 'confirm_password', 'Confirm New
+        Password', 'Confirm new password', wrapper_class='mb-0') }}
       </div>
 
       <!-- Buttons for submitting the form -->
@@ -254,13 +160,6 @@
         <button type="submit" class="btn auth-primary-btn dashboard-action-btn">
           Save Profile Changes
         </button>
-
-        <a
-          href="{{ url_for('auth.player_dashboard') }}"
-          class="btn auth-secondary-btn dashboard-action-btn"
-        >
-          Back to Dashboard
-        </a>
       </div>
     </form>
   </section>
@@ -287,36 +186,13 @@
     >
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-      <div class="mb-3">
-        <label for="delete_password" class="auth-label">
-          Confirm with current password
-        </label>
-
-        <div class="password-toggle-wrap">
-          <input
-            type="password"
-            class="form-control auth-input"
-            id="delete_password"
-            name="delete_password"
-            placeholder="Enter current password"
-            required
-          />
-
-          <button
-            type="button"
-            class="password-toggle-btn"
-            data-target="delete_password"
-            aria-pressed="false"
-          >
-            Show
-          </button>
-        </div>
-      </div>
+      {{ password_field('delete_password', 'delete_password', 'Confirm with
+      current password', 'Enter current password', required=True) }}
 
       <button type="submit" class="btn btn-danger">Delete Account</button>
     </form>
   </section>
 </main>
 {% endblock %} {% block scripts %}
-<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+<script src="{{ url_for('static', filename='js/password_toggle.js') }}"></script>
 {% endblock %}
