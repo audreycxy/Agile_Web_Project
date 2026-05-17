@@ -72,10 +72,10 @@
 
       <!--
         Restart Progress: wipes the player's points, upgrades, and egg
-        progression. POSTs to /restart_game which resets both the User row
-        and the GameState row, then redirects back here so the dashboard
-        re-renders with the fresh state. The native confirm() dialog is a
-        last-line guard against an accidental click on a destructive action.
+        progression. POSTs to /restart_game which resets the player's
+        GameState row, then redirects back here so the dashboard re-renders
+        with the fresh state. The native confirm() dialog is a last-line
+        guard against an accidental click on a destructive action.
       -->
       <form
         method="POST"

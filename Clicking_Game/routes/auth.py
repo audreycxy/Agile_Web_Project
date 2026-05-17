@@ -320,7 +320,6 @@ def admin_dashboard():
     player_progress = users.list_player_progress(search=search)
     all_results = users.list_results(search=search)
     recent_results = users.list_results(search=search, limit=10)
-    recent_player_progress = users.list_player_progress(search=search, limit=10, sort_by="updated")
 
     return render_template(
         "admin/admin_dashboard.html",
@@ -329,10 +328,22 @@ def admin_dashboard():
         total_users=len(all_users),
         player_count=len([user for user in all_users if user.role == "player"]),
         total_results=len(all_results),
-        tracked_players=len([user for user in player_progress if user.points > 0]),
-        highest_score=max((user.points for user in player_progress), default=0),
+        tracked_players=len(
+            [
+                user
+                for user in player_progress
+                if user.game_state is not None and user.game_state.points > 0
+            ]
+        ),
+        highest_score=max(
+            (
+                user.game_state.points
+                for user in player_progress
+                if user.game_state is not None
+            ),
+            default=0,
+        ),
         recent_results=recent_results,
-        recent_players=recent_player_progress,
     )
 
 # Admin accounts page allows searching and filtering users by role
@@ -721,14 +732,13 @@ def logout():
 def save_game_state():
     data = request.get_json() or {}
 
-    users.update_user_game_state(
+    users.update_game_state(
         user_id=g.user.id,
         points=int(data.get("points", 0)),
         current_infinity_level=int(data.get("current_infinity_level", 0)),
         current_type=data.get("current_type", "standard"),
         highest_type=data.get("highest_type", "standard"),
         clicks_remaining=data.get("clicks_remaining"),
-        progress_percent=int(data.get("progress_percent", 0)),
     )
 
     return jsonify({"success": True})
