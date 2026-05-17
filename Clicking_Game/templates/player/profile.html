@@ -254,13 +254,6 @@
         <button type="submit" class="btn auth-primary-btn dashboard-action-btn">
           Save Profile Changes
         </button>
-
-        <a
-          href="{{ url_for('auth.player_dashboard') }}"
-          class="btn auth-secondary-btn dashboard-action-btn"
-        >
-          Back to Dashboard
-        </a>
       </div>
     </form>
   </section>
@@ -318,5 +311,5 @@
   </section>
 </main>
 {% endblock %} {% block scripts %}
-<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+<script src="{{ url_for('static', filename='js/password_toggle.js') }}"></script>
 {% endblock %}

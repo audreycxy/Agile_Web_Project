@@ -2,7 +2,7 @@ function initializePasswordToggle() {
   const toggleButtons = document.querySelectorAll(".password-toggle-btn");
 
   toggleButtons.forEach((button) => {
-    button.addEventListener("click", function() {
+    button.addEventListener("click", function () {
       const targetId = button.getAttribute("data-target");
       const input = document.getElementById(targetId);
 

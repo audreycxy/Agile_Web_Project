@@ -135,5 +135,6 @@ block body_class %}auth-page{% endblock %} {% block navbar %}
   alert({{ forced_logout_message | tojson }});
 </script>
 {% endif %}
+<script src="{{ url_for('static', filename='js/password_toggle.js') }}"></script>
 <script src="{{ url_for('static', filename='js/login.js') }}"></script>
 {% endblock %}
