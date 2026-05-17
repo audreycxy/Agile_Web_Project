@@ -127,6 +127,12 @@ class User(Base):
         String(255),
         nullable=True,
     )
+    # active_session_token enforces single-session login. On each successful
+    # /login we rotate this to a fresh random value and store the new value
+    # in the user's session cookie. The before_request hook compares the two
+    # on every request, and if they no longer match (because someone else
+    # logged in from another device and rotated the token), it boots the
+    # stale session back to /login. None means "currently logged out".
     active_session_token: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
@@ -246,6 +252,11 @@ def verify_email_token(token):
     return user
 
 
+# Generates a fresh random token, stores it on the user row, and returns it
+# so the caller can put it in the new session cookie. Called on every
+# successful login; this overwrites any previous token, which is what
+# invalidates any earlier session (the older cookie's token no longer
+# matches the row).
 def issue_active_session_token(user_id):
     session = get_session()
     user = session.get(User, user_id)
@@ -259,6 +270,9 @@ def issue_active_session_token(user_id):
     return token
 
 
+# Wipes the token, explicitly invalidating the current session. Called on
+# logout. Without this, an old cookie could remain valid until the user
+# logs in somewhere else and rotates the token.
 def clear_active_session_token(user_id):
     if user_id is None:
         return False
