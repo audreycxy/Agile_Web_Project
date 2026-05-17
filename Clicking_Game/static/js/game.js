@@ -46,7 +46,13 @@
   let hasShownForcedLogoutAlert = false;
 
   let lastManualClickTime = 0;
-  const CLICK_DEBOUNCE = 50; // 50ms human limit threshold
+  // 50ms minimum gap between manual clicks. A human's fastest sustainable
+  // click rate is ~10-12 cps (~80-100ms apart). Anything tighter than 50ms
+  // is almost certainly a macro / auto-clicker, so we drop those clicks.
+  const CLICK_DEBOUNCE = 50;
+  // Auto-clicker only fires while the player has interacted within the last
+  // 30 seconds. Prevents idle farming (leave the tab open all night for
+  // free points).
   const AUTO_CLICKER_IDLE_TIMEOUT = 30000;
 
   let isWindowFocused = document.hasFocus();
@@ -56,6 +62,11 @@
     lastPlayerActivityTime = Date.now();
   }
 
+  // When the server tells us this session is no longer valid (typically
+  // because the user logged in again from another device, which rotates
+  // their active_session_token on the server), we kick them back to the
+  // login page. The `hasShownForcedLogoutAlert` flag stops us spamming the
+  // alert when multiple in-flight requests all return 401 at the same time.
   function forceLogout(message, redirectUrl = "/login") {
     if (hasShownForcedLogoutAlert) {
       return;
@@ -70,6 +81,9 @@
     return fetch(url, options).then(async (response) => {
       const data = await response.json().catch(() => null);
 
+      // 401 means the server has invalidated our session (single-session
+      // enforcement). Bail out of the request and redirect the user before
+      // the rest of the click handler can act on stale state.
       if (response.status === 401) {
         forceLogout(data?.message, data?.redirect_url);
         throw new Error(data?.message || "Authentication required.");
@@ -83,6 +97,13 @@
     });
   }
 
+  // Four gates protect against AFK farming with an auto-clicker:
+  //   1. autoClickerPower > 0   -> they actually own the upgrade
+  //   2. !document.hidden       -> tab is currently visible
+  //   3. isWindowFocused        -> window has OS focus
+  //   4. recent activity        -> they've moved the mouse / typed / tapped
+  //                                in the last AUTO_CLICKER_IDLE_TIMEOUT ms
+  // All four must hold, otherwise the auto-clicker pauses.
   function isAutoClickerAllowed() {
     return (
       gameState.autoClickerPower > 0 &&
@@ -410,6 +431,13 @@
     });
   }
 
+  // Four event types together cover both desktop and mobile input:
+  //   pointerdown - mouse clicks and stylus taps
+  //   keydown     - any keyboard activity
+  //   touchstart  - finger taps (mobile)
+  //   scroll      - page scrolling (a low-effort "I'm still here" signal)
+  // We use { passive: true } so we never block the browser's default
+  // scrolling/input handling; we only need to *observe* activity.
   ["pointerdown", "keydown", "touchstart", "scroll"].forEach((eventName) => {
     window.addEventListener(eventName, markPlayerActive, { passive: true });
   });
@@ -430,6 +458,11 @@
     }
   });
 
+  // Auto-clicker tick. Fires once per second, but each tick is gated by
+  // isAutoClickerAllowed() above, so it does nothing while the tab is
+  // hidden / unfocused / idle. The 1-second cadence is slow enough that
+  // it never collides with manual clicks (which are also debounced) and
+  // fast enough to feel responsive for upgrade demonstrations.
   setInterval(() => {
     if (isAutoClickerAllowed()) {
       const autoDamage =

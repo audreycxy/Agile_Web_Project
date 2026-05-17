@@ -69,6 +69,29 @@
       </button>
 
       <p id="actionMessage" class="dashboard-action-message"></p>
+
+      <!--
+        Restart Progress: wipes the player's points, upgrades, and egg
+        progression. POSTs to /restart_game which resets both the User row
+        and the GameState row, then redirects back here so the dashboard
+        re-renders with the fresh state. The native confirm() dialog is a
+        last-line guard against an accidental click on a destructive action.
+      -->
+      <form
+        method="POST"
+        action="{{ url_for('auth.restart_game') }}"
+        class="dashboard-restart-form"
+        onsubmit="
+          return confirm(
+            'Restart your game progress? This will reset your points, upgrades, and egg tier. This cannot be undone.',
+          );
+        "
+      >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="dashboard-restart-btn">
+          Restart Progress
+        </button>
+      </form>
     </div>
   </section>
 
