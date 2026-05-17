@@ -726,5 +726,8 @@ def save_game_state():
 @bp.route("/restart_game", methods=["POST"])
 @login_required(role="player")
 def restart_game():
+    # POSTed from the "Restart Progress" form on the player dashboard.
+    # Wipes points, upgrades, and egg progression, then bounces the user
+    # back to the dashboard so they immediately see the fresh state.
     users.reset_user_game_state(g.user.id)
-    return jsonify({"success": True})
+    return redirect(url_for("auth.player_dashboard"))

@@ -499,12 +499,26 @@ def reset_user_game_state(user_id):
     if user is None:
         return None
 
+    # Reset the legacy User-row copies. Some admin reports still read from
+    # these fields, so we keep them in sync with the live state.
     user.points = 0
     user.current_infinity_level = 0
     user.current_type = "standard"
     user.highest_type = "standard"
     user.clicks_remaining = None
     user.progress_percent = 0
+
+    # Reset the live GameState row, which is what the in-game UI actually
+    # reads on /game. Without this, the reset above would be invisible to
+    # the player after they click "Restart Progress".
+    if user.game_state is not None:
+        user.game_state.points = 0
+        user.game_state.current_infinity_level = 0
+        user.game_state.current_type = "standard"
+        user.game_state.highest_type = "standard"
+        user.game_state.clicks_remaining = None
+        user.game_state.click_power_lvl = 1
+        user.game_state.autoclicker_lvl = 0
 
     session.commit()
     return user
