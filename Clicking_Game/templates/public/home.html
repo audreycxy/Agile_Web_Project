@@ -1,30 +1,6 @@
 {% extends "base.html" %} {% block title %}Egg Clicker{% endblock %} {% block
-body_class %}game-home-page{% endblock %} {% block navbar %}
-<!-- Game-style navigation bar -->
-<nav class="game-navbar">
-  <a href="{{ url_for('main.home') }}" class="game-logo">🥚 Egg Clicker</a>
-
-  <div class="game-nav-links">
-    <a href="#how-it-works" class="section-nav-link"> How it works </a>
-
-    <a href="#features" class="section-nav-link"> Features </a>
-
-    <a
-      href="{{ url_for('auth.login', search=search) }}"
-      class="{% if request.endpoint == 'auth.login' %}active{% endif %}"
-    >
-      Login
-    </a>
-
-    <a
-      href="{{ url_for('auth.signup') }}"
-      class="{% if request.endpoint == 'auth.signup' %}active{% endif %}"
-    >
-      Sign Up
-    </a>
-  </div>
-</nav>
-{% endblock %} {% block content %}
+body_class %}game-home-page{% endblock %} {% block navbar %} {% include
+"includes/public_navbar.html" %} {% endblock %} {% block content %}
 <!-- Hero section -->
 <main class="home-hero">
   <section class="hero-text">

@@ -713,22 +713,6 @@ def logout():
     session.clear()
     return redirect(url_for("main.home"))
 
-@bp.route("/save_game_state", methods=["POST"])
-@login_required(role="player")
-def save_game_state():
-    data = request.get_json() or {}
-
-    users.update_game_state(
-        user_id=g.user.id,
-        points=int(data.get("points", 0)),
-        current_infinity_level=int(data.get("current_infinity_level", 0)),
-        current_type=data.get("current_type", "standard"),
-        highest_type=data.get("highest_type", "standard"),
-        clicks_remaining=data.get("clicks_remaining"),
-    )
-
-    return jsonify({"success": True})
-
 
 @bp.route("/restart_game", methods=["POST"])
 @login_required(role="player")

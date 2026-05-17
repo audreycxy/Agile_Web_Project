@@ -270,28 +270,6 @@ def update_profile(user, name=None, email=None, password=None):
         session.rollback()
         return False
 
-# Authenticates a user by email and password, returning the user if valid
-# Prevent unverified users from logging in
-def authenticate(email, password):
-    user = get_by_email(email)
-
-    if user is None:
-        return None
-
-    if not user.check_password(password):
-        return None
-
-    if user.is_deleted:
-        return None
-
-    if not user.is_active:
-        return None
-
-    if not user.email_verified:
-        return None
-
-    return user
-
 # Lists users for admin pages
 def list_users(search=None, role=None):
     session = get_session()
@@ -443,52 +421,6 @@ def soft_delete_user(user):
     user.active_session_token = None
     session.commit()
     return True
-
-def create_game_result(user_id, score, duration_seconds=None):
-    session = get_session()
-
-    result = GameResult(
-        user_id=user_id,
-        score=score,
-        duration_seconds=duration_seconds,
-    )
-
-    session.add(result)
-    session.commit()
-
-    return result
-
-
-def update_game_state(
-    user_id,
-    points,
-    current_infinity_level,
-    current_type,
-    highest_type,
-    clicks_remaining,
-):
-    session = get_session()
-    user = session.get(User, user_id)
-
-    if user is None:
-        return None
-
-    if user.game_state is None:
-        user.game_state = GameState(
-            user_id=user.id,
-            clicks_remaining=EGG_CONFIG["standard"]["base_clicks"],
-        )
-
-    user.game_state.points = points
-    user.game_state.current_infinity_level = current_infinity_level
-    user.game_state.current_type = current_type
-    user.game_state.highest_type = highest_type
-    user.game_state.clicks_remaining = clicks_remaining
-
-    session.commit()
-    return user.game_state
-
-
 def reset_user_game_state(user_id):
     session = get_session()
     user = session.get(User, user_id)

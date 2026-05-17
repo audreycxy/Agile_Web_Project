@@ -1,0 +1,23 @@
+<nav class="game-navbar">
+  <a href="{{ url_for('main.home') }}" class="game-logo">🥚 Egg Clicker</a>
+
+  <div class="game-nav-links">
+    <a href="{{ url_for('main.home') }}#how-it-works"> How it works </a>
+
+    <a href="{{ url_for('main.home') }}#features"> Features </a>
+
+    <a
+      href="{{ url_for('auth.login') }}"
+      class="{% if request.endpoint == 'auth.login' %}active{% endif %}"
+    >
+      Login
+    </a>
+
+    <a
+      href="{{ url_for('auth.signup') }}"
+      class="{% if request.endpoint == 'auth.signup' %}active{% endif %}"
+    >
+      Sign Up
+    </a>
+  </div>
+</nav>

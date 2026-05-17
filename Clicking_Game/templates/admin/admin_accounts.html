@@ -1,38 +1,7 @@
-{% extends "base.html" %} {% block title %}Admin Accounts | Egg Clicker{%
-endblock %} {% block body_class %}dashboard-page{% endblock %} {% block navbar
-%}
-<!-- Shared game-style navigation bar -->
-<nav class="game-navbar">
-  <a href="{{ url_for('auth.admin_dashboard') }}" class="game-logo">
-    🥚 Egg Clicker
-  </a>
-
-  <div class="game-nav-links">
-    <a
-      href="{{ url_for('auth.admin_dashboard') }}"
-      class="{% if request.endpoint == 'auth.admin_dashboard' %}active{% endif %}"
-    >
-      Dashboard
-    </a>
-
-    <a
-      href="{{ url_for('auth.admin_player_results', search=search) }}"
-      class="{% if request.endpoint == 'auth.admin_player_results' %}active{% endif %}"
-    >
-      Results
-    </a>
-
-    <a
-      href="{{ url_for('auth.admin_accounts') }}"
-      class="{% if request.endpoint == 'auth.admin_accounts' %}active{% endif %}"
-    >
-      Accounts
-    </a>
-
-    <a href="{{ url_for('auth.logout') }}" class="nav-signup"> Logout </a>
-  </div>
-</nav>
-{% endblock %} {% block content %}
+{% extends "base.html" %} {% from "macros/forms.html" import
+dropdown_action_form with context %} {% block title %}Admin Accounts | Egg Clicker{% endblock %} {%
+block body_class %}dashboard-page{% endblock %} {% block navbar %} {% include
+"includes/admin_navbar.html" %} {% endblock %} {% block content %}
 <main class="dashboard-layout">
   <!-- Page header -->
   <section class="dashboard-hero">
@@ -168,35 +137,15 @@ endblock %} {% block body_class %}dashboard-page{% endblock %} {% block navbar
 
                 <ul class="dropdown-menu">
                   <li>
-                    <form
-                      method="post"
-                      action="{{ url_for('auth.update_account_role', user_id=account.id) }}"
-                    >
-                      <input
-                        type="hidden"
-                        name="csrf_token"
-                        value="{{ csrf_token() }}"
-                      />
-                      <input type="hidden" name="role" value="admin" />
-                      <button type="submit" class="dropdown-item">Admin</button>
-                    </form>
+                    {{ dropdown_action_form(
+                    url_for('auth.update_account_role', user_id=account.id),
+                    'role', 'admin', 'Admin') }}
                   </li>
 
                   <li>
-                    <form
-                      method="post"
-                      action="{{ url_for('auth.update_account_role', user_id=account.id) }}"
-                    >
-                      <input
-                        type="hidden"
-                        name="csrf_token"
-                        value="{{ csrf_token() }}"
-                      />
-                      <input type="hidden" name="role" value="player" />
-                      <button type="submit" class="dropdown-item">
-                        Player
-                      </button>
-                    </form>
+                    {{ dropdown_action_form(
+                    url_for('auth.update_account_role', user_id=account.id),
+                    'role', 'player', 'Player') }}
                   </li>
                 </ul>
               </div>
@@ -230,37 +179,15 @@ endblock %} {% block body_class %}dashboard-page{% endblock %} {% block navbar
 
                 <ul class="dropdown-menu">
                   <li>
-                    <form
-                      method="post"
-                      action="{{ url_for('auth.update_account_status', user_id=account.id) }}"
-                    >
-                      <input
-                        type="hidden"
-                        name="csrf_token"
-                        value="{{ csrf_token() }}"
-                      />
-                      <input type="hidden" name="is_active" value="true" />
-                      <button type="submit" class="dropdown-item">
-                        Active
-                      </button>
-                    </form>
+                    {{ dropdown_action_form(
+                    url_for('auth.update_account_status', user_id=account.id),
+                    'is_active', 'true', 'Active') }}
                   </li>
 
                   <li>
-                    <form
-                      method="post"
-                      action="{{ url_for('auth.update_account_status', user_id=account.id) }}"
-                    >
-                      <input
-                        type="hidden"
-                        name="csrf_token"
-                        value="{{ csrf_token() }}"
-                      />
-                      <input type="hidden" name="is_active" value="false" />
-                      <button type="submit" class="dropdown-item">
-                        Inactive
-                      </button>
-                    </form>
+                    {{ dropdown_action_form(
+                    url_for('auth.update_account_status', user_id=account.id),
+                    'is_active', 'false', 'Inactive') }}
                   </li>
                 </ul>
               </div>
