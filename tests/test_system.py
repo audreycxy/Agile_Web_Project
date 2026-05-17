@@ -63,14 +63,16 @@ class SystemTestCase(unittest.TestCase):
         current_type="standard",
         highest_type="standard",
         clicks_remaining=None,
-        progress_percent=0,
     ):
         # Helper for creating users with different roles, verification status,
-        # account status, and game progress.
+        # account status, and game progress. Game-progress fields live on the
+        # related GameState row (the legacy User-row copies were dropped by
+        # migration c1c3d0a4e7f2).
         with self.app.app_context():
             user = users.create_user(name, email, password, role=role)
             self.assertIsNotNone(user)
 
+            session = database.get_session()
             stored_user = users.get_by_id(user.id)
             stored_user.email_verified = email_verified
             stored_user.email_verification_token = (
@@ -79,21 +81,36 @@ class SystemTestCase(unittest.TestCase):
             stored_user.is_active = is_active
             stored_user.is_deleted = is_deleted
             stored_user.deleted_at = datetime.utcnow() if is_deleted else None
-            stored_user.points = points
-            stored_user.current_infinity_level = current_infinity_level
-            stored_user.current_type = current_type
-            stored_user.highest_type = highest_type
-            stored_user.clicks_remaining = clicks_remaining
-            stored_user.progress_percent = progress_percent
 
-            database.get_session().commit()
+            # Create or update the player's GameState row so the test's
+            # `points` / `current_type` / etc. arguments take effect on the
+            # field that the in-game UI actually reads.
+            if stored_user.game_state is None:
+                stored_user.game_state = users.GameState(user_id=stored_user.id)
+            stored_user.game_state.points = points
+            stored_user.game_state.current_infinity_level = current_infinity_level
+            stored_user.game_state.current_type = current_type
+            stored_user.game_state.highest_type = highest_type
+            stored_user.game_state.clicks_remaining = clicks_remaining
+
+            session.commit()
 
             return stored_user.id
 
     def create_result(self, user_id, score, duration_seconds=None):
-        # Helper for creating a saved game result for a user.
+        # Helper for creating a saved game result for a user. The previous
+        # `users.create_game_result()` helper was removed; we now add a
+        # GameResult row directly.
         with self.app.app_context():
-            return users.create_game_result(user_id, score, duration_seconds)
+            session = database.get_session()
+            result = users.GameResult(
+                user_id=user_id,
+                score=score,
+                duration_seconds=duration_seconds,
+            )
+            session.add(result)
+            session.commit()
+            return result
 
     def login_session(self, user_id):
         # Helper for manually setting session values so the test user is logged in.
@@ -206,9 +223,12 @@ class SystemTestCase(unittest.TestCase):
             self.assertEqual(response.status_code, 302, path)
             self.assertTrue(response.headers["Location"].endswith("/login"))
 
+        # /restart_game is a POST-only player-protected endpoint, so anonymous
+        # callers should bounce to /login just like the GET routes above.
+        # (The previous /save_game_state probe here was removed alongside
+        # that route during the User-row cleanup.)
         post_response = self.client.post(
-            "/save_game_state",
-            json={"points": 25},
+            "/restart_game",
             follow_redirects=False,
         )
 
@@ -376,35 +396,26 @@ class SystemTestCase(unittest.TestCase):
 
         self.assertIn("This account has been deleted.", login_response.get_data(as_text=True))
 
-    def test_save_game_state_and_restart_game_update_persistent_progress(self):
-        # Check that game state saving stores progress and restart resets progress.
-        user_id = self.create_user(email="gamer@example.com")
+    def test_restart_game_resets_player_progress(self):
+        # Seed a player with in-progress game state via the helper, confirm
+        # the /game page reflects that state, then POST to /restart_game and
+        # verify the GameState row is wiped back to the default values.
+        #
+        # (The previous /save_game_state route was removed when the legacy
+        # User-row game fields were dropped; the test for it has been
+        # collapsed into this single end-to-end check.)
+        user_id = self.create_user(
+            email="gamer@example.com",
+            points=275,
+            current_infinity_level=4,
+            current_type="water",
+            highest_type="gold",
+            clicks_remaining=7,
+        )
         self.login_session(user_id)
 
-        save_response = self.client.post(
-            "/save_game_state",
-            json={
-                "points": 275,
-                "current_infinity_level": 4,
-                "current_type": "water",
-                "highest_type": "gold",
-                "clicks_remaining": 7,
-                "progress_percent": 63,
-            },
-        )
-
-        self.assertEqual(save_response.status_code, 200)
-        self.assertEqual(save_response.get_json(), {"success": True})
-
-        saved_user = self.get_user(user_id)
-
-        self.assertEqual(saved_user.points, 275)
-        self.assertEqual(saved_user.current_infinity_level, 4)
-        self.assertEqual(saved_user.current_type, "water")
-        self.assertEqual(saved_user.highest_type, "gold")
-        self.assertEqual(saved_user.clicks_remaining, 7)
-        self.assertEqual(saved_user.progress_percent, 63)
-
+        # The helper wrote the state to the user's GameState row, so the
+        # /game page should serialise it into the initial state JSON.
         game_page = self.client.get("/game").get_data(as_text=True)
 
         self.assertIn('"is_guest": false', game_page)
@@ -422,13 +433,15 @@ class SystemTestCase(unittest.TestCase):
         )
 
         reset_user = self.get_user(user_id)
+        reset_state = reset_user.game_state
 
-        self.assertEqual(reset_user.points, 0)
-        self.assertEqual(reset_user.current_infinity_level, 0)
-        self.assertEqual(reset_user.current_type, "standard")
-        self.assertEqual(reset_user.highest_type, "standard")
-        self.assertIsNone(reset_user.clicks_remaining)
-        self.assertEqual(reset_user.progress_percent, 0)
+        self.assertIsNotNone(reset_state, "GameState should exist after restart")
+        self.assertEqual(reset_state.points, 0)
+        self.assertEqual(reset_state.current_infinity_level, 0)
+        self.assertEqual(reset_state.current_type, "standard")
+        self.assertEqual(reset_state.highest_type, "standard")
+        self.assertEqual(reset_state.click_power_lvl, 1)
+        self.assertEqual(reset_state.autoclicker_lvl, 0)
 
     def test_leaderboard_returns_only_active_non_deleted_players_in_rank_order(self):
         # Check that leaderboard excludes inactive, deleted, and admin users,
