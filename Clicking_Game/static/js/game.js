@@ -44,6 +44,9 @@
   let isAnimating = false;
   let isSyncing = false;
   let hasShownForcedLogoutAlert = false;
+  let hasShownGameLockAlert = false;
+  let ownsGameLock = false;
+  let lockHeartbeatHandle = null;
 
   let lastManualClickTime = 0;
   // 50ms minimum gap between manual clicks. A human's fastest sustainable
@@ -54,9 +57,129 @@
   // 30 seconds. Prevents idle farming (leave the tab open all night for
   // free points).
   const AUTO_CLICKER_IDLE_TIMEOUT = 30000;
+  const GAME_LOCK_KEY = `eggClicker:activeGameTab:${GAME_LOCK_SCOPE}`;
+  const GAME_LOCK_TAB_ID_KEY = "eggClickerGameTabId";
+  const GAME_LOCK_TIMEOUT = 10000;
+  const GAME_LOCK_HEARTBEAT_INTERVAL = 3000;
+  const GAME_LOCK_CONFLICT_MESSAGE = gameState.isGuest
+    ? "This game is already open in another tab. Return to the existing game tab to continue."
+    : "This account is already playing in another game tab. Return to the existing tab to continue.";
 
   let isWindowFocused = document.hasFocus();
   let lastPlayerActivityTime = Date.now();
+  const gameTabId = getOrCreateGameTabId();
+
+  function getOrCreateGameTabId() {
+    const existingTabId = sessionStorage.getItem(GAME_LOCK_TAB_ID_KEY);
+
+    if (existingTabId) {
+      return existingTabId;
+    }
+
+    const newTabId =
+      typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `tab-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    sessionStorage.setItem(GAME_LOCK_TAB_ID_KEY, newTabId);
+    return newTabId;
+  }
+
+  function readGameLock() {
+    const rawLock = localStorage.getItem(GAME_LOCK_KEY);
+
+    if (!rawLock) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(rawLock);
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function isGameLockStale(lock) {
+    return !lock || typeof lock.lastSeen !== "number" || Date.now() - lock.lastSeen > GAME_LOCK_TIMEOUT;
+  }
+
+  function writeGameLock() {
+    localStorage.setItem(
+      GAME_LOCK_KEY,
+      JSON.stringify({
+        tabId: gameTabId,
+        lastSeen: Date.now(),
+      }),
+    );
+  }
+
+  function releaseGameLock() {
+    if (!ownsGameLock) {
+      return;
+    }
+
+    const currentLock = readGameLock();
+
+    if (currentLock?.tabId === gameTabId) {
+      localStorage.removeItem(GAME_LOCK_KEY);
+    }
+
+    ownsGameLock = false;
+
+    if (lockHeartbeatHandle !== null) {
+      clearInterval(lockHeartbeatHandle);
+      lockHeartbeatHandle = null;
+    }
+  }
+
+  function exitBecauseGameLockLost() {
+    if (hasShownGameLockAlert) {
+      return;
+    }
+
+    hasShownGameLockAlert = true;
+    releaseGameLock();
+    alert(GAME_LOCK_CONFLICT_MESSAGE);
+    window.location.assign(GAME_LOCK_REDIRECT_URL);
+  }
+
+  function maintainGameLock() {
+    if (!ownsGameLock) {
+      return;
+    }
+
+    const currentLock = readGameLock();
+
+    if (currentLock && currentLock.tabId !== gameTabId && !isGameLockStale(currentLock)) {
+      exitBecauseGameLockLost();
+      return;
+    }
+
+    writeGameLock();
+  }
+
+  function tryAcquireGameLock() {
+    const currentLock = readGameLock();
+
+    if (currentLock && currentLock.tabId !== gameTabId && !isGameLockStale(currentLock)) {
+      return false;
+    }
+
+    writeGameLock();
+    const confirmedLock = readGameLock();
+    ownsGameLock = confirmedLock?.tabId === gameTabId;
+
+    if (!ownsGameLock) {
+      return false;
+    }
+
+    if (lockHeartbeatHandle !== null) {
+      clearInterval(lockHeartbeatHandle);
+    }
+
+    lockHeartbeatHandle = setInterval(maintainGameLock, GAME_LOCK_HEARTBEAT_INTERVAL);
+    return true;
+  }
 
   function markPlayerActive() {
     lastPlayerActivityTime = Date.now();
@@ -106,6 +229,7 @@
   // All four must hold, otherwise the auto-clicker pauses.
   function isAutoClickerAllowed() {
     return (
+      ownsGameLock &&
       gameState.autoClickerPower > 0 &&
       !document.hidden &&
       isWindowFocused &&
@@ -114,6 +238,7 @@
   }
 
   function handleEggClick(damageAmount = null) {
+    if (!ownsGameLock) return;
     if (isAnimating || isSyncing) return;
 
     if (damageAmount !== null && !isAutoClickerAllowed()) {
@@ -278,6 +403,8 @@
   }
 
   function changeEgg(direction) {
+    if (!ownsGameLock) return;
+
     const eggKeys = EGG_ORDER;
     const nextIndex = eggKeys.indexOf(gameState.currentType) + direction;
     const highestIndex = eggKeys.indexOf(gameState.highestType);
@@ -329,6 +456,8 @@
   }
 
   function buyUpgrade(type) {
+    if (!ownsGameLock) return;
+
     const currentLevel = gameState[type];
 
     const cost = Math.floor(10 * Math.pow(5, currentLevel));
@@ -451,6 +580,29 @@
     isWindowFocused = false;
   });
 
+  window.addEventListener("storage", (event) => {
+    if (event.key !== GAME_LOCK_KEY || !ownsGameLock) {
+      return;
+    }
+
+    let currentLock = null;
+
+    if (event.newValue) {
+      try {
+        currentLock = JSON.parse(event.newValue);
+      } catch (_error) {
+        currentLock = null;
+      }
+    }
+
+    if (currentLock && currentLock.tabId !== gameTabId && !isGameLockStale(currentLock)) {
+      exitBecauseGameLockLost();
+    }
+  });
+
+  window.addEventListener("pagehide", releaseGameLock);
+  window.addEventListener("beforeunload", releaseGameLock);
+
   document.addEventListener("visibilitychange", () => {
     if (!document.hidden) {
       isWindowFocused = document.hasFocus();
@@ -483,6 +635,11 @@
     .addEventListener("click", () => buyUpgrade("autoClickerPower"));
 
   window.addEventListener("load", () => {
+    if (!tryAcquireGameLock()) {
+      exitBecauseGameLockLost();
+      return;
+    }
+
     updateProgressUI();
     updateUpgradeUI();
 

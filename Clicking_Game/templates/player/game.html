@@ -358,6 +358,8 @@
 <script>
   const INITIAL_STATE = {{ state | tojson | safe }};
   const EGG_CONFIG = {{ config | tojson | safe }};
+  const GAME_LOCK_SCOPE = {{ ("guest" if state.is_guest else "user:" ~ g.user.id) | tojson }};
+  const GAME_LOCK_REDIRECT_URL = {{ (url_for('main.guest') if state.is_guest else url_for('auth.player_dashboard')) | tojson }};
 </script>
 <script src="{{ url_for('static', filename='js/game.js') }}"></script>
 {% endblock %}
