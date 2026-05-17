@@ -722,9 +722,19 @@ def save_game_state():
 
     return jsonify({"success": True})
 
+@bp.route("/leaderboard")
+def leaderboard():
+    players = users.list_leaderboard(limit=10)
 
-@bp.route("/restart_game", methods=["POST"])
-@login_required(role="player")
-def restart_game():
-    users.reset_user_game_state(g.user.id)
-    return jsonify({"success": True})
+    return jsonify({
+        "current_user_id": g.user.id if g.user else None,
+        "players": [
+            {
+                "id": player.id,
+                "name": player.name,
+                "points": player.game_state.points if player.game_state else 0,
+                "highest_type": player.game_state.highest_type if player.game_state else "standard",
+            }
+            for player in players
+        ],
+    })
