@@ -72,7 +72,7 @@ body {
 .demo-egg-button,
 #clickpower-btn,
 #autoclicker-btn,
-#prev-egg,
+#prev-egg-btn,
 #next-egg-btn {
   touch-action: manipulation;
   user-select: none;
@@ -1549,7 +1549,7 @@ a:hover {
   transform: scale(0.95);
 }
 
-.game-screen-themed #prev-egg,
+.game-screen-themed #prev-egg-btn,
 .game-screen-themed #next-egg-btn {
   width: 44px !important;
   height: 44px !important;
@@ -1559,7 +1559,7 @@ a:hover {
   box-shadow: 0 8px 18px rgba(85, 52, 15, 0.08);
 }
 
-.game-screen-themed #prev-egg:hover,
+.game-screen-themed #prev-egg-btn:hover,
 .game-screen-themed #next-egg-btn:hover {
   background: var(--egg-cream-soft) !important;
 }
