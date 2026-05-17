@@ -6,7 +6,6 @@ from google import genai
 from google.genai import errors as genai_errors
 from flask import (
     Blueprint,
-    abort,
     current_app,
     g,
     jsonify,
@@ -106,6 +105,50 @@ def dashboard_url_for(user):
         return url_for("auth.admin_dashboard")
     return url_for("auth.player_dashboard")
 
+
+def redirect_authenticated_user():
+    if g.user is None:
+        return None
+
+    if g.user.is_deleted or not g.user.is_active:
+        session.clear()
+        return None
+
+    return redirect(dashboard_url_for(g.user))
+
+
+def render_login_page(error=None, success=None, forced_logout_message=None):
+    return render_template(
+        "public/login.html",
+        error=error,
+        success=success,
+        forced_logout_message=forced_logout_message,
+    )
+
+
+def render_signup_page(error=None, success=None):
+    return render_template(
+        "public/signup.html",
+        error=error,
+        success=success,
+    )
+
+
+def render_profile_page(error=None, success=None, username=None, email=None):
+    return render_template(
+        "player/profile.html",
+        username=g.user.name if username is None else username,
+        email=g.user.email if email is None else email,
+        error=error,
+        success=success,
+    )
+
+
+def sync_session_profile(user):
+    session["name"] = user.name
+    session["email"] = user.email
+
+
 def send_verification_email(user):
     verification_url = url_for(
         "auth.verify_email",
@@ -132,11 +175,9 @@ def send_verification_email(user):
 def login():
     forced_logout_message = pop_auth_notice()
 
-    if g.user is not None:
-        if g.user.is_deleted or not g.user.is_active:
-            session.clear()
-        else:
-            return redirect(dashboard_url_for(g.user))
+    authenticated_redirect = redirect_authenticated_user()
+    if authenticated_redirect is not None:
+        return authenticated_redirect
 
     error = None
     success = (
@@ -172,8 +213,7 @@ def login():
                 establish_login_session(user)
                 return redirect(dashboard_url_for(user))
 
-    return render_template(
-        "public/login.html",
+    return render_login_page(
         error=error,
         success=success,
         forced_logout_message=forced_logout_message,
@@ -183,11 +223,9 @@ def login():
 # New users are created with the "player" role by default
 @bp.route("/signup", methods=("GET", "POST"))
 def signup():
-    if g.user is not None:
-        if g.user.is_deleted or not g.user.is_active:
-            session.clear()
-        else:
-            return redirect(dashboard_url_for(g.user))
+    authenticated_redirect = redirect_authenticated_user()
+    if authenticated_redirect is not None:
+        return authenticated_redirect
 
     error = None
 
@@ -216,14 +254,11 @@ def signup():
                 try:
                     send_verification_email(user)
                 except Exception:
-                    from flask import current_app
-
                     current_app.logger.exception(
                         "Failed to send verification email to %s", user.email
                     )
 
-                    return render_template(
-                        "public/signup.html",
+                    return render_signup_page(
                         success=None,
                         error=(
                             "Account created, but we could not send the "
@@ -234,13 +269,12 @@ def signup():
                         ),
                     )
 
-                return render_template(
-                    "public/signup.html",
+                return render_signup_page(
                     success="Account created. Please check your email to verify your account before logging in.",
                     error=None,
                 )
 
-    return render_template("public/signup.html", error=error)
+    return render_signup_page(error=error)
 
 # Verify-email route
 # When the user clicks the verification link in the signup email, mark the
@@ -253,8 +287,7 @@ def verify_email(token):
 
     # Token did not match any user (expired, already-used, typo).
     if user is None:
-        return render_template(
-            "public/login.html",
+        return render_login_page(
             error="Invalid or expired verification link.",
             success=None,
         )
@@ -262,26 +295,18 @@ def verify_email(token):
     # An admin may have disabled the account between signup and verification.
     # Refuse to auto-login but tell the user clearly what happened.
     if user.is_deleted:
-        return render_template(
-            "public/login.html",
+        return render_login_page(
             error="This account has been deleted.",
             success=None,
         )
 
     if not user.is_active:
-        return render_template(
-            "public/login.html",
+        return render_login_page(
             error="This account has been deactivated. Please contact an administrator.",
             success=None,
         )
 
-    # Start a logged-in session, identical to the /login success path.
-    session.clear()
-    session["user_id"] = user.id
-    session["email"] = user.email
-    session["name"] = user.name
-    session["role"] = user.role
-
+    establish_login_session(user)
     return redirect(dashboard_url_for(user))
 
 # ADMIN ROUTES
@@ -539,20 +564,18 @@ def profile():
             email=new_email,
             password=new_password or None,
         ):
-            session["name"] = g.user.name
-            session["email"] = g.user.email
+            sync_session_profile(g.user)
             success = "Profile updated."
             form_username = g.user.name
             form_email = g.user.email
         else:
             error = "Email already in use."
 
-    return render_template(
-        "player/profile.html",
-        username=form_username,
-        email=form_email,
+    return render_profile_page(
         error=error,
         success=success,
+        username=form_username,
+        email=form_email,
     )
 
 
@@ -562,19 +585,13 @@ def delete_account():
     current_password = request.form.get("delete_password", "")
 
     if not current_password:
-        return render_template(
-            "player/profile.html",
-            username=g.user.name,
-            email=g.user.email,
+        return render_profile_page(
             error="Current password is required to delete your account.",
             success=None,
         )
 
     if not g.user.check_password(current_password):
-        return render_template(
-            "player/profile.html",
-            username=g.user.name,
-            email=g.user.email,
+        return render_profile_page(
             error="Current password is incorrect.",
             success=None,
         )
@@ -638,10 +655,7 @@ def upload_avatar():
             g.user.avatar_filename = new_basename
             success = "Avatar updated."
 
-    return render_template(
-        "player/profile.html",
-        username=g.user.name,
-        email=g.user.email,
+    return render_profile_page(
         error=error,
         success=success,
     )
@@ -665,10 +679,7 @@ def delete_avatar():
 
         g.user.avatar_filename = None
 
-    return render_template(
-        "player/profile.html",
-        username=g.user.name,
-        email=g.user.email,
+    return render_profile_page(
         error=None,
         success="Avatar removed.",
     )
