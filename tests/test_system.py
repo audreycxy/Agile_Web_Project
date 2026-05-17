@@ -411,10 +411,15 @@ class SystemTestCase(unittest.TestCase):
         self.assertIn('"points": 275', game_page)
         self.assertIn('"current_type": "water"', game_page)
 
-        restart_response = self.client.post("/restart_game")
+        # The "Restart Progress" form on the dashboard POSTs here and
+        # expects a redirect back to /player_dashboard so the page re-renders
+        # with the freshly-zeroed state.
+        restart_response = self.client.post("/restart_game", follow_redirects=False)
 
-        self.assertEqual(restart_response.status_code, 200)
-        self.assertEqual(restart_response.get_json(), {"success": True})
+        self.assertEqual(restart_response.status_code, 302)
+        self.assertTrue(
+            restart_response.headers["Location"].endswith("/player_dashboard")
+        )
 
         reset_user = self.get_user(user_id)
 

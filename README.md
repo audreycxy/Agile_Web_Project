@@ -4,10 +4,12 @@ A Flask-based clicking game ("Egg Clicker") where players click an egg to
 earn points, progress through egg tiers, and compete on a shared leaderboard.
 The project includes:
 
-- **User signup with real email verification**, powered by the
-  [Resend](https://resend.com) HTTPS API and a verified custom domain.
-  Resend works on the live Render demo even though Render's free tier
-  blocks outbound SMTP at the network level.
+- **User signup with real email verification.** Verification emails are
+  sent through the [Resend](https://resend.com) HTTPS API from a verified
+  custom domain. Resend was chosen instead of a traditional Flask-Mail +
+  SMTP setup because the live Render free-tier deployment blocks outbound
+  SMTP connections at the network level, while Resend goes out over plain
+  HTTPS and is unaffected.
 - **Profile avatar upload** with file-extension allow-listing, magic-byte
   validation (so renamed binaries are rejected), a 1 MB size cap, and
   `secure_filename` sanitisation. Uploaded avatars are displayed on the

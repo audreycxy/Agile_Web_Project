@@ -914,6 +914,39 @@ a:hover {
   text-align: center;
 }
 
+/*
+  Restart Progress lives on the dashboard alongside Start Game but is a
+  destructive action, so we deliberately understate it: text-link styling
+  with a dotted underline, muted brown, no button-card background. The
+  visual hierarchy still puts Start Game first; the restart is available
+  but visually quiet so the player has to look at it to find it.
+*/
+.dashboard-restart-form {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.dashboard-restart-btn {
+  background: transparent;
+  border: none;
+  color: rgba(43, 23, 7, 0.55);
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 4px 10px;
+  cursor: pointer;
+  text-decoration: underline dotted;
+  text-underline-offset: 4px;
+  transition: color 0.15s ease;
+}
+
+.dashboard-restart-btn:hover,
+.dashboard-restart-btn:focus {
+  color: rgba(43, 23, 7, 0.9);
+  text-decoration: underline solid;
+  outline: none;
+}
+
 @media (max-width: 900px) {
   .dashboard-hero-split {
     grid-template-columns: 1fr;
